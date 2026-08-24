@@ -1,0 +1,3762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1F4E79">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VASMAR Gastos">
+<meta name="application-name" content="VASMAR Gastos">
+<meta name="description" content="Relación de gastos aduaneros VASMAR / CEYMA">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='192'%20height='192'%20viewBox='0%200%20192%20192'%3E%20%20%3Cdefs%3E%20%20%20%20%3ClinearGradient%20id='g'%20x1='0%'%20y1='0%'%20x2='100%'%20y2='100%'%3E%20%20%20%20%20%20%3Cstop%20offset='0%'%20style='stop-color:%231F4E79'/%3E%20%20%20%20%20%20%3Cstop%20offset='100%'%20style='stop-color:%232E86AB'/%3E%20%20%20%20%3C/linearGradient%3E%20%20%3C/defs%3E%20%20%3Crect%20width='192'%20height='192'%20rx='40'%20fill='url(%23g)'/%3E%20%20%3Crect%20x='12'%20y='12'%20width='168'%20height='168'%20rx='32'%20fill='none'%20stroke='rgba(255,255,255,0.25)'%20stroke-width='3'/%3E%20%20%3Ctext%20x='96'%20y='118'%20text-anchor='middle'%20font-family='Arial%20Black,%20Arial,%20sans-serif'%20font-size='92'%20font-weight='900'%20fill='%23ffffff'%3EV%3C/text%3E%20%20%3Ctext%20x='96'%20y='155'%20text-anchor='middle'%20font-family='Arial,%20sans-serif'%20font-size='18'%20font-weight='700'%20fill='%23F5C542'%20letter-spacing='2'%3EVASMAR%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='192'%20height='192'%20viewBox='0%200%20192%20192'%3E%20%20%3Cdefs%3E%20%20%20%20%3ClinearGradient%20id='g'%20x1='0%'%20y1='0%'%20x2='100%'%20y2='100%'%3E%20%20%20%20%20%20%3Cstop%20offset='0%'%20style='stop-color:%231F4E79'/%3E%20%20%20%20%20%20%3Cstop%20offset='100%'%20style='stop-color:%232E86AB'/%3E%20%20%20%20%3C/linearGradient%3E%20%20%3C/defs%3E%20%20%3Crect%20width='192'%20height='192'%20rx='40'%20fill='url(%23g)'/%3E%20%20%3Crect%20x='12'%20y='12'%20width='168'%20height='168'%20rx='32'%20fill='none'%20stroke='rgba(255,255,255,0.25)'%20stroke-width='3'/%3E%20%20%3Ctext%20x='96'%20y='118'%20text-anchor='middle'%20font-family='Arial%20Black,%20Arial,%20sans-serif'%20font-size='92'%20font-weight='900'%20fill='%23ffffff'%3EV%3C/text%3E%20%20%3Ctext%20x='96'%20y='155'%20text-anchor='middle'%20font-family='Arial,%20sans-serif'%20font-size='18'%20font-weight='700'%20fill='%23F5C542'%20letter-spacing='2'%3EVASMAR%3C/text%3E%3C/svg%3E">
+<title>VASMAR Gastos</title>
+<style>
+  :root {
+    --primary: #1F4E79;
+    --primary-light: #2E86AB;
+    --accent: #C65911;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --input-bg: #FFF8E7;
+    --success: #2E7D32;
+    --border: #d0d7de;
+    --text: #1a1a1a;
+    --muted: #666;
+  }
+
+  /* App-like shell */
+  html, body {
+    height: 100%;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  body {
+    /* already has styles - enhance */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    max-width: 720px;
+    margin: 0 auto;
+    min-height: 100dvh;
+  }
+  /* Hide browser chrome feel when standalone */
+  @media all and (display-mode: standalone) {
+    body { background: var(--bg); }
+    header { border-radius: 0; padding-top: calc(12px + env(safe-area-inset-top)); }
+  }
+  /* Install banner */
+  .install-bar {
+    display: none;
+    position: fixed; bottom: calc(72px + env(safe-area-inset-bottom)); left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px); max-width: 480px;
+    background: #1F4E79; color: #fff; border-radius: 14px;
+    padding: 12px 14px; z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    align-items: center; gap: 12px;
+  }
+  .install-bar.show { display: flex; }
+  .install-bar img { width: 40px; height: 40px; border-radius: 10px; background: #fff; }
+  .install-bar .txt { flex: 1; font-size: 0.85rem; line-height: 1.3; }
+  .install-bar .txt strong { display: block; font-size: 0.95rem; }
+  .install-bar button {
+    border: none; border-radius: 10px; padding: 8px 12px; font-weight: 700;
+    cursor: pointer; font-size: 0.85rem;
+  }
+  .install-bar .btn-inst { background: #F5C542; color: #1F4E79; }
+  .install-bar .btn-x { background: transparent; color: #fff; font-size: 1.2rem; padding: 4px 8px; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+    padding-bottom: 90px;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 16px 18px; background: linear-gradient(135deg, #1F4E79 0%, #2E6DA4 100%);
+    color: white; border-radius: 0 0 16px 16px; margin-bottom: 8px;
+  }
+  header .logo-box {
+    width: 112px; height: 112px; border-radius: 14px;
+    background: white; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  }
+  header .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  header .logo-box .placeholder { font-size: 0.65rem; color: var(--primary); font-weight: 700; text-align: center; line-height: 1.1; }
+  header h1 { font-size: 1.1rem; font-weight: 700; }
+  header p { font-size: 0.72rem; opacity: 0.9; margin-top: 2px; }
+  nav {
+    display: flex; gap: 4px; padding: 10px 12px; background: white;
+    border-bottom: 1px solid var(--border); overflow-x: auto;
+    position: sticky; top: 72px; z-index: 90;
+  }
+  nav button {
+    flex: 1; min-width: 70px; padding: 8px 6px; border: none;
+    background: #eef2f6; border-radius: 8px; font-size: 0.78rem;
+    font-weight: 600; color: var(--primary); cursor: pointer; white-space: nowrap;
+  }
+  nav button.active { background: var(--primary); color: white; }
+  .merc-line {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+    margin-bottom: 8px; background: #fafbfd;
+  }
+  .merc-line .flags { font-size: 0.75rem; margin-top: 4px; }
+  .merc-line .flag-ok { color: #2E7D32; font-weight: 600; }
+  .merc-line .flag-warn { color: #C65911; font-weight: 600; }
+  .merc-line .flag-info { color: #1565C0; }
+  .merc-suggest {
+    margin-top: 6px; border: 1px solid #c5d0dc; border-radius: 8px;
+    background: #f7fafc; max-height: 180px; overflow-y: auto; display: none;
+  }
+  .merc-suggest.show { display: block; }
+  .merc-suggest .sg {
+    padding: 8px 10px; border-bottom: 1px solid #e8eef4; cursor: pointer;
+    font-size: 0.82rem;
+  }
+  .merc-suggest .sg:hover, .merc-suggest .sg:active { background: #e3f2fd; }
+  .merc-suggest .sg .code { font-family: ui-monospace, monospace; font-weight: 700; color: #1F4E79; }
+  .merc-suggest .sg .meta { font-size: 0.75rem; color: #666; margin-top: 2px; }
+  .merc-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .lote-box {
+    background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 10px;
+    padding: 12px; margin-bottom: 12px;
+  }
+  .lote-box h3 { font-size: 0.92rem; color: #6A1B9A; margin-bottom: 6px; }
+  .lote-box textarea {
+    width: 100%; min-height: 110px; font-size: 0.85rem;
+    font-family: ui-monospace, monospace; padding: 8px; border-radius: 8px;
+    border: 1px solid #ce93d8; background: #fff;
+  }
+  .lote-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .merc-progress {
+    font-size: 0.8rem; color: #6A1B9A; margin-top: 6px; font-weight: 600;
+  }
+
+
+  #mercancias .row-tight { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media(min-width:520px){ #mercancias .row-tight.r4 { grid-template-columns: 1.2fr 0.8fr 0.7fr 0.7fr; } }
+
+  .screen { display: none; padding: 12px; max-width: 640px; margin: 0 auto; }
+  .screen.active { display: block; }
+  .card {
+    background: var(--card); border-radius: 14px; padding: 20px 16px;
+    margin-bottom: 28px; box-shadow: 0 3px 14px rgba(0,0,0,0.09);
+    border-left: 6px solid var(--primary);
+    border-top: 1px solid rgba(0,0,0,0.04);
+  }
+  .card > h2 {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 0 0 14px; padding-bottom: 10px;
+    border-bottom: 2px solid #e8eef4;
+    font-size: 1.05rem;
+  }
+  .mod-badge {
+    display: inline-block; font-size: 0.68rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 999px; letter-spacing: 0.03em;
+    color: #fff; vertical-align: middle;
+  }
+  .mod-badge.datos { background: #455A64; }
+  .mod-badge.vehiculo { background: #1565C0; }
+  .mod-badge.cif { background: #2E7D32; }
+  .mod-badge.imp { background: #C65911; }
+  .mod-badge.op { background: #6A1B9A; }
+  .mod-badge.ter { background: #00838F; }
+  .mod-badge.total { background: #1F4E79; }
+  .qty-banner {
+    background: #E3F2FD; border: 1px solid #90CAF9; color: #0D47A1;
+    border-radius: 10px; padding: 8px 12px; font-size: 0.82rem; font-weight: 600;
+    margin: 8px 0 12px; display: none;
+  }
+  .qty-banner.show { display: block; }
+
+  #vehiculoCard { border-left-color: #1565C0; }
+  #cifCard { border-left-color: #2E7D32; }
+  #impuestosCard { border-left-color: #C65911; }
+  #opCard { border-left-color: #6A1B9A; }
+  #terCard { border-left-color: #00838F; }
+  .card > h2 {
+    font-size: 1.05rem; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border); color: var(--primary);
+  }
+  .card h2 {
+    font-size: 0.95rem; color: var(--primary); margin-bottom: 12px;
+    padding-bottom: 6px; border-bottom: 2px solid #e8eef4;
+  }
+  label {
+    display: block; font-size: 0.78rem; font-weight: 600;
+    color: var(--muted); margin-bottom: 3px; margin-top: 10px;
+  }
+  label:first-of-type { margin-top: 0; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 1rem; background: var(--input-bg); color: #0000aa;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,78,121,0.15); }
+  input[readonly], .calc { background: #f5f7fa; color: #111; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid #eee;
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .switch { position: relative; width: 48px; height: 28px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #ccc; border-radius: 28px; transition: 0.2s;
+  }
+  .slider:before {
+    content: ""; position: absolute; height: 22px; width: 22px;
+    left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s;
+  }
+  input:checked + .slider { background: var(--primary); }
+  input:checked + .slider:before { transform: translateX(20px); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 18px; border: none; border-radius: 10px;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-danger { background: #c62828; color: white; }
+  .btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; margin-top: 0; }
+  .btn-add {
+    background: #e8f0fe; color: var(--primary); border: 1px dashed var(--primary);
+    padding: 8px; font-size: 0.85rem; margin-top: 8px;
+  }
+  .total-box {
+    background: linear-gradient(135deg, #1F4E79, #2E86AB);
+    color: white; border-radius: 12px; padding: 16px; text-align: center; margin: 12px 0;
+  }
+  .total-box .label { font-size: 0.85rem; opacity: 0.9; }
+  .total-box .amount { font-size: 1.8rem; font-weight: 700; margin: 4px 0; }
+  .total-box .per { font-size: 0.85rem; opacity: 0.85; }
+  .section-title {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 1.05rem; font-weight: 700; color: var(--primary);
+    margin: 0 0 14px; padding-bottom: 10px;
+    border-bottom: 2px solid #e8eef4;
+  }
+  #cifCard .section-title { background: #2E7D32; }
+  #impuestosCard .section-title { background: #C65911; }
+  #opCard .section-title { background: #6A1B9A; }
+  #terCard .section-title { background: #00838F; }
+  .hidden { display: none !important; }
+  .item-card {
+    background: #f8fafc; border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; margin-bottom: 8px;
+  }
+  .item-card .name { font-weight: 600; }
+  .item-card .meta { font-size: 0.8rem; color: var(--muted); }
+  .item-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .empty { text-align: center; color: var(--muted); padding: 24px 10px; font-size: 0.9rem; }
+  .line-item {
+    display: flex; gap: 6px; align-items: center; margin-bottom: 6px;
+    background: #fafbfc; padding: 6px; border-radius: 8px; border: 1px solid #eee;
+  }
+  .line-item input[type="text"] { flex: 2; padding: 8px; font-size: 0.9rem; }
+  .line-item input[type="number"] { flex: 1; padding: 8px; font-size: 0.9rem; max-width: 110px; }
+  .line-item .del {
+    background: #ffebee; color: #c62828; border: none; border-radius: 6px;
+    width: 32px; height: 32px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+  }
+  .line-item .monto-oculto {
+    flex: 1; max-width: 110px; padding: 8px; font-size: 0.9rem;
+    text-align: center; color: var(--muted); background: #eee; border-radius: 6px;
+  }
+  .subtotal {
+    text-align: right; font-weight: 700; padding: 8px 4px; color: var(--primary);
+    border-top: 1px solid #ddd; margin-top: 6px; font-size: 0.95rem;
+  }
+  .hint { font-size: 0.75rem; color: var(--accent); margin-top: 4px; font-style: italic; }
+  .tax-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem;
+  }
+  .tax-row .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.7rem; font-weight: 600; background: #fff3e0; color: var(--accent);
+  }
+  .logo-upload-box {
+    border: 2px dashed var(--border); border-radius: 10px; padding: 12px;
+    text-align: center; margin-bottom: 10px; background: #fafbfc;
+  }
+  .logo-upload-box img { max-height: 80px; max-width: 100%; margin: 8px 0; }
+  .logo-upload-box .name { font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+  footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid var(--border);
+    padding: 8px 12px; display: flex; gap: 8px; z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  }
+  footer .btn { margin-top: 0; padding: 10px; font-size: 0.85rem; }
+  #toast {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #333; color: white; padding: 10px 20px;
+    border-radius: 24px; font-size: 0.9rem; opacity: 0;
+    transition: all 0.3s; z-index: 200; pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* Montos de renglones siempre visibles en pantalla; solo se ocultan en PDF si vista cliente = SI */
+  .monto-oculto { display: none !important; }
+  @media print {
+    nav, footer, header, .no-print, .btn-add, .del, .detalle-ctrl { display: none !important; }
+    body { background: white !important; padding: 0 !important; }
+    .screen { display: none !important; }
+    .screen.active { display: block !important; padding: 0 !important; max-width: 100% !important; }
+    .card { box-shadow: none !important; border: 1px solid #ddd !important; margin-bottom: 6px !important; padding: 8px !important; }
+    .hint { display: none !important; }
+    @page { size: letter portrait; margin: 10mm; }
+  }
+  @media (min-width: 600px) {
+    .screen { padding: 20px; }
+    header h1 { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-box" id="headerLogo">
+    <div class="placeholder" id="headerLogoPh">VASMAR</div>
+  </div>
+  <div>
+    <h1 id="headerTitle">Relación de Gastos</h1>
+    <p id="headerSub">VASMAR Asesores y Logística, C.A.</p>
+  </div>
+</header>
+
+<nav>
+  <button class="active" data-screen="nueva">Nueva</button>
+  <button data-screen="mercancias">Mercancías</button>
+  <button data-screen="catalogo">Catálogo</button>
+  <button data-screen="historial">Historial</button>
+  <button data-screen="config">Config</button>
+</nav>
+
+<div id="nueva" class="screen active">
+  <div class="card">
+    <h2><span class="mod-badge datos">1</span> Datos del presupuesto</h2>
+    <div class="row">
+      <div>
+        <label>Presupuesto N°</label>
+        <input type="text" id="presupuesto" value="P-001">
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+    </div>
+    <label>Cliente</label>
+    <input type="text" id="cliente" placeholder="Nombre del cliente">
+    <div class="row">
+      <div>
+        <label>Vista cliente (solo al imprimir PDF)</label>
+        <select id="vistaCliente">
+          <option value="no">NO — PDF con montos de renglones</option>
+          <option value="si">SI — PDF sin montos Op/Terceros</option>
+        </select>
+      </div>
+    </div>
+    <label>Empresa / Logo a usar</label>
+    <select id="empresaLogo">
+      <option value="vasmar">VASMAR</option>
+      <option value="ceyma">CEYMA — AGENTES DE ADUANAS CEYMA CA</option>
+    </select>
+  </div>
+
+  <div class="card" id="vehiculoCard">
+    <h2><span class="mod-badge vehiculo">2</span> Vehículo / Producto</h2>
+    <label>Código (del catálogo)</label>
+    <select id="codigo"></select>
+    <label>Modelo / Descripción</label>
+    <input type="text" id="modelo" placeholder="Editable — puedes corregir y guardar en catálogo">
+    <div class="row" style="margin-top:8px">
+      <button type="button" class="btn btn-sm btn-ok" style="width:auto" onclick="guardarVehiculoActual()">Guardar cambios en catálogo</button>
+      <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="guardarVehiculoComoNuevo()">Guardar como vehículo nuevo</button>
+    </div>
+    <div class="hint">Edita modelo, FOB, tipo, CC o combustible aquí sin ir a la pestaña Catálogo.</div>
+    <div class="row">
+      <div>
+        <label>Tipo</label>
+        <select id="tipoVehiculo" onchange="onTipoVehiculoChange()">
+          <option value="auto">Automóvil / Camioneta (pasajeros)</option>
+          <option value="carga">Pickup / Camioneta de carga</option>
+          <option value="camion">Camión / Vehículo de carga</option>
+          <option value="moto">Moto / Motocicleta</option>
+        </select>
+      </div>
+      <div>
+        <label>Tracción</label>
+        <select id="traccion" onchange="calcular()">
+          <option value="na">No aplica</option>
+          <option value="4x2">4x2</option>
+          <option value="4x4">4x4</option>
+        </select>
+      </div>
+      <div>
+        <label>Combustible</label>
+        <select id="combustible">
+          <option value="gasolina">Gasolina</option>
+          <option value="diesel">Diésel</option>
+          <option value="hibrido">Híbrido</option>
+          <option value="electrico">Eléctrico</option>
+        </select>
+      </div>
+      <div>
+        <label>Cilindrada (CC)</label>
+        <input type="number" id="cilindrada" value="1600" min="0" step="1">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Año del vehículo</label>
+        <select id="anioVehiculo"><option value="2027">2027</option><option value="2026" selected>2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option></select>
+      </div>
+      <div>
+        <label>Cantidad de vehículos</label>
+        <input type="number" id="cantidad" value="1" min="1" max="99">
+        <div class="hint" style="margin-top:4px">Al cambiar la cantidad se multiplican FOB, flete, seguro, impuestos, cada renglón y totales</div>
+      </div>
+    </div>
+    <div class="qty-banner" id="qtyBanner">Cantidad ×1 — todos los valores se calculan por unidad y se multiplican</div>
+    <label>FOB Unitario (USD)</label>
+    <input type="number" id="fobUnit" step="0.01" min="0">
+    <div class="hint" id="hintAdValorem">Ad-Valorem: 20% (≤ 2100 CC)</div>
+    <div class="hint" id="hintLujo"></div>
+    <div class="hint" id="hintComexVeh" style="display:none;color:#C65911;font-weight:600"></div>
+    <button type="button" class="btn btn-outline detalle-ctrl" style="margin-top:10px" onclick="abrirPickerArancel()">Usar ficha de base arancelaria</button>
+    <div class="hint">Complementa con <strong>base_arancelaria.html</strong> (módulo separado). Solo lectura.</div>
+  </div>
+
+  <div class="card" id="cifCard">
+    <div class="section-title"><span class="mod-badge cif">3</span> Valores CIF <span class="qty-factor" style="font-weight:600"></span></div>
+    <label>FOB Total</label>
+    <input type="text" id="fobTotal" readonly class="calc">
+    <div class="row">
+      <div>
+        <label>Flete (unitario)</label>
+        <input type="number" id="flete" value="0" step="0.01" min="0">
+      </div>
+      <div>
+        <label>Seguro (unitario)</label>
+        <input type="number" id="seguro" value="0" step="0.01" min="0">
+      </div>
+    </div>
+    <label>CIF Total</label>
+    <input type="text" id="cifTotal" readonly class="calc">
+  </div>
+
+  <div class="card" id="impuestosCard">
+    <div class="section-title"><span class="mod-badge imp">4</span> Impuestos de importación <span class="qty-factor" style="font-weight:600"></span></div>
+    <div class="tax-row">
+      <span>Ad-Valorem <span class="badge" id="badgeAdValorem">20%</span></span>
+      <span class="val" id="montoAdValorem">$0.00</span>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <div>
+        <label>% Ad-Valorem</label>
+        <input type="number" id="adValorem" value="20" step="0.01" readonly class="calc">
+      </div>
+      <div>
+        <label>Tasa Aduanal %</label>
+        <input type="number" id="tasaAduanal" value="1" step="0.01">
+      </div>
+    </div>
+    <div class="tax-row" style="margin-top:8px">
+      <span>Tasa Aduanal</span>
+      <span class="val" id="montoTasa">$0.00</span>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <div>
+        <label>IVA %</label>
+        <input type="number" id="iva" value="16" step="0.01">
+      </div>
+      <div>
+        <label>Imp. Lujo %</label>
+        <input type="number" id="impLujoPct" value="15" step="0.01">
+      </div>
+    </div>
+    <div class="tax-row" style="margin-top:8px">
+      <span>IVA</span>
+      <span class="val" id="montoIva">$0.00</span>
+    </div>
+    <div class="tax-row">
+      <span>Impuesto al Lujo <span class="badge" id="badgeLujo">No aplica</span></span>
+      <span class="val" id="montoLujo">$0.00</span>
+    </div>
+    <div class="hint" style="margin-top:8px">
+      Ad-Valorem gasolina (pasajeros): 20% ≤ 2100 CC · 40% &gt; 2100 CC<br>Pickup / carga / camión / híbrido / eléctrico / diésel: <strong>20%</strong> sin importar CC<br>
+      Imp. Lujo: FOB unitario &gt; $40.000 (auto) o &gt; $20.000 (moto)
+    </div>
+    <label style="margin-top:12px">Total Impuestos</label>
+    <input type="text" id="totalImpuestos" readonly class="calc">
+  </div>
+
+  <div class="card" id="opCard">
+    <div class="section-title"><span class="mod-badge op">5</span> Gastos de Operación <span class="qty-factor" style="font-weight:600"></span></div>
+    <div class="toggle-row detalle-ctrl">
+      <span style="font-size:0.85rem">¿Multiplicar renglones de operación × cantidad?</span>
+      <label class="switch">
+        <input type="checkbox" id="opMultiplica" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="listaOperacion"></div>
+    <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('operacion')">+ Agregar concepto</button>
+    <div class="subtotal">Total Operación: <span id="totalOp">$0.00</span></div>
+  </div>
+
+  <div class="card" id="terCard">
+    <div class="section-title"><span class="mod-badge ter">6</span> Gastos de Terceros <span class="qty-factor" style="font-weight:600"></span></div>
+    <div class="toggle-row detalle-ctrl">
+      <span style="font-size:0.85rem">¿Multiplicar renglones de operación × cantidad?</span>
+      <label class="switch">
+        <input type="checkbox" id="terMultiplica" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="listaTerceros"></div>
+    <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('terceros')">+ Agregar concepto</button>
+    <div class="subtotal">Total Terceros: <span id="totalTer">$0.00</span></div>
+  </div>
+
+  <div class="total-box">
+    <div class="label">TOTAL GENERAL</div>
+    <div class="amount" id="totalGeneral">$0.00</div>
+    <div class="per" id="porVehiculo">por vehículo: $0.00</div>
+  </div>
+</div>
+
+
+<div id="mercancias" class="screen">
+  <div class="card">
+    <h2><span class="mod-badge datos">1</span> Importación de mercancías</h2>
+    <div class="row">
+      <div>
+        <label>Nº Presupuesto</label>
+        <input type="text" id="mPresupuesto" placeholder="PRE-M-001">
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input type="date" id="mFecha">
+      </div>
+    </div>
+    <label>Cliente</label>
+    <input type="text" id="mCliente" placeholder="Nombre del cliente">
+    <div class="row">
+      <div>
+        <label>Empresa / Logo</label>
+        <select id="mEmpresaLogo">
+          <option value="vasmar">VASMAR</option>
+          <option value="ceyma">CEYMA</option>
+        </select>
+      </div>
+      <div>
+        <label>Vista cliente (al imprimir)</label>
+        <select id="mVistaCliente">
+          <option value="no">No — mostrar todo</option>
+          <option value="si">Sí — ocultar montos de renglones op/ter</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-left-color:#00695C">
+    <h2><span class="mod-badge" style="background:#00695C">2</span> Productos / mercancía</h2>
+    <div class="hint" style="margin-bottom:8px">Escribe el <strong>código arancelario</strong> y se consultan COMEX / Ap. I / Ad-Valorem en la base local. Para un <strong>contenedor o lista larga</strong> usa el bloque de lote (sin salir de la app).</div>
+
+    <div class="lote-box">
+      <h3>Modo contenedor / lote de productos</h3>
+      <div class="hint" style="margin-bottom:6px">
+        Ideal para <strong>facturas comerciales</strong> (Nro, Código/SKU, Descripción, Cantidad, Precio).<br>
+        Sube el Excel/CSV o pega líneas: <code>descripción | cantidad | precio unitario</code><br>
+        El código de factura (ej. 6202-2RSK) se trata como <strong>ref. proveedor</strong>, no como HS.
+      </div>
+      <textarea id="lotePaste" placeholder="Bomba agua 12V para motor fuera de borda&#10;Filtro de aceite hidráulico 10 micras&#10;Rodamiento 6205 2RS | 200 | 2.80&#10;Junta culata Toyota 1NZ | 50 | 12"></textarea>
+      <div class="lote-actions">
+        <label class="btn btn-ok btn-sm" style="width:auto;cursor:pointer;margin:0">
+          0. Subir Excel / CSV / PDF / TXT
+          <input type="file" accept=".csv,.txt,.xlsx,.xls,.pdf,text/csv,text/plain,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="subirListaArchivo(event)">
+        </label>
+        <button type="button" class="btn btn-ok btn-sm" style="width:auto" onclick="importarLoteMerc()">1. Cargar texto a la relación</button>
+        <button type="button" class="btn btn-sm btn-outline" onclick="sugerirCodigosLoteLocal()">2. Sugerir códigos (base local)</button>
+        <button type="button" class="btn btn-sm btn-outline" onclick="revisarAp1Lote()">2b. Revisar Apéndice I (base)</button>
+        <button type="button" class="btn btn-sm" style="width:auto;background:#2E7D32;color:#fff;border:none" onclick="aplicarAp1Todos(true)">Ap. I 90% a todos</button>
+        <button type="button" class="btn btn-sm btn-outline" onclick="aplicarAp1Todos(false)">Quitar Ap. I manual</button>
+        <button type="button" class="btn btn-sm" style="width:auto;background:#6A1B9A;color:#fff;border:none" onclick="exportarPromptsIALote()">3. Generar prompt IA (copiar/descargar)</button>
+      </div>
+      <div class="lote-actions" style="margin-top:6px">
+        <button type="button" class="btn btn-sm btn-outline" onclick="exportarLoteCSV()">Exportar CSV trabajo</button>
+        <label class="btn btn-sm btn-outline" style="width:auto;cursor:pointer;margin:0">
+          Importar códigos CSV
+          <input type="file" accept=".csv,text/csv,text/plain" style="display:none" onchange="importarCodigosCSV(event)">
+        </label>
+      </div>
+      <div class="merc-progress" id="loteProgress"></div>
+
+      <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #ce93d8">
+        <h3 style="font-size:0.9rem;color:#6A1B9A;margin-bottom:6px">4. Pegar respuesta de la IA (se integra sola)</h3>
+        <div class="hint" style="margin-bottom:6px">
+          Copia aquí la respuesta de Grok/ChatGPT. Debe traer líneas como
+          <code>Código: 8482.10.00</code> o <code>Ítem 3 | 8482.10.00</code> o tabla
+          <code>3 | 8482.10.00</code>. La app asigna el código a cada producto y aplica COMEX/exo.
+        </div>
+        <textarea id="loteRespuestaIA" placeholder="### Ítem 1&#10;Código: 8413.70.11&#10;Notas: bomba centrífuga...&#10;&#10;### Ítem 2&#10;Código: 8421.23.00&#10;..."></textarea>
+        <div class="lote-actions">
+          <button type="button" class="btn btn-ok btn-sm" style="width:auto;background:#2E7D32;color:#fff;border:none" onclick="integrarRespuestaIA()">Integrar códigos de la IA a la relación</button>
+          <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('loteRespuestaIA').value=''">Limpiar respuesta</button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px">
+        <strong>Flujo contenedor:</strong> subir Excel/pegar lista → cargar → (opcional base local) → generar prompt IA → una sola consulta en Grok/ChatGPT → pegar respuesta aquí → integrar. PDF: súbelo directo. Si tiene texto seleccionable se lee solo; si es <strong>escaneado</strong>, se ofrece <strong>OCR</strong> (Tesseract, spa+eng). Primera vez descarga librerías (internet). Máx. 15 páginas.
+      </div>
+    </div>
+
+    <div id="listaMerc"></div>
+    <button type="button" class="btn btn-add" onclick="agregarMercLinea()">+ Agregar producto</button>
+    <div class="subtotal" style="margin-top:10px">FOB mercancía: <span id="mFobTotal">$0.00</span>
+      <span id="loteStats" class="hint" style="margin-left:8px"></span>
+    </div>
+  </div>
+
+  <div class="card" style="border-left-color:#2E7D32">
+    <h2><span class="mod-badge cif">3</span> Valores CIF</h2>
+    <div class="row">
+      <div>
+        <label>Flete (USD)</label>
+        <input type="number" id="mFlete" step="0.01" min="0" value="0">
+      </div>
+      <div>
+        <label>Seguro (USD)</label>
+        <input type="number" id="mSeguro" step="0.01" min="0" value="0">
+      </div>
+    </div>
+    <div class="subtotal">CIF Total: <span id="mCifTotal">$0.00</span></div>
+  </div>
+
+  <div class="card" style="border-left-color:#C65911">
+    <h2><span class="mod-badge imp">4</span> Impuestos (por código)</h2>
+    <div id="mImpuestosDesglose" class="hint">Agrega productos con código para calcular.</div>
+    <div class="subtotal">Total impuestos: <span id="mTotalImp">$0.00</span></div>
+  </div>
+
+  <div class="card" id="mOpCard" style="border-left-color:#6A1B9A">
+    <h2><span class="mod-badge op">5</span> Gastos de operación</h2>
+    <div id="listaOperacionM"></div>
+    <button type="button" class="btn btn-add" onclick="agregarLineaM('operacion')">+ Concepto</button>
+    <div class="subtotal">Total operación: <span id="mTotalOp">$0.00</span></div>
+  </div>
+
+  <div class="card" id="mTerCard" style="border-left-color:#00838F">
+    <h2><span class="mod-badge ter">6</span> Gastos de terceros</h2>
+    <div id="listaTercerosM"></div>
+    <button type="button" class="btn btn-add" onclick="agregarLineaM('terceros')">+ Concepto</button>
+    <div class="subtotal">Total terceros: <span id="mTotalTer">$0.00</span></div>
+  </div>
+
+  <div class="total-box">
+    <div class="label">TOTAL GENERAL (mercancías)</div>
+    <div class="amount" id="mTotalGeneral">$0.00</div>
+    <div class="per" style="opacity:.85;margin-top:4px">Impuestos + Operación + Terceros (CIF referencial)</div>
+  </div>
+
+  <div class="card">
+    <button type="button" class="btn btn-ok" style="width:100%;margin-bottom:8px" onclick="guardarMercRelacion()">Guardar relación</button>
+    <button type="button" class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="imprimirPDFMerc()">Imprimir PDF</button>
+    <button type="button" class="btn btn-outline" style="width:100%" onclick="guardarProductosMercAlCatalogo()">Guardar productos al catálogo de mercancías</button>
+  </div>
+
+  <div class="card">
+    <h2>Catálogo de mercancías guardadas</h2>
+    <input type="search" id="buscarCatMerc" placeholder="Buscar por producto o código..." oninput="renderCatMerc()" style="margin-bottom:8px">
+    <div class="hint" style="margin-bottom:8px">Guarda productos desde la relación y luego pulsa <strong>Usar</strong> para cargarlos sin volver a buscar el arancel.</div>
+    <div id="listaCatMerc"></div>
+  </div>
+</div>
+
+<div id="catalogo" class="screen">
+  <div class="card">
+    <h2>Catálogo de vehículos</h2>
+    <div id="listaCatalogo"></div>
+    <button class="btn btn-primary" onclick="mostrarFormCatalogo()">+ Agregar vehículo</button>
+  </div>
+  <div class="card hidden" id="formCatalogo">
+    <h2 id="formCatTitulo">Nuevo vehículo</h2>
+    <input type="hidden" id="catEditId">
+    <label>Código</label>
+    <input type="text" id="catCodigo" placeholder="VH-001">
+    <label>Modelo / Descripción</label>
+    <input type="text" id="catModelo" placeholder="Toyota Corolla 2025">
+    <div class="row">
+      <div>
+        <label>Tipo</label>
+        <select id="catTipo">
+          <option value="auto">Automóvil / Camioneta (pasajeros)</option>
+          <option value="carga">Pickup / Camioneta de carga</option>
+          <option value="camion">Camión / Vehículo de carga</option>
+          <option value="moto">Moto</option>
+        </select>
+      </div>
+      <div>
+        <label>Combustible</label>
+        <select id="catComb">
+          <option value="gasolina">Gasolina</option>
+          <option value="diesel">Diésel</option>
+          <option value="hibrido">Híbrido</option>
+          <option value="electrico">Eléctrico</option>
+        </select>
+      </div>
+      <div>
+        <label>Cilindrada (CC)</label>
+        <input type="number" id="catCc" value="1600" min="0">
+      </div>
+    </div>
+    <label>FOB Unitario (USD)</label>
+    <input type="number" id="catFob" step="0.01" min="0" placeholder="18500">
+    <label>Observaciones</label>
+    <input type="text" id="catObs" placeholder="Opcional">
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="ocultarFormCatalogo()">Cancelar</button>
+      <button class="btn btn-success" onclick="guardarCatalogo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="historial" class="screen">
+  <div class="card">
+    <h2>Historial de relaciones</h2>
+    <div id="listaHistorial"></div>
+  </div>
+</div>
+
+<div id="config" class="screen">
+  <div class="card">
+    <h2>Logos de empresa</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">
+      Carga el logo de VASMAR y de CEYMA. Luego eliges cuál usar en cada presupuesto.
+    </p>
+    <div class="logo-upload-box">
+      <div class="name">Logo VASMAR</div>
+      <div id="previewVasmar"></div>
+      <input type="file" id="fileVasmar" accept="image/*" onchange="cargarLogo('vasmar', this)">
+      <button class="btn btn-sm btn-outline" style="margin-top:6px" onclick="borrarLogo('vasmar')">Quitar logo</button>
+    </div>
+    <div class="logo-upload-box">
+      <div class="name">Logo CEYMA</div>
+      <div id="previewCeyma"></div>
+      <input type="file" id="fileCeyma" accept="image/*" onchange="cargarLogo('ceyma', this)">
+      <button class="btn btn-sm btn-outline" style="margin-top:6px" onclick="borrarLogo('ceyma')">Quitar logo</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Plantillas de conceptos</h2>
+    <label style="font-weight:700;color:var(--primary)">Gastos de Operación</label>
+    <div id="plantillaOp"></div>
+    <button class="btn btn-add" onclick="agregarPlantilla('op')">+ Concepto operación</button>
+    <label style="margin-top:16px;font-weight:700;color:var(--primary)">Gastos de Terceros</label>
+    <div id="plantillaTer"></div>
+    <button class="btn btn-add" onclick="agregarPlantilla('ter')">+ Concepto terceros</button>
+    <button class="btn btn-success" style="margin-top:14px" onclick="guardarPlantillas()">Guardar plantillas</button>
+  </div>
+
+  <div class="card">
+    <h2>Reglas e instrucciones</h2>
+    <ul style="font-size:0.85rem;padding-left:18px;color:var(--muted)">
+      <li style="margin-bottom:6px"><strong>Vista cliente:</strong> oculta solo el monto de cada renglón de Operación y Terceros; deja conceptos, subtotales, CIF e impuestos visibles.</li>
+      <li style="margin-bottom:6px"><strong>Ad-Valorem:</strong> gasolina pasajeros 20% ≤ 2100 / 40% &gt; 2100 · carga/pickup/camión/híbrido/diésel/eléctrico: 20%</li>
+      <li style="margin-bottom:6px"><strong>Imp. Lujo:</strong> FOB &gt; $40.000 (auto) o &gt; $20.000 (moto)</li>
+      <li style="margin-bottom:6px"><strong>PDF:</strong> diseñado para una sola página.</li>
+    </ul>
+    <button class="btn btn-outline" style="margin-top:12px" onclick="exportarDatos()">Exportar respaldo (JSON)</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="document.getElementById('importFile').click()">Importar respaldo</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarDatos(event)">
+    <button class="btn btn-danger" style="margin-top:8px" onclick="if(confirm('¿Borrar todos los datos?')){localStorage.clear();location.reload()}">Borrar todos los datos</button>
+  </div>
+  <div class="card">
+    <p style="font-size:0.8rem;color:var(--muted);text-align:center">VASMAR / AGENTES DE ADUANAS CEYMA CA</p>
+  </div>
+</div>
+
+
+<div id="pickerArancel" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:flex-end;justify-content:center;padding:12px">
+  <div style="background:#fff;border-radius:14px 14px 0 0;max-width:640px;width:100%;max-height:80vh;overflow:auto;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="color:#1F4E79">Base arancelaria (referencia)</strong>
+      <button type="button" class="btn btn-sm btn-outline" onclick="cerrarPickerArancel()">Cerrar</button>
+    </div>
+    <input type="search" id="pickerQ" placeholder="Buscar en la base…" style="margin-bottom:10px" oninput="renderPickerArancel()">
+    <div id="pickerLista"></div>
+    <p style="font-size:0.75rem;color:#666;margin-top:10px">Si no ves fichas, ábrelas y guárdalas primero en <em>base_arancelaria.html</em> (mismo navegador).</p>
+  </div>
+</div>
+<footer class="no-print">
+  <button class="btn btn-success" onclick="guardarEnHistorial()">Guardar</button>
+  <button class="btn btn-accent" onclick="imprimirPDF()">PDF</button>
+  <button class="btn btn-primary" onclick="calcular()">Calcular</button>
+</footer>
+<div id="toast"></div>
+
+<script>
+const PLANTILLA_OP_DEFAULT = [
+  { concepto: 'Honorarios de gestión / agenciamiento', monto: 1500 },
+  { concepto: 'Trámites aduanales y documentación', monto: 800 },
+  { concepto: 'Coordinación logística', monto: 400 },
+  { concepto: 'Gastos administrativos', monto: 300 }
+];
+const PLANTILLA_TER_DEFAULT = [
+  { concepto: 'Transporte interno / movilización', monto: 1200 },
+  { concepto: 'Almacenaje / depósito', monto: 800 },
+  { concepto: 'Inspección / verificación', monto: 500 },
+  { concepto: 'Certificados y permisos', monto: 600 },
+  { concepto: 'Gastos bancarios / comisiones', monto: 472 },
+  { concepto: 'Servicios de terceros varios', monto: 1000 }
+];
+const EMPRESAS = {
+  vasmar: { nombre: 'VASMAR Asesores y Logística, C.A.', corto: 'VASMAR' },
+  ceyma:  { nombre: 'AGENTES DE ADUANAS CEYMA CA', corto: 'CEYMA' }
+};
+
+let catalogo = JSON.parse(localStorage.getItem('vasmar_catalogo') || 'null') || [
+  {id:1, codigo:'VH-001', modelo:'Toyota Agya 1.2', fob:18500, obs:'City car · Gasolina', tipo:'auto', cc:1200, comb:'gasolina'},
+  {id:2, codigo:'VH-002', modelo:'Toyota Yaris Sedán 1.5', fob:24500, obs:'Sedán compacto · Gasolina', tipo:'auto', cc:1500, comb:'gasolina'},
+  {id:3, codigo:'VH-003', modelo:'Toyota Corolla 1.8', fob:26500, obs:'Sedán · Gasolina', tipo:'auto', cc:1800, comb:'gasolina'},
+  {id:4, codigo:'VH-004', modelo:'Toyota Corolla Hybrid 1.8', fob:28500, obs:'Sedán híbrido · Ad-Val 20%', tipo:'auto', cc:1800, comb:'hibrido'},
+  {id:5, codigo:'VH-005', modelo:'Toyota Corolla Cross 1.8 / 2.0', fob:29000, obs:'SUV compacta · Gasolina', tipo:'auto', cc:1800, comb:'gasolina'},
+  {id:6, codigo:'VH-006', modelo:'Toyota Corolla Cross Elite / GR Sport', fob:34000, obs:'SUV · Gasolina', tipo:'auto', cc:2000, comb:'gasolina'},
+  {id:7, codigo:'VH-007', modelo:'Toyota Hilux SR5 2.7 4x4', fob:32000, obs:'Pickup · Gasolina', tipo:'auto', cc:2700, comb:'gasolina'},
+  {id:8, codigo:'VH-008', modelo:'Toyota Hilux 2.4 / 2.8 Diesel 4x4', fob:36000, obs:'Pickup · Diésel', tipo:'auto', cc:2800, comb:'diesel'},
+  {id:9, codigo:'VH-009', modelo:'Toyota Hilux GR Sport', fob:40000, obs:'Pickup deportiva', tipo:'auto', cc:2800, comb:'diesel'},
+  {id:10, codigo:'VH-010', modelo:'Toyota Fortuner SR5 2.7 4x4', fob:38000, obs:'SUV 7p · Gasolina', tipo:'auto', cc:2700, comb:'gasolina'},
+  {id:11, codigo:'VH-011', modelo:'Toyota Fortuner SRX 2.4 Diesel 4x4', fob:42000, obs:'SUV 7p · Diésel', tipo:'auto', cc:2400, comb:'diesel'},
+  {id:12, codigo:'VH-012', modelo:'Toyota Land Cruiser Prado TXL', fob:55000, obs:'SUV premium', tipo:'auto', cc:2800, comb:'diesel'},
+  {id:13, codigo:'VH-013', modelo:'Toyota 4Runner SR5', fob:48000, obs:'SUV 4x4 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+  {id:14, codigo:'VH-014', modelo:'Toyota Hiace', fob:35000, obs:'Van', tipo:'auto', cc:2800, comb:'diesel'},
+  {id:15, codigo:'VH-015', modelo:'Changan Alsvin 1.4 MT', fob:14500, obs:'Sedán', tipo:'auto', cc:1400, comb:'gasolina'},
+  {id:16, codigo:'VH-016', modelo:'Changan CS35 Plus 1.4T', fob:23000, obs:'SUV', tipo:'auto', cc:1400, comb:'gasolina'},
+  {id:17, codigo:'VH-017', modelo:'Changan CS55 Plus 1.5T', fob:28000, obs:'SUV', tipo:'auto', cc:1500, comb:'gasolina'},
+  {id:18, codigo:'VH-018', modelo:'Changan CS95 2.0T', fob:42000, obs:'SUV 7p', tipo:'auto', cc:2000, comb:'gasolina'},
+  {id:19, codigo:'VH-019', modelo:'Changan Hunter Diesel 2.5', fob:30000, obs:'Pickup diésel', tipo:'auto', cc:2500, comb:'diesel'},
+  {id:20, codigo:'VH-020', modelo:'Changan Hunter Plus 2.0T', fob:35000, obs:'Pickup gasolina', tipo:'auto', cc:2000, comb:'gasolina'},
+  {id:21, codigo:'VH-021', modelo:'Toyota Corolla Cross Elite 2.0 (China)', fob:30000, obs:'Importación China', tipo:'auto', cc:2000, comb:'gasolina'},
+  {id:22, codigo:'VH-022', modelo:'Toyota Corolla Cross Hybrid (China)', fob:32000, obs:'Importación China · Híbrido', tipo:'auto', cc:1800, comb:'hibrido'},
+  {id:23, codigo:'VH-023', modelo:'Toyota Frontlander (China)', fob:28000, obs:'SUV origen China', tipo:'auto', cc:2000, comb:'gasolina'},
+  {id:24, codigo:'VH-024', modelo:'Toyota Wildlander (China)', fob:33000, obs:'SUV origen China', tipo:'auto', cc:2000, comb:'gasolina'},
+  {id:25, codigo:'VH-025', modelo:'Toyota Levin / Corolla China', fob:24000, obs:'Sedán origen China', tipo:'auto', cc:1800, comb:'gasolina'},
+  {id:26, codigo:'VH-026', modelo:'Toyota 4Runner SR5 Premium', fob:52000, obs:'SUV 4x4', tipo:'auto', cc:4000, comb:'gasolina'},
+  {id:27, codigo:'VH-027', modelo:'Toyota 4Runner TRD Off-Road', fob:55000, obs:'SUV 4x4 off-road', tipo:'auto', cc:4000, comb:'gasolina'},
+  {id:28, codigo:'VH-028', modelo:'Toyota 4Runner TRD Pro', fob:58000, obs:'SUV 4x4 TRD Pro', tipo:'auto', cc:4000, comb:'gasolina'},
+  {id:29, codigo:'VH-029', modelo:'Toyota 4Runner Limited', fob:56000, obs:'SUV 4x4 Limited', tipo:'auto', cc:4000, comb:'gasolina'},
+  {id:30, codigo:'VH-030', modelo:'Toyota 4Runner TRD Sport', fob:54000, obs:'SUV 4x4 TRD Sport', tipo:'auto', cc:4000, comb:'gasolina'},
+  // Motos comerciales Venezuela — afectadas Res. 007-2026 (87.11 · 35% + COMEX)
+  {id:101, codigo:'MT-001', modelo:'Empire Keeway Horse RL 150', fob:1212, obs:'Mototaxi / trabajo · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:102, codigo:'MT-002', modelo:'Empire Keeway New Horse 150', fob:1186, obs:'Mototaxi · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:103, codigo:'MT-003', modelo:'Empire Keeway New Owen 150', fob:1171, obs:'Urbana · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:104, codigo:'MT-004', modelo:'Empire Keeway EK Xpress 150', fob:937, obs:'Entrada · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:105, codigo:'MT-005', modelo:'Bera Merú 110', fob:790, obs:'Urbana ligera · 110cc', tipo:'moto', cc:110, comb:'gasolina'},
+  {id:106, codigo:'MT-006', modelo:'Bera Jaguar TR150', fob:940, obs:'Trabajo · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:107, codigo:'MT-007', modelo:'Bera León TR200', fob:1150, obs:'Trabajo · 200cc', tipo:'moto', cc:200, comb:'gasolina'},
+  {id:108, codigo:'MT-008', modelo:'Skygo SG150', fob:980, obs:'Comercial · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:109, codigo:'MT-009', modelo:'Skygo SG200', fob:1100, obs:'Comercial · 200cc', tipo:'moto', cc:200, comb:'gasolina'},
+  {id:110, codigo:'MT-010', modelo:'Haojue HJ150', fob:1050, obs:'Urbana · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:111, codigo:'MT-011', modelo:'Suzuki GN125', fob:1400, obs:'Clásica · 125cc', tipo:'moto', cc:125, comb:'gasolina'},
+  {id:112, codigo:'MT-012', modelo:'Suzuki EN125', fob:1350, obs:'Urbana · 125cc', tipo:'moto', cc:125, comb:'gasolina'},
+  {id:113, codigo:'MT-013', modelo:'Honda CB190R', fob:2800, obs:'Sport · 190cc', tipo:'moto', cc:190, comb:'gasolina'},
+  {id:114, codigo:'MT-014', modelo:'Honda XR150L', fob:2600, obs:'Dual · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:115, codigo:'MT-015', modelo:'Yamaha YBR125', fob:2200, obs:'Urbana · 125cc', tipo:'moto', cc:125, comb:'gasolina'},
+  {id:116, codigo:'MT-016', modelo:'Yamaha FZ15', fob:3200, obs:'Naked · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:117, codigo:'MT-017', modelo:'Scooter 125cc genérico', fob:1100, obs:'Scooter urbano · 125cc', tipo:'moto', cc:125, comb:'gasolina'},
+  {id:118, codigo:'MT-018', modelo:'Scooter 150cc genérico', fob:1300, obs:'Scooter · 150cc', tipo:'moto', cc:150, comb:'gasolina'},
+  {id:119, codigo:'MT-019', modelo:'Motocicleta eléctrica urbana', fob:1800, obs:'Eléctrica (8711.60)', tipo:'moto', cc:0, comb:'electrico'},
+  {id:120, codigo:'MT-020', modelo:'Moto enduro 250cc', fob:3500, obs:'Enduro · 250cc', tipo:'moto', cc:250, comb:'gasolina'}
+
+];
+let historial = JSON.parse(localStorage.getItem('vasmar_historial') || '[]');
+let plantillaOp = JSON.parse(localStorage.getItem('vasmar_plantilla_op') || 'null') || JSON.parse(JSON.stringify(PLANTILLA_OP_DEFAULT));
+let plantillaTer = JSON.parse(localStorage.getItem('vasmar_plantilla_ter') || 'null') || JSON.parse(JSON.stringify(PLANTILLA_TER_DEFAULT));
+let logos = JSON.parse(localStorage.getItem('vasmar_logos') || '{}');
+let lineasOp = [], lineasTer = [];
+let nextId = catalogo.reduce((m,c)=>Math.max(m,c.id),0)+1;
+
+// Fusiona modelos Toyota/Changan de referencia si faltan en el catálogo guardado
+(function mergeCatalogoMercado(){
+    const extras = [
+    // Toyota mercado VE
+    {codigo:'VH-001', modelo:'Toyota Agya 1.2', fob:18500, obs:'City car · Gasolina', tipo:'auto', cc:1200, comb:'gasolina'},
+    {codigo:'VH-002', modelo:'Toyota Yaris Sedán 1.5', fob:24500, obs:'Sedán compacto · Gasolina', tipo:'auto', cc:1500, comb:'gasolina'},
+    {codigo:'VH-003', modelo:'Toyota Corolla 1.8', fob:26500, obs:'Sedán · Gasolina', tipo:'auto', cc:1800, comb:'gasolina'},
+    {codigo:'VH-004', modelo:'Toyota Corolla Hybrid 1.8', fob:28500, obs:'Sedán híbrido · Ad-Val 20%', tipo:'auto', cc:1800, comb:'hibrido'},
+    {codigo:'VH-005', modelo:'Toyota Corolla Cross 1.8 / 2.0', fob:29000, obs:'SUV compacta · Gasolina', tipo:'auto', cc:1800, comb:'gasolina'},
+    {codigo:'VH-006', modelo:'Toyota Corolla Cross Elite / GR Sport', fob:34000, obs:'SUV · Gasolina', tipo:'auto', cc:2000, comb:'gasolina'},
+    // Toyota importados desde China
+    {codigo:'VH-021', modelo:'Toyota Corolla Cross Elite 2.0 (origen China)', fob:30000, obs:'Importación China · Gasolina 2.0', tipo:'auto', cc:2000, comb:'gasolina'},
+    {codigo:'VH-022', modelo:'Toyota Corolla Cross Hybrid (origen China)', fob:32000, obs:'Importación China · Híbrido · Ad-Val 20%', tipo:'auto', cc:1800, comb:'hibrido'},
+    {codigo:'VH-023', modelo:'Toyota Frontlander / Corolla Cross China', fob:28000, obs:'SUV origen China · Gasolina', tipo:'auto', cc:2000, comb:'gasolina'},
+    {codigo:'VH-024', modelo:'Toyota Wildlander (origen China)', fob:33000, obs:'SUV origen China · Gasolina/Híbrido', tipo:'auto', cc:2000, comb:'gasolina'},
+    {codigo:'VH-025', modelo:'Toyota Levin / Corolla sedán China', fob:24000, obs:'Sedán origen China · Gasolina', tipo:'auto', cc:1800, comb:'gasolina'},
+    // Hilux / Fortuner
+    {codigo:'VH-007', modelo:'Toyota Hilux SR5 2.7 4x4', fob:32000, obs:'Pickup doble cabina · Gasolina', tipo:'auto', cc:2700, comb:'gasolina'},
+    {codigo:'VH-008', modelo:'Toyota Hilux 2.4 / 2.8 Diesel 4x4', fob:36000, obs:'Pickup · Diésel · Ad-Val 20%', tipo:'auto', cc:2800, comb:'diesel'},
+    {codigo:'VH-009', modelo:'Toyota Hilux GR Sport', fob:40000, obs:'Pickup deportiva', tipo:'auto', cc:2800, comb:'diesel'},
+    {codigo:'VH-010', modelo:'Toyota Fortuner SR5 2.7 4x4', fob:38000, obs:'SUV 7 puestos · Gasolina', tipo:'auto', cc:2700, comb:'gasolina'},
+    {codigo:'VH-011', modelo:'Toyota Fortuner SRX 2.4 Diesel 4x4', fob:42000, obs:'SUV 7 puestos · Diésel · Ad-Val 20%', tipo:'auto', cc:2400, comb:'diesel'},
+    {codigo:'VH-012', modelo:'Toyota Land Cruiser Prado TXL', fob:55000, obs:'SUV premium 4x4', tipo:'auto', cc:2800, comb:'diesel'},
+    // 4Runner versiones
+    {codigo:'VH-013', modelo:'Toyota 4Runner SR5', fob:48000, obs:'SUV 4x4 · Gasolina 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+    {codigo:'VH-026', modelo:'Toyota 4Runner SR5 Premium', fob:52000, obs:'SUV 4x4 · Gasolina 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+    {codigo:'VH-027', modelo:'Toyota 4Runner TRD Off-Road', fob:55000, obs:'SUV 4x4 off-road · Gasolina 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+    {codigo:'VH-028', modelo:'Toyota 4Runner TRD Pro', fob:58000, obs:'SUV 4x4 TRD Pro · Gasolina 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+    {codigo:'VH-029', modelo:'Toyota 4Runner Limited', fob:56000, obs:'SUV 4x4 Limited · Gasolina 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+    {codigo:'VH-030', modelo:'Toyota 4Runner TRD Sport', fob:54000, obs:'SUV 4x4 TRD Sport · Gasolina 4.0', tipo:'auto', cc:4000, comb:'gasolina'},
+    {codigo:'VH-014', modelo:'Toyota Hiace', fob:35000, obs:'Van / pasajeros', tipo:'auto', cc:2800, comb:'diesel'},
+    // Changan
+    {codigo:'VH-015', modelo:'Changan Alsvin 1.4 MT', fob:14500, obs:'Sedán entrada · Gasolina', tipo:'auto', cc:1400, comb:'gasolina'},
+    {codigo:'VH-016', modelo:'Changan CS35 Plus 1.4T', fob:23000, obs:'SUV compacta · Turbo gasolina', tipo:'auto', cc:1400, comb:'gasolina'},
+    {codigo:'VH-017', modelo:'Changan CS55 Plus 1.5T', fob:28000, obs:'SUV · Turbo gasolina', tipo:'auto', cc:1500, comb:'gasolina'},
+    {codigo:'VH-018', modelo:'Changan CS95 2.0T', fob:42000, obs:'SUV 7 puestos · Turbo gasolina', tipo:'auto', cc:2000, comb:'gasolina'},
+    {codigo:'VH-019', modelo:'Changan Hunter Diesel 2.5 4x2/4x4', fob:30000, obs:'Pickup · Diésel · Ad-Val 20%', tipo:'auto', cc:2500, comb:'diesel'},
+    {codigo:'VH-020', modelo:'Changan Hunter Plus 2.0T Gasolina', fob:35000, obs:'Pickup · Turbo gasolina', tipo:'auto', cc:2000, comb:'gasolina'}
+  ];
+  let changed = false;
+  extras.forEach(ex => {
+    const exists = catalogo.some(x => x.codigo === ex.codigo || (x.modelo && x.modelo.toLowerCase() === ex.modelo.toLowerCase()));
+    if (!exists) {
+      catalogo.push({id: nextId++, ...ex});
+      changed = true;
+    }
+  });
+  if (changed) { save(); }
+})();
+
+let lineIdCounter = 1;
+
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.screen).classList.add('active');
+      if(btn.dataset.screen==='mercancias') try{initMercancias();}catch(e){}
+    if(btn.dataset.screen==='catalogo') renderCatalogo();
+    if(btn.dataset.screen==='historial') renderHistorial();
+    if(btn.dataset.screen==='config'){ renderPlantillas(); renderLogosPreview(); }
+  });
+});
+
+function fmt(n){ return (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+function save(){
+  localStorage.setItem('vasmar_catalogo', JSON.stringify(catalogo));
+  localStorage.setItem('vasmar_historial', JSON.stringify(historial));
+  localStorage.setItem('vasmar_plantilla_op', JSON.stringify(plantillaOp));
+  localStorage.setItem('vasmar_plantilla_ter', JSON.stringify(plantillaTer));
+  localStorage.setItem('vasmar_logos', JSON.stringify(logos));
+}
+
+function cargarLogo(key, input){
+  const f = input.files[0]; if(!f) return;
+  if(f.size > 800000){ toast('Imagen muy grande (máx ~800KB)'); return; }
+  const r = new FileReader();
+  r.onload = () => {
+    logos[key] = r.result;
+    save();
+    renderLogosPreview();
+    actualizarHeaderLogo();
+    toast('Logo ' + key.toUpperCase() + ' guardado');
+  };
+  r.readAsDataURL(f);
+}
+function borrarLogo(key){
+  delete logos[key];
+  save();
+  renderLogosPreview();
+  actualizarHeaderLogo();
+  toast('Logo eliminado');
+}
+function renderLogosPreview(){
+  ['vasmar','ceyma'].forEach(k=>{
+    const el = document.getElementById('preview' + (k==='vasmar'?'Vasmar':'Ceyma'));
+    if(!el) return;
+    if(logos[k]) el.innerHTML = '<img src="'+logos[k]+'" alt="'+k+'">';
+    else el.innerHTML = '<span style="color:#999;font-size:0.85rem">Sin logo cargado</span>';
+  });
+}
+function actualizarHeaderLogo(){
+  const emp = document.getElementById('empresaLogo').value;
+  const box = document.getElementById('headerLogo');
+  const info = EMPRESAS[emp] || EMPRESAS.vasmar;
+  document.getElementById('headerSub').textContent = info.nombre;
+  if(logos[emp]) box.innerHTML = '<img src="'+logos[emp]+'" alt="'+emp+'">';
+  else box.innerHTML = '<div class="placeholder">'+info.corto+'</div>';
+}
+document.getElementById('empresaLogo').addEventListener('change', actualizarHeaderLogo);
+
+function cargarLineasDesdePlantilla(){
+  lineasOp = plantillaOp.map(p=>({id: lineIdCounter++, concepto: p.concepto, monto: p.monto}));
+  lineasTer = plantillaTer.map(p=>({id: lineIdCounter++, concepto: p.concepto, monto: p.monto}));
+  renderLineas();
+}
+function renderLineas(){
+  const mk = (lista, tipo) => lista.map(l=>`
+    <div class="line-item" data-id="${l.id}">
+      <input type="text" value="${esc(l.concepto)}" onchange="actualizarLinea('${tipo}',${l.id},'concepto',this.value)" placeholder="Concepto">
+      <input type="number" class="solo-monto" value="${l.monto}" step="0.01" min="0" onchange="actualizarLinea('${tipo}',${l.id},'monto',this.value)" placeholder="0.00">
+      <span class="monto-oculto">—</span>
+      <button class="del detalle-ctrl" onclick="eliminarLinea('${tipo}',${l.id})">×</button>
+    </div>
+  `).join('') || '<div class="empty" style="padding:10px">Sin conceptos.</div>';
+  document.getElementById('listaOperacion').innerHTML = mk(lineasOp, 'operacion');
+  document.getElementById('listaTerceros').innerHTML = mk(lineasTer, 'terceros');
+  calcular();
+}
+function esc(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function actualizarLinea(tipo, id, campo, valor){
+  const lista = tipo==='operacion' ? lineasOp : lineasTer;
+  const item = lista.find(x=>x.id===id);
+  if(!item) return;
+  if(campo==='monto') item.monto = parseFloat(valor)||0;
+  else item.concepto = valor;
+  calcular();
+}
+function eliminarLinea(tipo, id){
+  if(tipo==='operacion') lineasOp = lineasOp.filter(x=>x.id!==id);
+  else lineasTer = lineasTer.filter(x=>x.id!==id);
+  renderLineas();
+}
+function agregarLinea(tipo){
+  const nuevo = {id: lineIdCounter++, concepto: '', monto: 0};
+  if(tipo==='operacion') lineasOp.push(nuevo);
+  else lineasTer.push(nuevo);
+  renderLineas();
+}
+
+function renderPlantillas(){
+  document.getElementById('plantillaOp').innerHTML = plantillaOp.map((p,i)=>`
+    <div class="line-item">
+      <input type="text" value="${esc(p.concepto)}" onchange="plantillaOp[${i}].concepto=this.value">
+      <input type="number" value="${p.monto}" step="0.01" min="0" onchange="plantillaOp[${i}].monto=parseFloat(this.value)||0">
+      <button class="del" onclick="plantillaOp.splice(${i},1);renderPlantillas()">×</button>
+    </div>
+  `).join('') || '<div class="empty" style="padding:8px">Vacío</div>';
+  document.getElementById('plantillaTer').innerHTML = plantillaTer.map((p,i)=>`
+    <div class="line-item">
+      <input type="text" value="${esc(p.concepto)}" onchange="plantillaTer[${i}].concepto=this.value">
+      <input type="number" value="${p.monto}" step="0.01" min="0" onchange="plantillaTer[${i}].monto=parseFloat(this.value)||0">
+      <button class="del" onclick="plantillaTer.splice(${i},1);renderPlantillas()">×</button>
+    </div>
+  `).join('') || '<div class="empty" style="padding:8px">Vacío</div>';
+}
+function agregarPlantilla(tipo){
+  if(tipo==='op') plantillaOp.push({concepto:'', monto:0});
+  else plantillaTer.push({concepto:'', monto:0});
+  renderPlantillas();
+}
+function guardarPlantillas(){
+  plantillaOp = plantillaOp.filter(p=>p.concepto.trim()!=='' || p.monto>0);
+  plantillaTer = plantillaTer.filter(p=>p.concepto.trim()!=='' || p.monto>0);
+  save();
+  toast('Plantillas guardadas');
+  if(confirm('¿Aplicar a la relación actual?')) cargarLineasDesdePlantilla();
+}
+
+function renderCatalogo(){
+  const cont=document.getElementById('listaCatalogo');
+  if(!catalogo.length){ cont.innerHTML='<div class="empty">No hay vehículos.</div>'; return; }
+  cont.innerHTML=catalogo.map(c=>`
+    <div class="item-card">
+      <div class="name">${c.codigo} — ${c.modelo}</div>
+      <div class="meta">FOB: $${fmt(c.fob)} · ${(c.tipo||'auto')==='moto'?'Moto':'Auto'} · ${c.comb||'gasolina'} · ${c.cc||'—'} CC</div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-outline" onclick="editarCatalogo(${c.id})">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="borrarCatalogo(${c.id})">Borrar</button>
+      </div>
+    </div>
+  `).join('');
+  llenarAnios();
+llenarSelectCodigo();
+}
+function generarCodigoCatalogo(tipo){
+  const pref = (tipo === 'moto') ? 'MT' : 'VH';
+  const nums = catalogo
+    .filter(x => (x.codigo || '').toUpperCase().startsWith(pref + '-'))
+    .map(x => {
+      const m = String(x.codigo).match(/(\d+)$/);
+      return m ? parseInt(m[1], 10) : 0;
+    });
+  const next = (nums.length ? Math.max.apply(null, nums) : 0) + 1;
+  return pref + '-' + String(next).padStart(3, '0');
+}
+function mostrarFormCatalogo(){
+  document.getElementById('formCatalogo').classList.remove('hidden');
+  document.getElementById('formCatTitulo').textContent='Nuevo vehículo';
+  document.getElementById('catEditId').value='';
+  document.getElementById('catTipo').value='auto';
+  document.getElementById('catCodigo').value = generarCodigoCatalogo('auto');
+  document.getElementById('catModelo').value='';
+  document.getElementById('catFob').value='';
+  document.getElementById('catObs').value='';
+  document.getElementById('catCc').value=1600;
+}
+document.getElementById('catTipo') && document.getElementById('catTipo').addEventListener('change', function(){
+  if (!document.getElementById('catEditId').value) {
+    document.getElementById('catCodigo').value = generarCodigoCatalogo(this.value);
+  }
+});
+function ocultarFormCatalogo(){ document.getElementById('formCatalogo').classList.add('hidden'); }
+function editarCatalogo(id){
+  const c=catalogo.find(x=>x.id===id); if(!c) return;
+  document.getElementById('formCatalogo').classList.remove('hidden');
+  document.getElementById('formCatTitulo').textContent='Editar vehículo';
+  document.getElementById('catEditId').value=c.id;
+  document.getElementById('catCodigo').value=c.codigo;
+  document.getElementById('catModelo').value=c.modelo;
+  document.getElementById('catFob').value=c.fob;
+  document.getElementById('catObs').value=c.obs||'';
+  document.getElementById('catTipo').value=c.tipo||'auto';
+  document.getElementById('catCc').value=c.cc||1600;
+  const catComb=document.getElementById('catComb');
+  if(catComb) catComb.value=c.comb||'gasolina';
+}
+function guardarCatalogo(){
+  const id=document.getElementById('catEditId').value;
+  const codigo=document.getElementById('catCodigo').value.trim();
+  const modelo=document.getElementById('catModelo').value.trim();
+  const fob=parseFloat(document.getElementById('catFob').value)||0;
+  const obs=document.getElementById('catObs').value.trim();
+  const tipo=document.getElementById('catTipo').value;
+  const comb=(document.getElementById('catComb')||{}).value||'gasolina';
+  const cc=parseInt(document.getElementById('catCc').value)||0;
+  if(!codigo||!modelo){ toast('Código y modelo obligatorios'); return; }
+  if(id) Object.assign(catalogo.find(x=>x.id==id),{codigo,modelo,fob,obs,tipo,cc,comb});
+  else catalogo.push({id:nextId++,codigo,modelo,fob,obs,tipo,cc,comb});
+  save(); ocultarFormCatalogo(); renderCatalogo(); toast('Guardado');
+}
+function borrarCatalogo(id){
+  if(!confirm('¿Eliminar?')) return;
+  catalogo=catalogo.filter(x=>x.id!==id); save(); renderCatalogo(); toast('Eliminado');
+}
+
+function llenarAnios(){
+  const sel = document.getElementById('anioVehiculo');
+  if (!sel) return;
+  const y = new Date().getFullYear();
+  sel.innerHTML = '';
+  for (let a = y + 1; a >= y - 15; a--) {
+    const o = document.createElement('option');
+    o.value = a; o.textContent = a;
+    if (a === y) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+
+function slugNombre(s){
+  return String(s||'').trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^\w\s\-]+/g,'')
+    .replace(/\s+/g,'_')
+    .slice(0, 40) || 'sin_nombre';
+}
+
+function tituloPdfVehiculo(){
+  const cliente = (document.getElementById('cliente')||{}).value || '';
+  const modelo = (document.getElementById('modelo')||{}).value || '';
+  const pres = (document.getElementById('presupuesto')||{}).value || '';
+  const parts = ['Relacion_Gastos'];
+  if (cliente) parts.push(slugNombre(cliente));
+  if (modelo) parts.push(slugNombre(modelo));
+  if (pres) parts.push(slugNombre(pres));
+  return parts.join('_');
+}
+
+function tituloPdfMerc(){
+  const cliente = (document.getElementById('mCliente')||{}).value || '';
+  const pres = (document.getElementById('mPresupuesto')||{}).value || '';
+  const parts = ['Relacion_Mercancias'];
+  if (cliente) parts.push(slugNombre(cliente));
+  if (pres) parts.push(slugNombre(pres));
+  // first product desc
+  if (lineasMerc && lineasMerc[0] && lineasMerc[0].desc)
+    parts.push(slugNombre(lineasMerc[0].desc));
+  return parts.join('_');
+}
+
+function guardarVehiculoActual(){
+  const codigo = (document.getElementById('codigo')||{}).value;
+  if (!codigo) {
+    toast('Elige un código del catálogo o usa "Guardar como vehículo nuevo"');
+    return;
+  }
+  const c = catalogo.find(x => x.codigo === codigo);
+  if (!c) {
+    toast('Código no está en catálogo; usa "Guardar como vehículo nuevo"');
+    return;
+  }
+  c.modelo = (document.getElementById('modelo')||{}).value || c.modelo;
+  c.fob = parseFloat(document.getElementById('fobUnit').value) || c.fob;
+  c.tipo = (document.getElementById('tipoVehiculo')||{}).value || c.tipo;
+  c.cc = parseInt(document.getElementById('cilindrada').value, 10) || c.cc;
+  c.comb = (document.getElementById('combustible')||{}).value || c.comb;
+  c.traccion = (document.getElementById('traccion')||{}).value || c.traccion || 'na';
+  localStorage.setItem('vasmar_catalogo', JSON.stringify(catalogo));
+  llenarSelectCodigo();
+  document.getElementById('codigo').value = codigo;
+  if (typeof renderCatalogo === 'function') try { renderCatalogo(); } catch(e){}
+  toast('Catálogo actualizado: ' + c.codigo + ' · ' + c.modelo);
+}
+
+function guardarVehiculoComoNuevo(){
+  const modelo = (document.getElementById('modelo')||{}).value || '';
+  if (!modelo.trim()) { toast('Escribe el modelo / descripción'); return; }
+  const fob = parseFloat(document.getElementById('fobUnit').value) || 0;
+  const tipo = (document.getElementById('tipoVehiculo')||{}).value || 'auto';
+  const cc = parseInt(document.getElementById('cilindrada').value, 10) || 1600;
+  const comb = (document.getElementById('combustible')||{}).value || 'gasolina';
+  let maxN = 0;
+  catalogo.forEach(x => {
+    const m = String(x.codigo||'').match(/(\d+)$/);
+    if (m) maxN = Math.max(maxN, parseInt(m[1],10));
+  });
+  const codigo = 'VH-' + String(maxN + 1).padStart(3,'0');
+  const id = Date.now();
+  const traccion = (document.getElementById('traccion')||{}).value || 'na';
+  catalogo.push({ id, codigo, modelo, fob, obs: '', tipo, cc, comb, traccion });
+  localStorage.setItem('vasmar_catalogo', JSON.stringify(catalogo));
+  llenarSelectCodigo();
+  document.getElementById('codigo').value = codigo;
+  if (typeof renderCatalogo === 'function') try { renderCatalogo(); } catch(e){}
+  toast('Nuevo en catálogo: ' + codigo + ' · ' + modelo);
+}
+
+
+function llenarSelectCodigo(){
+  const sel=document.getElementById('codigo');
+  const val=sel.value;
+  sel.innerHTML='<option value="">— Elegir o FOB manual —</option>'+
+    catalogo.map(c=>`<option value="${c.codigo}">${c.codigo} · ${c.modelo}</option>`).join('');
+  if(val) sel.value=val;
+}
+
+function sumLineas(lista){ return lista.reduce((s,l)=>s+(parseFloat(l.monto)||0),0); }
+
+function calcular(){
+  const qty=Math.max(1, parseInt(document.getElementById('cantidad').value)||1);
+  let fobU=parseFloat(document.getElementById('fobUnit').value)||0;
+  const flete=parseFloat(document.getElementById('flete').value)||0;
+  const seguro=parseFloat(document.getElementById('seguro').value)||0;
+  const cc=parseInt(document.getElementById('cilindrada').value)||0;
+  const tipo=document.getElementById('tipoVehiculo').value;
+  const tasa=parseFloat(document.getElementById('tasaAduanal').value)||0;
+  const ivaPct=parseFloat(document.getElementById('iva').value)||0;
+  const lujoPct=parseFloat(document.getElementById('impLujoPct').value)||0;
+  const opMul=document.getElementById('opMultiplica') ? document.getElementById('opMultiplica').checked : true;
+  const terMul=document.getElementById('terMultiplica') ? document.getElementById('terMultiplica').checked : true;
+
+  const comb = (document.getElementById('combustible') || {}).value || 'gasolina';
+  // Carga/pickup/camión: 20% siempre. Híbridos/eléctricos: 20%. Diésel: 20%. Motos: 35%+COMEX (Gac.43.439). Pickup 4x2: 40%. Pickup 4x4/camión: 20%. Gasolina: 20%≤2100 / 40%>2100
+
+/** Reglas Ad-Valorem vehículos (Venezuela) — sistema central editable */
+function resolverAdValoremVehiculo(tipo, comb, cc, traccion){
+  tipo = tipo || 'auto';
+  comb = comb || 'gasolina';
+  cc = parseInt(cc, 10) || 0;
+  traccion = traccion || 'na';
+  const r = { adPct: 20, comex: false, hint: '', regla: '' };
+
+  // 1) Motos — Gaceta 43.439: 35% + COMEX
+  if (tipo === 'moto') {
+    r.adPct = 35;
+    r.comex = true;
+    r.regla = 'Gaceta 43.439';
+    r.hint = 'Ad-Valorem: 35% (motocicleta — Gaceta 43.439). Requiere COMEX (RL9).';
+    return r;
+  }
+
+  // 2) Pickup / camioneta de carga
+  if (tipo === 'carga') {
+    if (traccion === '4x2') {
+      r.adPct = 40;
+      r.regla = 'Pickup 4x2';
+      r.hint = 'Ad-Valorem: 40% (pickup / camioneta de carga 4x2).';
+      return r;
+    }
+    r.adPct = 20;
+    r.regla = 'Pickup 4x4 u otra';
+    r.hint = 'Ad-Valorem: 20% (pickup / camioneta de carga'+(traccion==='4x4'?' 4x4':'')+' — no aplica regla de CC).';
+    return r;
+  }
+
+  // 3) Camión
+  if (tipo === 'camion') {
+    r.adPct = 20;
+    r.regla = 'Camión';
+    r.hint = 'Ad-Valorem: 20% (camión / vehículo de carga — no aplica regla de CC).';
+    return r;
+  }
+
+  // 4) Híbrido / eléctrico
+  if (comb === 'hibrido' || comb === 'electrico') {
+    r.adPct = 20;
+    r.regla = comb;
+    r.hint = 'Ad-Valorem: 20% ('+(comb==='hibrido'?'híbrido':'eléctrico')+' — no aplica regla de CC).';
+    return r;
+  }
+
+  // 5) Diésel (pasajeros)
+  if (comb === 'diesel') {
+    r.adPct = 20;
+    r.regla = 'Diésel';
+    r.hint = 'Ad-Valorem: 20% (diésel — no aplica regla de CC).';
+    return r;
+  }
+
+  // 6) Gasolina pasajeros: 20% ≤2100 / 40% >2100
+  if (cc > 2100) {
+    r.adPct = 40;
+    r.regla = 'Gasolina >2100 CC';
+    r.hint = 'Ad-Valorem: 40% (gasolina '+cc+' CC > 2100)';
+  } else {
+    r.adPct = 20;
+    r.regla = 'Gasolina ≤2100 CC';
+    r.hint = 'Ad-Valorem: 20% (gasolina '+cc+' CC ≤ 2100)';
+  }
+  return r;
+}
+
+function onTipoVehiculoChange(){
+  const tipo = document.getElementById('tipoVehiculo').value;
+  const tr = document.getElementById('traccion');
+  const ht = document.getElementById('hintTraccion');
+  if (tr) {
+    if (tipo === 'carga') {
+      tr.disabled = false;
+      if (tr.value === 'na') tr.value = '4x2';
+      if (ht) ht.style.display = 'block';
+    } else {
+      tr.value = 'na';
+      tr.disabled = tipo !== 'carga';
+      if (ht) ht.style.display = 'none';
+    }
+  }
+  if (typeof calcular === 'function') calcular();
+}
+
+
+  let adPct;
+  let adHint;
+  let requiereComex = false;
+  const traccion = (document.getElementById('traccion')||{}).value || 'na';
+  const reg = resolverAdValoremVehiculo(tipo, comb, cc, traccion);
+  adPct = reg.adPct;
+  adHint = reg.hint;
+  requiereComex = !!reg.comex;
+  document.getElementById('adValorem').value = adPct;
+  document.getElementById('badgeAdValorem').textContent = adPct + '%';
+  document.getElementById('hintAdValorem').textContent = adHint;
+  const hintComex = document.getElementById('hintComexVeh');
+  if (hintComex) {
+    if (requiereComex) {
+      hintComex.style.display = 'block';
+      hintComex.innerHTML = '⚠ <strong>COMEX requerido</strong> (Régimen Legal 9) — Gaceta 43.439. Tramitar permiso ante el Comité de Comercio Exterior.';
+    } else {
+      hintComex.style.display = 'none';
+      hintComex.textContent = '';
+    }
+  }
+  // Indicador de multiplicación por cantidad
+  document.querySelectorAll('.qty-factor').forEach(el => {
+    el.textContent = qty > 1 ? ' × '+qty+' unidades' : '';
+  });
+  const qb = document.getElementById('qtyBanner');
+  if (qb) {
+    if (qty > 1) {
+      qb.classList.add('show');
+      qb.textContent = 'Cantidad × '+qty+' — FOB, flete, seguro, impuestos y renglones se multiplican por '+qty;
+    } else {
+      qb.classList.remove('show');
+      qb.textContent = 'Cantidad ×1';
+    }
+  }
+
+  const umbralLujo = tipo === 'moto' ? 20000 : 40000;
+  const aplicaLujo = fobU > umbralLujo;
+  document.getElementById('badgeLujo').textContent = aplicaLujo ? 'Aplica' : 'No aplica';
+  document.getElementById('hintLujo').textContent = aplicaLujo
+    ? 'Imp. Lujo: SÍ (FOB $'+fmt(fobU)+' > $'+fmt(umbralLujo)+')'
+    : 'Imp. Lujo: no (FOB $'+fmt(fobU)+' ≤ $'+fmt(umbralLujo)+')';
+
+  const fobT = fobU * qty;
+  const cif = fobT + flete * qty + seguro * qty;
+  const adM = cif * adPct / 100;
+  const tasaM = cif * tasa / 100;
+  const ivaM = (cif + adM + tasaM) * ivaPct / 100;
+  // Imp. al lujo: misma base que IVA = CIF + Ad-Valorem + Tasa Aduanal
+  const baseIvaLujo = cif + adM + tasaM;
+  const lujoM = aplicaLujo ? (baseIvaLujo * lujoPct / 100) : 0;
+  const impT = adM + tasaM + ivaM + lujoM;
+
+  document.getElementById('montoAdValorem').textContent = '$ ' + fmt(adM);
+  document.getElementById('montoTasa').textContent = '$ ' + fmt(tasaM);
+  document.getElementById('montoIva').textContent = '$ ' + fmt(ivaM);
+  document.getElementById('montoLujo').textContent = '$ ' + fmt(lujoM);
+  // Desglose en vivo para verificar
+  const baseEl = document.getElementById('baseIvaLujoHint');
+  if (baseEl) {
+    baseEl.textContent = 'Base IVA / Lujo: CIF $'+fmt(cif)+' + Ad-Val $'+fmt(adM)+' + Tasa $'+fmt(tasaM)+' = $'+fmt(baseIvaLujo);
+  }
+
+  const opBase = sumLineas(lineasOp);
+  const terBase = sumLineas(lineasTer);
+  // Cantidad multiplica TODO: FOB, flete, seguro (ya en CIF), impuestos y cada renglón
+  const opT = opMul ? opBase * qty : opBase;
+  const terT = terMul ? terBase * qty : terBase;
+  const total = cif + impT + opT + terT;
+  const porV = qty > 0 ? total / qty : 0;
+
+  document.getElementById('fobTotal').value = '$ ' + fmt(fobT);
+  document.getElementById('cifTotal').value = '$ ' + fmt(cif);
+  document.getElementById('totalImpuestos').value = '$ ' + fmt(impT);
+  document.getElementById('totalOp').textContent = '$ ' + fmt(opT);
+  document.getElementById('totalTer').textContent = '$ ' + fmt(terT);
+  document.getElementById('totalGeneral').textContent = '$ ' + fmt(total);
+  document.getElementById('porVehiculo').textContent = 'por vehículo: $ ' + fmt(porV);
+
+  const anio = (document.getElementById('anioVehiculo')||{}).value||'';
+  return {
+    qty, fobU, fobT, cif, adPct, adM, tasaM, ivaM, lujoM, aplicaLujo, impT, baseIvaLujo, anio,
+    opT, terT, total, porV,
+    lineasOp: JSON.parse(JSON.stringify(lineasOp)),
+    lineasTer: JSON.parse(JSON.stringify(lineasTer)),
+    opMul, terMul, cc, tipo, comb,
+    empresa: document.getElementById('empresaLogo').value
+  };
+}
+
+document.getElementById('codigo').addEventListener('change', function(){
+  const c = catalogo.find(x => x.codigo === this.value);
+  if (c) {
+    document.getElementById('modelo').value = c.modelo;
+    document.getElementById('fobUnit').value = c.fob;
+    document.getElementById('tipoVehiculo').value = c.tipo || 'auto';
+    document.getElementById('cilindrada').value = c.cc || 1600;
+    const combEl = document.getElementById('combustible');
+    if (combEl) combEl.value = c.comb || 'gasolina';
+    const trEl = document.getElementById('traccion');
+    if (trEl) {
+      trEl.value = c.traccion || (c.tipo === 'carga' ? '4x2' : 'na');
+      if (typeof onTipoVehiculoChange === 'function') onTipoVehiculoChange();
+    }
+  } else document.getElementById('modelo').value = '';
+  calcular();
+});
+['cantidad','fobUnit','flete','seguro','cilindrada','tasaAduanal','iva','impLujoPct','tipoVehiculo','combustible'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', calcular);
+});
+['tipoVehiculo','combustible'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', calcular);
+});
+
+document.getElementById('tipoVehiculo').addEventListener('change', calcular);
+const anioEl = document.getElementById('anioVehiculo');
+if (anioEl) anioEl.addEventListener('change', calcular);
+const combEl = document.getElementById('combustible');
+if (combEl) combEl.addEventListener('change', calcular);
+document.getElementById('opMultiplica').addEventListener('change', calcular);
+document.getElementById('terMultiplica').addEventListener('change', calcular);
+
+document.getElementById('vistaCliente').addEventListener('change', function(){
+  // Los montos de renglones solo se ocultan al imprimir/PDF, no en pantalla
+  // (flag se lee en imprimirPDF)
+});
+
+function guardarEnHistorial(){
+  const d = calcular();
+  const item = {
+    id: Date.now(),
+    presupuesto: document.getElementById('presupuesto').value,
+    fecha: document.getElementById('fecha').value,
+    cliente: document.getElementById('cliente').value,
+    codigo: document.getElementById('codigo').value,
+    modelo: document.getElementById('modelo').value,
+    cantidad: d.qty, fobTotal: d.fobT, cif: d.cif, impuestos: d.impT,
+    operacion: d.opT, terceros: d.terT, total: d.total,
+    lineasOp: d.lineasOp, lineasTer: d.lineasTer,
+    opMul: d.opMul, terMul: d.terMul, cc: d.cc, tipo: d.tipo,
+    empresa: d.empresa, adPct: d.adPct, comb: (document.getElementById('combustible')||{}).value||'gasolina',
+    anio: (document.getElementById('anioVehiculo')||{}).value||''
+  };
+  historial.unshift(item);
+  save();
+  toast('Guardado en historial');
+  const m = item.presupuesto.match(/P-(\d+)/i);
+  if (m) document.getElementById('presupuesto').value = 'P-' + String(parseInt(m[1])+1).padStart(3,'0');
+}
+function renderHistorial(){
+  const cont = document.getElementById('listaHistorial');
+  if (!historial.length) { cont.innerHTML = '<div class="empty">Aún no hay relaciones guardadas.</div>'; return; }
+  cont.innerHTML = historial.map(h => `
+    <div class="item-card">
+      <div class="name">${h.presupuesto} · ${h.fecha||'—'}</div>
+      <div class="meta">${h.cliente||'Sin cliente'} · ${h.modelo||h.codigo||'—'} × ${h.cantidad}</div>
+      <div class="meta" style="margin-top:4px;font-weight:600;color:var(--primary)">Total: $${fmt(h.total)}</div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-outline" onclick="cargarHistorial(${h.id})">Cargar</button>
+        <button class="btn btn-sm btn-danger" onclick="borrarHistorial(${h.id})">Borrar</button>
+      </div>
+    </div>
+  `).join('');
+}
+function cargarHistorial(id){
+  const h = historial.find(x => x.id === id); if (!h) return;
+  document.getElementById('presupuesto').value = h.presupuesto;
+  document.getElementById('fecha').value = h.fecha || '';
+  document.getElementById('cliente').value = h.cliente || '';
+  document.getElementById('cantidad').value = h.cantidad;
+  document.getElementById('codigo').value = h.codigo || '';
+  document.getElementById('modelo').value = h.modelo || '';
+  if (h.empresa) document.getElementById('empresaLogo').value = h.empresa;
+  const c = catalogo.find(x => x.codigo === h.codigo);
+  if (c) {
+    document.getElementById('fobUnit').value = c.fob;
+    document.getElementById('tipoVehiculo').value = c.tipo || h.tipo || 'auto';
+    document.getElementById('cilindrada').value = c.cc || h.cc || 1600;
+  } else if (h.tipo) {
+    document.getElementById('tipoVehiculo').value = h.tipo;
+    document.getElementById('cilindrada').value = h.cc || 1600;
+  }
+  if (h.lineasOp) lineasOp = h.lineasOp.map(l => ({...l, id: lineIdCounter++}));
+  if (h.lineasTer) lineasTer = h.lineasTer.map(l => ({...l, id: lineIdCounter++}));
+  if (h.opMul !== undefined) document.getElementById('opMultiplica').checked = h.opMul;
+  if (h.terMul !== undefined) document.getElementById('terMultiplica').checked = h.terMul;
+  renderLineas();
+  actualizarHeaderLogo();
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelector('nav button[data-screen="nueva"]').classList.add('active');
+  document.getElementById('nueva').classList.add('active');
+  toast('Cargado');
+}
+function borrarHistorial(id){
+  if (!confirm('¿Eliminar del historial?')) return;
+  historial = historial.filter(x => x.id !== id);
+  save(); renderHistorial(); toast('Eliminado');
+}
+
+function imprimirPDF(){
+  const d = calcular();
+  const si = document.getElementById('vistaCliente').value === 'si';
+  const emp = d.empresa;
+  const info = EMPRESAS[emp] || EMPRESAS.vasmar;
+  const logoHtml = logos[emp]
+    ? '<img src="'+logos[emp]+'" style="max-height:48px;max-width:120px;object-fit:contain">'
+    : '<div class="logo-ph">'+((info.corto||'V').charAt(0))+'</div>';
+
+  const qMark = d.qty > 1 ? ' <span class="xq">×'+d.qty+'</span>' : '';
+  const filaOp = lineasOp.filter(l => l.concepto || l.monto).map(l =>
+    '<tr><td>'+(l.concepto||'—')+qMark+'</td><td>'+(si?'—':'$'+fmt((l.monto||0)*(d.opMul?d.qty:1)))+'</td></tr>'
+  ).join('') || '<tr><td colspan="2" style="color:#888">Sin conceptos</td></tr>';
+  const filaTer = lineasTer.filter(l => l.concepto || l.monto).map(l =>
+    '<tr><td>'+(l.concepto||'—')+qMark+'</td><td>'+(si?'—':'$'+fmt((l.monto||0)*(d.terMul?d.qty:1)))+'</td></tr>'
+  ).join('') || '<tr><td colspan="2" style="color:#888">Sin conceptos</td></tr>';
+
+  const fleteT = (parseFloat(document.getElementById('flete').value)||0)*d.qty;
+  const seguroT = (parseFloat(document.getElementById('seguro').value)||0)*d.qty;
+  const totalPdf = d.impT + d.opT + d.terT;
+
+  const css = `
+@page{size:letter portrait;margin:7mm}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:auto}
+body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:8.5pt;color:#1a1a1a;line-height:1.2}
+.wrap{max-width:100%;margin:0 auto}
+.hdr{display:flex;align-items:center;gap:8px;border-bottom:2px solid #1F4E79;padding-bottom:5px;margin-bottom:6px}
+.hdr img{max-height:48px!important;max-width:120px!important}
+.logo-ph{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#1F4E79,#2E86AB);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16pt;font-weight:900;flex-shrink:0}
+.hdr h1{font-size:11pt;color:#1F4E79;margin:0 0 1px}
+.hdr .sub{font-size:7.5pt;color:#555}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:1px 10px;margin-bottom:6px;font-size:8pt}
+.meta strong{color:#1F4E79}
+.mod{border:1px solid #c5d0dc;border-radius:5px;margin-bottom:5px;overflow:hidden;background:#fff;page-break-inside:avoid}
+.mod-h{display:flex;align-items:center;gap:6px;padding:3px 8px;font-weight:700;font-size:8pt;color:#fff}
+.mod-h .num{background:rgba(255,255,255,.22);border-radius:999px;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:7pt}
+.cif .mod-h{background:linear-gradient(90deg,#2E7D32,#43A047)}
+.imp .mod-h{background:linear-gradient(90deg,#C65911,#E67E22)}
+.op .mod-h{background:linear-gradient(90deg,#6A1B9A,#8E24AA)}
+.ter .mod-h{background:linear-gradient(90deg,#00838F,#00ACC1)}
+.mod-b{padding:4px 8px 5px}
+table{width:100%;border-collapse:collapse}
+td{padding:1px 0;vertical-align:top;font-size:8pt}
+td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.sub td{border-top:1px solid #e0e6ec;padding-top:2px;font-weight:700;color:#1F4E79}
+.hint{font-size:6.5pt;color:#777;margin-top:2px}
+.xq{color:#666;font-size:0.85em}
+.grand{border:2px solid #1F4E79;border-radius:5px;padding:5px 10px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,#f5f8fc,#fff);margin-top:2px;page-break-inside:avoid}
+.grand .l{font-size:9pt;font-weight:800;color:#1F4E79;letter-spacing:.02em}
+.grand .s{font-size:6.5pt;color:#666;margin-top:1px}
+.grand .a{font-size:12pt;font-weight:800;color:#1F4E79}
+.foot{text-align:center;margin-top:5px;font-size:7pt;color:#888;border-top:1px solid #ddd;padding-top:4px}
+@media print{
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mod,.grand,.hdr{page-break-inside:avoid}
+}
+`.replace(/\n/g,'');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${tituloPdfVehiculo()}</title><style>${css}</style></head><body><div class="wrap">
+<div class="hdr">${logoHtml}<div><h1>RELACIÓN DE GASTOS DE IMPORTACIÓN</h1><div class="sub">${info.nombre}</div></div></div>
+<div class="meta">
+  <div><strong>Presupuesto:</strong> ${document.getElementById('presupuesto').value||'—'}</div>
+  <div><strong>Fecha:</strong> ${document.getElementById('fecha').value||'—'}</div>
+  <div><strong>Cliente:</strong> ${document.getElementById('cliente').value||'—'}</div>
+  <div><strong>Cantidad:</strong> ${d.qty} ${(d.tipo==='moto'?'moto':d.tipo==='camion'?'camión':d.tipo==='carga'?'pickup':'vehículo')}${(d.qty>1?'s':'')}</div>
+  <div><strong>Producto:</strong> ${document.getElementById('modelo').value||'—'}${d.anio?' · Año '+d.anio:''}</div>
+  <div><strong>Código:</strong> ${document.getElementById('codigo').value||'—'} · ${d.cc||'—'} CC</div>
+</div>
+
+<div class="mod cif">
+  <div class="mod-h"><span class="num">1</span> Valores CIF <span style="margin-left:auto;opacity:.9;font-weight:500;font-size:8pt">referencial</span></div>
+  <div class="mod-b"><table>
+    <tr><td>FOB Total${qMark}</td><td>$${fmt(d.fobT)}</td></tr>
+    <tr><td>Flete${qMark}</td><td>$${fmt(fleteT)}</td></tr>
+    <tr><td>Seguro${qMark}</td><td>$${fmt(seguroT)}</td></tr>
+    <tr class="sub"><td>CIF Total</td><td>$${fmt(d.cif)}</td></tr>
+  </table>
+  <div class="hint">Base para el cálculo de impuestos · no se incluye en el total a cobrar</div></div>
+</div>
+
+<div class="mod imp">
+  <div class="mod-h"><span class="num">2</span> Impuestos de importación</div>
+  <div class="mod-b"><table>
+    <tr><td>Ad-Valorem ${d.adPct}%</td><td>$${fmt(d.adM)}</td></tr>
+    <tr><td>Tasa aduanal</td><td>$${fmt(d.tasaM)}</td></tr>
+    <tr><td>IVA</td><td>$${fmt(d.ivaM)}</td></tr>
+    <tr><td>Impuesto al lujo ${d.aplicaLujo?'':'(no aplica)'}</td><td>$${fmt(d.lujoM)}</td></tr>
+    <tr class="sub"><td>Total impuestos</td><td>$${fmt(d.impT)}</td></tr>
+  </table></div>
+</div>
+
+<div class="mod op">
+  <div class="mod-h"><span class="num">3</span> Gastos de operación</div>
+  <div class="mod-b"><table>
+    ${filaOp}
+    <tr class="sub"><td>Total operación</td><td>$${fmt(d.opT)}</td></tr>
+  </table></div>
+</div>
+
+<div class="mod ter">
+  <div class="mod-h"><span class="num">4</span> Gastos de terceros</div>
+  <div class="mod-b"><table>
+    ${filaTer}
+    <tr class="sub"><td>Total terceros</td><td>$${fmt(d.terT)}</td></tr>
+  </table></div>
+</div>
+
+<div class="grand">
+  <div><div class="l">TOTAL GENERAL</div><div class="s">Impuestos + Operación + Terceros</div></div>
+  <div class="a">$${fmt(totalPdf)}</div>
+</div>
+
+<div class="foot">${info.nombre} · Documento generado para fines de cotización</div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print()},250)};<\/script>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { toast('Permite ventanas emergentes para imprimir'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+
+function exportarDatos(){
+  const data = {catalogo, historial, plantillaOp, plantillaTer, logos, exportado: new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vasmar_respaldo_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  toast('Respaldo descargado');
+}
+function importarDatos(e){
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (data.catalogo) catalogo = data.catalogo;
+      if (data.historial) historial = data.historial;
+      if (data.plantillaOp) plantillaOp = data.plantillaOp;
+      if (data.plantillaTer) plantillaTer = data.plantillaTer;
+      if (data.logos) logos = data.logos;
+      nextId = catalogo.reduce((m,c)=>Math.max(m,c.id),0)+1;
+      save(); cargarLineasDesdePlantilla(); renderCatalogo(); actualizarHeaderLogo();
+      toast('Datos importados');
+    } catch(err) { toast('Archivo invalido'); }
+  };
+  r.readAsText(f);
+}
+
+
+// --- Complemento: lee módulo base_arancelaria (localStorage separado) ---
+const ARANCEL_KEY = 'ceyma_base_arancelaria_v1';
+function leerBaseArancelaria(){
+  try {
+    const raw = localStorage.getItem(ARANCEL_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch(e) { return []; }
+}
+function abrirPickerArancel(){
+  const el = document.getElementById('pickerArancel');
+  el.classList.remove('hidden');
+  el.style.display = 'flex';
+  renderPickerArancel();
+}
+function cerrarPickerArancel(){
+  const el = document.getElementById('pickerArancel');
+  el.classList.add('hidden');
+  el.style.display = 'none';
+}
+function renderPickerArancel(){
+  const q = (document.getElementById('pickerQ').value || '').toLowerCase().trim();
+  let rows = leerBaseArancelaria();
+  if (q) {
+    rows = rows.filter(r => {
+      const blob = [r.desc, r.codigo, r.tipo, r.comb, r.cc, r.notas].join(' ').toLowerCase();
+      return blob.includes(q);
+    });
+  }
+  const cont = document.getElementById('pickerLista');
+  if (!rows.length) {
+    cont.innerHTML = '<div class="empty">No hay fichas. Abre base_arancelaria.html, crea fichas y vuelve aquí (mismo navegador/dispositivo).</div>';
+    return;
+  }
+  cont.innerHTML = rows.map(r => `
+    <div class="item-card" style="cursor:pointer" onclick="aplicarFichaArancel(${r.id})">
+      <div class="name">${esc(r.desc||'')}</div>
+      <div class="meta">${esc(r.codigo||'')} · Ad-Valorem ${r.ad}% · ${esc(r.comb||'')} · ${esc(r.cc||'')}</div>
+      <div class="meta" style="color:#1F4E79;font-weight:600;margin-top:4px">Tocar para aplicar al presupuesto</div>
+    </div>
+  `).join('');
+}
+function aplicarFichaArancel(id){
+  const r = leerBaseArancelaria().find(x => x.id === id);
+  if (!r) { toast('Ficha no encontrada'); return; }
+  // Aplica solo lo que es seguro y complementario
+  if (r.ad != null && r.ad !== '') {
+    // El Ad-Valorem de la app se calcula por CC; si la ficha trae CC parseable, ayudamos
+    // Forzamos hint vía tipo/combustible y notas en toast
+  }
+  if (r.tipo === 'moto') document.getElementById('tipoVehiculo').value = 'moto';
+  else if (r.tipo === 'auto' || r.tipo === 'pickup' || r.tipo === 'hibrido') document.getElementById('tipoVehiculo').value = 'auto';
+
+  // Intentar leer número de CC desde la regla de la ficha
+  const ccTxt = String(r.cc || '');
+  const m = ccTxt.match(/(\\d{3,5})/);
+  if (m) {
+    // Si dice > 2100, poner 2200; si ≤ 2100 poner 1600 como ejemplo solo si no hay número útil
+  }
+  if (/\\>\\s*2100|>\\s*2\\.100/i.test(ccTxt)) document.getElementById('cilindrada').value = 2200;
+  else if (/≤|<=|hasta/i.test(ccTxt) && /2100|2\\.100/.test(ccTxt)) document.getElementById('cilindrada').value = 1600;
+  else if (m) document.getElementById('cilindrada').value = m[1];
+
+  // IVA y tasa si vienen en la ficha
+  if (r.iva != null) document.getElementById('iva').value = r.iva;
+  if (r.tasa != null) document.getElementById('tasaAduanal').value = r.tasa;
+
+  calcular();
+  cerrarPickerArancel();
+  toast('Aplicado: ' + (r.desc || 'ficha') + ' (Ad-Valorem según CC: revisar)');
+}
+
+
+
+/* ===== PWA: manifiesto, icono e instalación ===== */
+(function setupPWA(){
+  const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1F4E79"/>
+      <stop offset="100%" style="stop-color:#2E86AB"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#g)"/>
+  <rect x="12" y="12" width="168" height="168" rx="32" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
+  <text x="96" y="118" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="92" font-weight="900" fill="#ffffff">V</text>
+  <text x="96" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#F5C542" letter-spacing="2">VASMAR</text>
+</svg>`;
+  const ICON_SVG_512 = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1F4E79"/>
+      <stop offset="100%" style="stop-color:#2E86AB"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#g)"/>
+  <rect x="28" y="28" width="456" height="456" rx="80" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="6"/>
+  <text x="256" y="310" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="250" font-weight="900" fill="#ffffff">V</text>
+  <text x="256" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="700" fill="#F5C542" letter-spacing="6">VASMAR</text>
+</svg>`;
+  const iconUrl = URL.createObjectURL(new Blob([ICON_SVG], {type: 'image/svg+xml'}));
+  const iconUrl512 = URL.createObjectURL(new Blob([ICON_SVG_512], {type: 'image/svg+xml'}));
+
+  const manifest = {
+    name: 'VASMAR Gastos — Relación de Gastos',
+    short_name: 'VASMAR Gastos',
+    description: 'Relación de gastos aduaneros VASMAR / CEYMA',
+    start_url: '.',
+    scope: '.',
+    display: 'standalone',
+    orientation: 'portrait-primary',
+    background_color: '#1F4E79',
+    theme_color: '#1F4E79',
+    lang: 'es-VE',
+    icons: [
+      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
+      { src: iconUrl512, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+  };
+  const manBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  const manUrl = URL.createObjectURL(manBlob);
+  let link = document.querySelector('link[rel="manifest"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'manifest';
+    document.head.appendChild(link);
+  }
+  link.href = manUrl;
+
+  // Service worker mínimo (cache de la propia página) para poder instalar
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+      const CACHE = 'vasmar-gastos-v1';
+      self.addEventListener('install', e => {
+        self.skipWaiting();
+        e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])));
+      });
+      self.addEventListener('activate', e => {
+        e.waitUntil(self.clients.claim());
+      });
+      self.addEventListener('fetch', e => {
+        e.respondWith(
+          caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./')))
+        );
+      });
+    `;
+    const swUrl = URL.createObjectURL(new Blob([swCode], {type: 'text/javascript'}));
+    // Blob SW only works in some browsers for same-origin file; for file:// may fail — wrap try
+    navigator.serviceWorker.register(swUrl).catch(() => {
+      // Fallback: data URL not allowed for SW; ignore on file://
+    });
+  }
+
+  // Install prompt
+  let deferredPrompt = null;
+  const bar = document.getElementById('installBar');
+  const btn = document.getElementById('btnInstall');
+  const btnX = document.getElementById('btnInstallX');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (bar && !localStorage.getItem('vasmar_hide_install')) bar.classList.add('show');
+  });
+  if (btn) btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (bar) bar.classList.remove('show');
+  });
+  if (btnX) btnX.addEventListener('click', () => {
+    if (bar) bar.classList.remove('show');
+    localStorage.setItem('vasmar_hide_install', '1');
+  });
+  // Si ya está en modo app, no mostrar barra
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    if (bar) bar.classList.remove('show');
+  }
+})();
+
+
+/* ===== Módulo Importación de Mercancías ===== */
+let lineasMerc = [];
+let lineasOpM = [];
+let lineasTerM = [];
+let catalogoMerc = JSON.parse(localStorage.getItem('vasmar_catalogo_merc') || '[]');
+let historialMerc = JSON.parse(localStorage.getItem('vasmar_historial_merc') || '[]');
+let nextMercId = 1;
+let nextOpMId = 1;
+let nextTerMId = 1;
+
+function saveMerc(){
+  localStorage.setItem('vasmar_catalogo_merc', JSON.stringify(catalogoMerc));
+  localStorage.setItem('vasmar_historial_merc', JSON.stringify(historialMerc));
+}
+
+function leerBaseArancelaria(){
+  try {
+    const raw = localStorage.getItem('ceyma_base_arancelaria_v1');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : (parsed.data || []);
+  } catch(e) { return []; }
+}
+
+function normalizarCodigo(cod){
+  if (!cod) return '';
+  let s = String(cod).trim().replace(/\s+/g,'');
+  // 8501101900 -> 8501.10.19.00
+  const digits = s.replace(/\D/g,'');
+  if (digits.length >= 8 && s.indexOf('.') < 0) {
+    const p = digits.padEnd(10,'0').slice(0,10);
+    s = p.slice(0,4)+'.'+p.slice(4,6)+'.'+p.slice(6,8)+'.'+p.slice(8,10);
+  }
+  return s;
+}
+
+
+function tokensDesc(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9áéíóúñ\s]/gi,' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !['para','con','los','las','del','una','unos','tipo','tipos','demas','demás','otros','otras','desde','hasta'].includes(w));
+}
+
+function buscarArancelPorDesc(texto, limite){
+  limite = limite || 12;
+  const toks = tokensDesc(texto);
+  if (!toks.length) return [];
+  const base = leerBaseArancelaria();
+  if (!base.length) return [];
+  const scored = [];
+  base.forEach(row => {
+    const blob = ((row.desc||'')+' '+(row.codigo||'')+' '+(row.notas||'')).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    let score = 0;
+    toks.forEach(t => { if (blob.includes(t)) score += (t.length >= 5 ? 2 : 1); });
+    // bonus if most tokens hit
+    if (score > 0) {
+      scored.push({row, score});
+    }
+  });
+  scored.sort((a,b) => b.score - a.score);
+  const out = [];
+  const seen = new Set();
+  for (const {row, score} of scored) {
+    const cod = normalizarCodigo(row.codigo);
+    if (!cod || seen.has(cod)) continue;
+    seen.add(cod);
+    out.push({...row, codigo: cod, _score: score});
+    if (out.length >= limite) break;
+  }
+  return out;
+}
+
+function sugerirCodigoMerc(id){
+  const L = lineasMerc.find(x => x.id === id);
+  if (!L) return;
+  const root = document.querySelector('.merc-line[data-id="'+id+'"]');
+  const descInp = root ? root.querySelector('input[data-field="desc"]') : null;
+  const texto = (descInp && descInp.value) || L.desc || '';
+  L.desc = texto;
+  const box = document.getElementById('suggest-'+id);
+  if (!box) return;
+  if (!texto || texto.trim().length < 3) {
+    box.className = 'merc-suggest show';
+    box.innerHTML = '<div class="sg">Escribe al menos 3 letras de la descripción del producto.</div>';
+    return;
+  }
+  const base = leerBaseArancelaria();
+  if (!base.length) {
+    box.className = 'merc-suggest show';
+    box.innerHTML = '<div class="sg">No hay base arancelaria en este navegador. Abre <strong>base_arancelaria.html</strong>, carga Ap. I / Cap. 84-85-87 y vuelve aquí.</div>';
+    return;
+  }
+  const hits = buscarArancelPorDesc(texto, 15);
+  if (!hits.length) {
+    box.className = 'merc-suggest show';
+    box.innerHTML = '<div class="sg">Sin coincidencias locales. Prueba otras palabras o <button type="button" class="btn btn-sm btn-outline" onclick="buscarCodigoWeb('+id+')">Buscar en web</button></div>';
+    return;
+  }
+  box.className = 'merc-suggest show';
+  box.innerHTML = hits.map(h => {
+    const ap = h.ap1 ? ' · Ap.I exo' : '';
+    const cx = (h.comex||h.ap1) ? ' · COMEX' : '';
+    const ad = (h.ad != null ? h.ad : '—');
+    return `<div class="sg" onclick="aplicarSugerenciaMerc(${id},'${String(h.codigo).replace(/'/g,"\\'")}')">
+      <div class="code">${esc(h.codigo)} · Ad ${ad}%${ap}${cx}</div>
+      <div class="meta">${esc((h.desc||'').slice(0,120))}</div>
+    </div>`;
+  }).join(String.fromCharCode(10));
+}
+
+function aplicarSugerenciaMerc(id, codigo){
+  const L = lineasMerc.find(x => x.id === id);
+  if (!L) return;
+  L.codigo = codigo;
+  aplicarArancelALinea(L);
+  const box = document.getElementById('suggest-'+id);
+  if (box) { box.className = 'merc-suggest'; box.innerHTML = ''; }
+  renderMercLineas();
+  calcularMerc();
+  toast('Código '+codigo+' aplicado');
+}
+
+
+function consultarIACodigo(id){
+  const L = lineasMerc.find(x => x.id === id);
+  const root = document.querySelector('.merc-line[data-id="'+id+'"]');
+  const descInp = root ? root.querySelector('input[data-field="desc"]') : null;
+  const texto = ((descInp && descInp.value) || (L && L.desc) || '').trim();
+  if (!texto) { toast('Escribe primero la descripción del producto'); return; }
+
+  const prompt =
+`Eres un experto en clasificación arancelaria (Sistema Armonizado / NANDINA / Venezuela).
+
+Producto a clasificar:
+"""
+${texto}
+"""
+
+Necesito:
+1) Código HS sugerido a 6 dígitos (internacional) y, si puedes, a 10 dígitos estilo nomenclatura andina/venezolana.
+2) 2 o 3 códigos alternativos por si hay duda.
+3) Breve justificación (partida, material, uso, RGI relevantes).
+4) Si es probable que en Venezuela requiera permiso tipo COMEX/RL9 o tenga exoneraciones (solo orientativo).
+5) Qué dato adicional necesitarías para afinar (material, potencia, si es parte o máquina completa, etc.).
+
+Responde en español, claro y estructurado. Indica que es sugerencia orientativa y debe validarse con el arancel oficial venezolano.`;
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast('Prompt copiado. Pégalo en Grok, ChatGPT o Claude');
+    } catch(e) {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = prompt;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); toast('Prompt copiado'); }
+      catch(e2) { alert('Copia manualmente el prompt de la consola'); console.log(prompt); }
+      document.body.removeChild(ta);
+    }
+  };
+
+  copiar();
+
+  // Abrir opciones de IA (el usuario elige)
+  const q = encodeURIComponent(texto + ' código arancelario HS NANDINA Venezuela clasificación');
+  // Grok en x.com no acepta prompt por URL de forma fiable; abrimos buscadores de IA conocidos
+  setTimeout(() => {
+    const ir = confirm(
+      'Prompt copiado al portapapeles.\\n\\n' +
+      'Aceptar = abrir ChatGPT para pegar el prompt\\n' +
+      'Cancelar = solo queda copiado (puedes pegarlo en Grok u otra IA)'
+    );
+    if (ir) window.open('https://chatgpt.com/', '_blank', 'noopener');
+  }, 200);
+}
+
+
+function buscarCodigoWeb(id){
+  const L = lineasMerc.find(x => x.id === id);
+  const root = document.querySelector('.merc-line[data-id="'+id+'"]');
+  const descInp = root ? root.querySelector('input[data-field="desc"]') : null;
+  const texto = ((descInp && descInp.value) || (L && L.desc) || '').trim();
+  if (!texto) { toast('Escribe una descripción primero'); return; }
+  const q = encodeURIComponent(texto + ' código arancelario NANDINA Venezuela');
+  window.open('https://www.google.com/search?q='+q, '_blank', 'noopener');
+}
+
+
+function buscarArancel(codigo){
+  const cod = normalizarCodigo(codigo);
+  if (!cod) return null;
+  const base = leerBaseArancelaria();
+  let hit = base.find(x => normalizarCodigo(x.codigo) === cod);
+  if (!hit) {
+    // match without last pair
+    const short = cod.split('.').slice(0,3).join('.');
+    hit = base.find(x => normalizarCodigo(x.codigo).startsWith(short));
+  }
+  return hit || null;
+}
+
+
+
+
+function mapInvoiceHeaders(headers){
+  const h = headers.map(x => String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim());
+  const find = (...pats) => {
+    for (let i=0;i<h.length;i++) {
+      for (const p of pats) if (p.test(h[i])) return i;
+    }
+    return -1;
+  };
+  return {
+    nro: find(/^nro\.?$/, /^no\.?$/, /^item$/, /^line$/, /^linea$/, /^#$/, /^num/),
+    sku: find(/codigo(?!.*arancel)/, /c[oó]digo/, /^code$/, /^sku$/, /^ref/, /part\s*no/, /part\s*number/, /referencia/),
+    desc: find(/descrip/, /description/, /product/, /nombre/, /detalle/, /merchandise/, /articulo/, /art[ií]culo/),
+    qty: find(/cantidad/, /quantity/, /^qty$/, /^cant$/, /pcs/, /units/, /uds/),
+    unit: find(/precio.*unit/, /unit\s*price/, /unitario/, /price\s*usd/, /precio\s*usd/, /usd\s*unit/, /fob/, /costo/, /precio(?!.*total)/),
+    total: find(/^total$/, /importe/, /amount/, /valor\s*total/),
+    hs: find(/arancel/, /\bhs\b/, /nandina/, /partida/, /harmonized/, /hts/)
+  };
+}
+
+function rowsFromInvoiceMatrix(rows){
+  // rows: array of arrays. Find header row
+  let headerIdx = -1;
+  let map = null;
+  for (let i=0;i<Math.min(rows.length, 25);i++) {
+    const cells = rows[i].map(x => String(x==null?'':x));
+    const m = mapInvoiceHeaders(cells);
+    // need at least desc or sku-like + qty or unit
+    const score = (m.desc>=0?2:0)+(m.sku>=0?1:0)+(m.qty>=0?1:0)+(m.unit>=0?1:0)+(m.nro>=0?1:0);
+    if (score >= 3 && (m.desc>=0 || m.sku>=0)) { headerIdx = i; map = m; break; }
+  }
+  if (headerIdx < 0) {
+    // fallback: first row with many numeric-looking later cols
+    return null;
+  }
+  const out = [];
+  for (let i=headerIdx+1;i<rows.length;i++) {
+    const cols = rows[i].map(x => String(x==null?'':x).trim());
+    if (!cols.some(x => x)) continue;
+    const joined = cols.join(' ').toLowerCase();
+    if (/^total\b/.test(joined) || cols[0].toUpperCase()==='TOTAL') continue;
+    const sku = map.sku>=0 ? cols[map.sku] : '';
+    let desc = map.desc>=0 ? cols[map.desc] : '';
+    // If description is generic (RODAMIENTO) enrich with SKU
+    if (sku && desc) desc = desc + ' — ref. ' + sku;
+    else if (sku && !desc) desc = 'Artículo ref. ' + sku;
+    if (!desc) continue;
+    const qty = map.qty>=0 ? parseFloat(String(cols[map.qty]).replace(/,/g,'')) : 1;
+    const unit = map.unit>=0 ? parseFloat(String(cols[map.unit]).replace(/,/g,'')) : 0;
+    const hs = map.hs>=0 ? cols[map.hs] : '';
+    const nro = map.nro>=0 ? cols[map.nro] : '';
+    out.push({
+      nro: nro,
+      sku: sku,
+      desc: desc,
+      qty: isNaN(qty) ? 1 : qty,
+      unit: isNaN(unit) ? 0 : unit,
+      codigo: hs || ''
+    });
+  }
+  return out;
+}
+
+
+function subirListaArchivo(ev){
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const name = (f.name||'').toLowerCase();
+  const ta = document.getElementById('lotePaste');
+  if (!ta) return;
+
+  if (name.endsWith('.pdf') || (f.type||'') === 'application/pdf') {
+    cargarPdfFactura(f, ta, ev);
+    return;
+  }
+
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    toast('Leyendo Excel…');
+    cargarXlsxSiPosible(f, ta, ev);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    let text = String(reader.result||'');
+    // If CSV with header, convert to lote lines
+    const rawLines = text.split(/\r?\n/).filter(l => l.trim());
+    const matrix = rawLines.map(l => splitCsvLine(l));
+    let inv = rowsFromInvoiceMatrix(matrix);
+    if (inv && inv.length) {
+      ta.value = inv.map(r => {
+        let line = r.desc + ' | ' + r.qty + ' | ' + r.unit;
+        if (r.codigo) line += ' || ' + r.codigo;
+        return line;
+      }).join('\n');
+      toast('Factura detectada: '+inv.length+' ítems. Pulsa "Cargar texto a la relación"');
+    } else if (rawLines.length > 1 && /desc|product|nombre|item|codigo|qty|cant|descrip|precio/i.test(rawLines[0])) {
+      const headers = splitCsvLine(rawLines[0]);
+      const map = mapInvoiceHeaders(headers);
+      const out = [];
+      for (let i=1;i<rawLines.length;i++) {
+        const cols = splitCsvLine(rawLines[i]);
+        if (!cols.some(x=>x) || /^total$/i.test(cols[0])) continue;
+        let desc = map.desc>=0 ? cols[map.desc] : cols[0];
+        const sku = map.sku>=0 ? cols[map.sku] : '';
+        if (sku && desc && !String(desc).includes(sku)) desc = desc + ' — ref. ' + sku;
+        else if (sku && !desc) desc = 'Artículo ref. ' + sku;
+        if (!desc) continue;
+        const qty = map.qty>=0 ? cols[map.qty] : '1';
+        const unit = map.unit>=0 ? cols[map.unit] : '0';
+        const hs = map.hs>=0 ? cols[map.hs] : '';
+        let line = desc.trim() + ' | ' + (qty||1) + ' | ' + (unit||0);
+        if (hs) line += ' || ' + hs;
+        out.push(line);
+      }
+      ta.value = out.join('\n');
+      toast('Archivo cargado: '+out.length+' ítems. Pulsa "Cargar texto a la relación"');
+    } else {
+      ta.value = rawLines.map(l => {
+        if (l.includes('|')) return l;
+        const cols = splitCsvLine(l);
+        if (cols.length >= 3) return cols[0]+' | '+cols[1]+' | '+cols[2];
+        return l;
+      }).join('\n');
+      toast('Archivo cargado en el cuadro. Pulsa "Cargar texto a la relación"');
+    }
+    ev.target.value = '';
+  };
+  reader.readAsText(f);
+}
+
+function splitCsvLine(line){
+  const out = [];
+  let cur = '', inQ = false;
+  for (let i=0;i<line.length;i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; continue; }
+    if ((ch === ',' || ch === ';') && !inQ) { out.push(cur.trim()); cur=''; continue; }
+    if (ch === '\t' && !inQ) { out.push(cur.trim()); cur=''; continue; }
+    cur += ch;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+
+function cargarPdfFactura(file, ta, ev){
+  toast('Leyendo PDF…');
+  const finish = (msg) => {
+    toast(msg);
+    if (ev && ev.target) ev.target.value = '';
+  };
+  const applyText = (full, source) => {
+    const parsed = parsePdfInvoiceText(full);
+    if (parsed && parsed.length) {
+      ta.value = parsed.map(r => {
+        let line = r.desc + ' | ' + r.qty + ' | ' + r.unit;
+        if (r.codigo) line += ' || ' + r.codigo;
+        return line;
+      }).join('\n');
+      finish('PDF (' + source + '): ' + parsed.length + ' ítems detectados. Revisa el cuadro antes de cargar.');
+      return true;
+    }
+    ta.value = (full || '').trim();
+    return false;
+  };
+
+  const loadPdfJs = () => new Promise((resolve, reject) => {
+    if (window.pdfjsLib) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve();
+    };
+    s.onerror = () => reject(new Error('PDF.js'));
+    document.head.appendChild(s);
+  });
+
+  const loadTesseract = () => new Promise((resolve, reject) => {
+    if (window.Tesseract) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Tesseract'));
+    document.head.appendChild(s);
+  });
+
+  const extractTextLayer = async (pdf) => {
+    let full = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const items = content.items || [];
+      const linesMap = {};
+      items.forEach(it => {
+        const y = Math.round((it.transform && it.transform[5]) || 0);
+        if (!linesMap[y]) linesMap[y] = [];
+        linesMap[y].push({x: (it.transform && it.transform[4]) || 0, str: it.str || ''});
+      });
+      Object.keys(linesMap).map(Number).sort((a,b) => b-a).forEach(y => {
+        full += linesMap[y].sort((a,b)=>a.x-b.x).map(t=>t.str).join(' ') + '\n';
+      });
+      full += '\n';
+    }
+    return full;
+  };
+
+  const ocrPdf = async (pdf) => {
+    await loadTesseract();
+    const prog = document.getElementById('loteProgress');
+    let full = '';
+    const maxPages = Math.min(pdf.numPages, 15); // safety limit
+    for (let p = 1; p <= maxPages; p++) {
+      if (prog) prog.textContent = 'OCR página ' + p + '/' + maxPages + '… (puede tardar)';
+      toast('OCR página ' + p + '/' + maxPages + '…');
+      const page = await pdf.getPage(p);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const result = await Tesseract.recognize(canvas, 'spa+eng', {
+        logger: m => {
+          if (m.status === 'recognizing text' && prog) {
+            prog.textContent = 'OCR pág. ' + p + ': ' + Math.round((m.progress||0)*100) + '%';
+          }
+        }
+      });
+      full += (result && result.data && result.data.text) ? result.data.text + '\n\n' : '';
+    }
+    if (pdf.numPages > maxPages) {
+      full += '\n[Nota: solo se procesaron las primeras ' + maxPages + ' páginas]\n';
+    }
+    return full;
+  };
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      await loadPdfJs();
+      const data = new Uint8Array(reader.result);
+      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      const textFull = await extractTextLayer(pdf);
+      const letters = (textFull.match(/[A-Za-zÁÉÍÓÚáéíóúñÑ]{3,}/g) || []).length;
+      // If enough selectable text, use it
+      if (letters >= 30 && applyText(textFull, 'texto')) return;
+
+      // Scanned / almost empty → OCR
+      toast('Poco texto seleccionable. Iniciando OCR (spa+eng)…');
+      if (!confirm('Este PDF parece escaneado o sin texto.\n\n¿Ejecutar OCR? Puede tardar 1–3 min y usa internet la primera vez (Tesseract.js).')) {
+        ta.value = textFull.trim();
+        finish('OCR cancelado. Se dejó el texto crudo si había algo.');
+        return;
+      }
+      const ocrText = await ocrPdf(pdf);
+      if (!applyText(ocrText, 'OCR')) {
+        ta.value = ocrText.trim();
+        finish('OCR listo, pero no se detectó tabla automática. Revisa/ajusta el texto y carga.');
+      }
+    } catch (err) {
+      console.error(err);
+      finish('No se pudo leer el PDF. Prueba Excel/CSV o copia la tabla.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function isJunkInvoiceToken(s){
+  s = String(s||'').trim().toLowerCase();
+  if (!s) return true;
+  const junk = [
+    'name','name:','qty','qty.','qty:','quantity','packing','packed','pcs','pcs)','(pcs)',
+    'unit','unitario','price','precio','total','subtotal','invoice','comercial','commercial',
+    'buyer','seller','tel','fax','add','address','web','mail','email','swift','bank','branch',
+    'district','pudong','shanghai','group','details','term','terms','time','color','power',
+    'with','from','when','make','can','the','and','for','ref','no.','no','page','continued',
+    'description','descripcion','descripción','codigo','código','code','sku','nro','item',
+    'loading','diameter','inlet','fittings','two','elbow','drain','switch',
+    'lid','color:','term:','to','of','or','on','by','as','at','is','be','size','size:',
+    'open','south','osa','time:','name:lid','sw','hw','hw dh'
+  ];
+  if (junk.includes(s)) return true;
+  if (/^(name|qty|tel|fax|add|ref|no)[:.\s]*$/i.test(s)) return true;
+  if (/^\d+\)$/.test(s)) return true; // "3)" "4)"
+  if (/^[^\w\u00c0-\u024f]*$/.test(s)) return true; // only symbols
+  return false;
+}
+
+
+function isValidProductLine(desc, sku, qty, unit){
+  desc = String(desc||'').trim();
+  sku = String(sku||'').trim();
+  const low = desc.toLowerCase();
+  // pure noise descriptions
+  if (!desc || desc.length < 3) return false;
+  if (isJunkInvoiceToken(desc) || isJunkInvoiceToken(sku)) return false;
+  if (/^artículo ref\./i.test(desc)) {
+    const rest = desc.replace(/^artículo ref\.\s*/i,'').trim();
+    if (!rest || isJunkInvoiceToken(rest) || looksLikeMoney(rest) || /^\d+\)$/.test(rest)) return false;
+    // "Artículo ref. 411707" OK if sku-like; "Artículo ref. Size:" no
+    if (!looksLikePartNumber(rest) && rest.length < 8) return false;
+  }
+  // "0.39 — ref. 411707" = price mistaken as description
+  if (/^\d+([.,]\d+)?\s*—\s*ref\./i.test(desc)) return false;
+  if (/^[\d.,：:\s)—\-]+(\s*—\s*ref\.)/i.test(desc)) return false;
+  // description only symbols/numbers
+  if (!/[a-záéíóúñ]{3,}/i.test(desc) && !looksLikePartNumber(sku)) return false;
+  // sku cannot be junk/short word without digits
+  if (sku && !looksLikePartNumber(sku) && isJunkInvoiceToken(sku)) return false;
+  if (sku && /^(size|open|time|name|sw|osa|no\.?\d*)$/i.test(sku)) return false;
+  // need part number OR real words description
+  const descCore = desc.replace(/\s*—\s*ref\..*$/i,'').replace(/^artículo ref\.\s*/i,'').trim();
+  const hasSku = looksLikePartNumber(sku) || looksLikePartNumber(descCore);
+  const hasWords = /[a-záéíóúñ]{4,}/i.test(descCore);
+  if (!hasSku && !hasWords) return false;
+  // "0.39 — ref. XXX" already blocked; also block "South — ref. 1202" (one weak word + code, no product noun)
+  if (hasSku && !hasWords) return false;
+  if (hasSku && hasWords) {
+    // single weak word only
+    const words = descCore.split(/\s+/).filter(w => /[a-záéíóúñ]{3,}/i.test(w));
+    const weak = ['south','north','east','west','open','size','name','time','color','power','with','from','when','make','group','district','loading','packed','packing'];
+    if (words.length === 1 && weak.includes(words[0].toLowerCase())) return false;
+  }
+  // Prefer real lines: sku with digits + meaningful desc, or strong desc without needing sku
+  if (hasSku && hasWords) return true;
+  if (!hasSku && hasWords && descCore.length >= 8) return true;
+  return false;
+}
+
+
+function looksLikePartNumber(s){
+  s = String(s||'').trim();
+  if (s.length < 3 || s.length > 40) return false;
+  // alphanumeric codes: 411707, SWIH09-1.5, 6202-2RSK, DAC39720037K
+  if (/^[A-Z0-9][A-Z0-9._\-\/()]{2,}$/i.test(s) && /\d/.test(s)) return true;
+  return false;
+}
+
+function looksLikeMoney(s){
+  s = String(s||'').trim().replace(/,/g,'');
+  if (!/^\$?\d+(\.\d+)?$/.test(s)) return false;
+  const n = parseFloat(s.replace('$',''));
+  return !isNaN(n) && n >= 0 && n < 1e8;
+}
+
+function looksLikeQty(s){
+  s = String(s||'').trim().replace(/,/g,'');
+  if (!/^\d+(\.\d+)?$/.test(s)) return false;
+  const n = parseFloat(s);
+  return !isNaN(n) && n > 0 && n < 1e7 && (Number.isInteger(n) || n >= 1);
+}
+
+function scoreProductRow(cols){
+  // Higher score = more likely a real invoice line
+  let score = 0;
+  const joined = cols.join(' ').toLowerCase();
+  if (/total|subtotal|invoice|buyer|seller|swift|bank|address|tel:|fax:|www\.|@/.test(joined)) return -10;
+  if (cols.length < 2) return -5;
+  let hasSku = false, hasQty = false, hasPrice = false, hasDesc = false, hasNro = false;
+  cols.forEach((c, i) => {
+    const t = String(c||'').trim();
+    if (!t) return;
+    if (i === 0 && /^\d{1,4}$/.test(t) && parseInt(t,10) < 500) { hasNro = true; score += 2; }
+    if (looksLikePartNumber(t)) { hasSku = true; score += 3; }
+    if (looksLikeQty(t) && parseFloat(t) !== parseFloat(t)%1 && parseFloat(t) >= 1) { hasQty = true; score += 2; }
+    if (looksLikeMoney(t)) { hasPrice = true; score += 2; }
+    if (t.length >= 4 && /[a-záéíóúñ]/i.test(t) && !isJunkInvoiceToken(t) && !looksLikePartNumber(t) && !looksLikeMoney(t)) {
+      hasDesc = true; score += 2;
+    }
+  });
+  if (hasSku && (hasQty || hasPrice)) score += 3;
+  if (hasDesc && hasSku) score += 2;
+  if (hasNro && hasSku) score += 2;
+  // penalize pure junk tokens
+  const junkCount = cols.filter(c => isJunkInvoiceToken(c)).length;
+  score -= junkCount * 2;
+  return score;
+}
+
+
+
+function parseInvoiceByAmounts(text){
+  // Extracción universal: busca triplets qty * unit ≈ amount y el texto de producto antes.
+  // Funciona con proformas/facturas de distintos proveedores si hay montos coherentes.
+  const raw = String(text||'').replace(/\r/g, '\n');
+  // Cortar bank details / terms que ensucian
+  let cut = raw;
+  const cutAt = cut.search(/\n(?:Terms and Conditions|Bank Details|Intermediary|Payment term|Beneficiary)/i);
+  if (cutAt > 100) cut = cut.slice(0, cutAt);
+
+  const lines = cut.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(l => l.length > 0);
+
+  // Extraer todas las secuencias de números por línea con posición
+  // También texto plano para asociar producto
+  const candidates = [];
+
+  function nearEqual(a, b, tol) {
+    if (a === 0 && b === 0) return true;
+    const diff = Math.abs(a - b);
+    const base = Math.max(Math.abs(a), Math.abs(b), 1e-9);
+    return diff <= Math.max(tol, base * 0.02); // 2% o tol absoluto
+  }
+
+  // Pass 1: each line — find number lists
+  for (let li = 0; li < lines.length; li++) {
+    const L = lines[li];
+    if (/^total\b/i.test(L) && !/\d+\.\d+\s+\d+/.test(L)) continue;
+    if (/swift|bank|beneficiary|intermediary|tel:|fax:|e-mail|address:/i.test(L)) continue;
+
+    // All numbers on line
+    const numRe = /\d+(?:[.,]\d+)?/g;
+    const nums = [];
+    let m;
+    while ((m = numRe.exec(L)) !== null) {
+      const rawN = m[0].replace(',', '');
+      // skip long codes that are integers with 5+ digits in product code position — still allow as qty
+      const v = parseFloat(rawN);
+      if (!isNaN(v)) nums.push({ v, raw: rawN, idx: m.index, len: m[0].length });
+    }
+    if (nums.length < 2) continue;
+
+    // Try all pairs/triples for qty * unit ≈ amount
+    for (let a = 0; a < nums.length; a++) {
+      for (let b = a + 1; b < nums.length; b++) {
+        for (let c = b + 1; c < nums.length; c++) {
+          const n1 = nums[a].v, n2 = nums[b].v, n3 = nums[c].v;
+          // Skip pure year-like or huge codes used as qty
+          const tryTriplet = (qty, unit, amt, qi, ui, ai) => {
+            if (qty < 1 || qty > 5e6) return;
+            if (unit <= 0 || unit > 1e5) return;
+            if (amt < 0.5) return; // avoid tiny false products
+            // qty almost integer
+            if (Math.abs(qty - Math.round(qty)) > 0.011) return;
+            qty = Math.round(qty);
+            if (qty < 1) return;
+            // unit price: not a dimension-like value used as qty
+            if (unit > 500 && qty < 10) return;
+            if (!nearEqual(qty * unit, amt, Math.max(0.08, amt * 0.015))) return;
+            // amount should be larger than unit (except qty=1)
+            if (qty > 1 && amt < unit * 1.5) return;
+            const before = L.slice(0, nums[qi].idx).trim();
+            if (/size\s*:|diameter|volt\.?|freq|circles|thread|length\s*:|φ|temp\s*:/i.test(before + ' ' + L) && qty < 100) {
+              // dimensions often create false qty*unit
+              if (unit > 5 && qty < 100) return;
+            }
+            candidates.push({
+              qty, unit, amount: amt,
+              lineIndex: li,
+              textBefore: before,
+              line: L,
+              score: 0
+            });
+          };
+          // permutations: which is qty, unit, amount
+          tryTriplet(n1, n2, n3, a, b, c);
+          tryTriplet(n2, n1, n3, b, a, c);
+          tryTriplet(n1, n3, n2, a, c, b);
+          tryTriplet(n3, n1, n2, c, a, b);
+          tryTriplet(n2, n3, n1, b, c, a);
+          tryTriplet(n3, n2, n1, c, b, a);
+        }
+        // Also pair-only: qty * unit with amount on next lines — handled in pass 2
+      }
+    }
+  }
+
+  // Score candidates
+  candidates.forEach(c => {
+    let s = 10;
+    if (Number.isInteger(c.qty) || Math.abs(c.qty - Math.round(c.qty)) < 0.01) s += 3;
+    if (c.unit < 1000) s += 2;
+    if (c.amount > c.unit && c.amount >= c.qty * c.unit * 0.98) s += 3;
+    // text before has letters
+    if (/[a-zA-Z]{3,}/.test(c.textBefore)) s += 4;
+    if (/\b(ref|code|sku|name|hose|pump|switch|blade|seal|belt|sensor)\b/i.test(c.textBefore + c.line)) s += 2;
+    if (/page|tel|fax|swift|bank/i.test(c.line)) s -= 10;
+    c.score = s;
+  });
+
+  // Deduplicate by qty+unit+amount (keep best score)
+  candidates.sort((a,b) => b.score - a.score);
+  const used = [];
+  const picked = [];
+  for (const c of candidates) {
+    if (c.score < 16) continue;
+    const key = c.qty + '|' + c.unit + '|' + c.amount;
+    if (used.includes(key)) continue;
+    // avoid same line double-count with different perm
+    const sameLine = picked.find(p => p.lineIndex === c.lineIndex && Math.abs(p.amount - c.amount) < 0.02);
+    if (sameLine) continue;
+    used.push(key);
+    picked.push(c);
+  }
+
+  // Sort by line order
+  picked.sort((a,b) => a.lineIndex - b.lineIndex);
+
+  // Build product description from text before numbers + previous lines
+  const out = [];
+  const seenAmt = new Set();
+  for (const c of picked) {
+    const ak = c.qty + 'x' + c.unit + '=' + c.amount;
+    if (seenAmt.has(ak)) continue;
+    seenAmt.add(ak);
+
+    // Gather product text: current textBefore + up to 3 previous lines
+    let chunks = [];
+    for (let k = Math.max(0, c.lineIndex - 4); k <= c.lineIndex; k++) {
+      let t = lines[k];
+      if (k === c.lineIndex) t = c.textBefore || t;
+      if (!t) continue;
+      if (/^total\b/i.test(t)) continue;
+      if (/swift|beneficiary|intermediary|terms and/i.test(t)) continue;
+      // remove pure number tails
+      t = t.replace(/(?:\s+\d+(?:[.,]\d+)?){2,}\s*$/,'').trim();
+      if (t.length >= 2) chunks.push(t);
+    }
+    let desc = chunks.join(' | ');
+    // Prefer "Name: xxx" if present
+    const nameM = desc.match(/Name\s*:\s*([^\|1]+)/i);
+    // SKU: 5-8 digit code
+    let sku = '';
+    const skuM = desc.match(/\b(\d{5,8})\b/);
+    if (skuM) sku = skuM[1];
+    // Model-like token
+    const modM = desc.match(/\b([A-Z]{2,}[A-Z0-9.\-]*(?:-[A-Z0-9.\-]+)*)\b/);
+    let name = nameM ? nameM[1].trim() : '';
+    if (!name) {
+      // last meaningful words
+      const cleaned = desc
+        .replace(/\bSN\b|\bCode\b|\bModel\b|\bFOB\b|\bQTY\b|\bAmount\b/ig,'')
+        .replace(/\d+\)\s*/g,' ')
+        .replace(/\s+/g,' ').trim();
+      // take fragment after sku
+      if (sku && cleaned.includes(sku)) {
+        name = cleaned.split(sku).pop().trim();
+      } else {
+        name = cleaned;
+      }
+      name = name.replace(/^[\d.\s\-_|]+/,'').trim();
+      // limit length
+      if (name.length > 80) name = name.slice(0, 80).trim();
+    }
+    if (!name || name.length < 2) name = sku ? ('Artículo ref. ' + sku) : ('Ítem línea ' + (out.length+1));
+    if (sku && name.indexOf(sku) < 0) name = name + ' — ref. ' + sku;
+
+    // Filter junk names
+    if (typeof isValidProductLine === 'function') {
+      if (!isValidProductLine(name, sku, c.qty, c.unit)) {
+        // still accept if math is solid and qty>=10
+        if (!(c.qty >= 10 && c.amount >= 1 && /[a-z]{3,}/i.test(name))) continue;
+      }
+    }
+
+    out.push({
+      nro: String(out.length + 1),
+      sku: sku,
+      desc: name.replace(/\s+/g,' ').trim(),
+      qty: c.qty,
+      unit: Math.round(c.unit * 10000) / 10000,
+      amount: Math.round(c.amount * 100) / 100,
+      codigo: ''
+    });
+  }
+
+  // Invoice total check (optional info)
+  const totalM = raw.match(/Total\s*:?\s*([\d,]+(?:\.\d+)?)/i);
+  if (totalM && out.length) {
+    const invTotal = parseFloat(totalM[1].replace(',',''));
+    const sum = out.reduce((s,x) => s + x.qty * x.unit, 0);
+    out._invoiceTotal = invTotal;
+    out._sumLines = Math.round(sum * 100) / 100;
+  }
+  return out.length ? out : null;
+}
+
+function parseProformaInvoiceText(text){
+  const raw = String(text||'').replace(/\r/g,'\n');
+  let body = raw;
+  const terms = body.search(/\nTerms and Conditions/i);
+  if (terms > 0) body = body.slice(0, terms);
+
+  const reAnchor = /(?:^|\n)\s*(\d{1,3})\s+(\d{5,8})\s+/g;
+  const anchors = [];
+  let m;
+  while ((m = reAnchor.exec(body)) !== null) {
+    anchors.push({ nro: m[1], code: m[2], index: m.index + (m[0].startsWith('\n') ? 1 : 0), end: m.index + m[0].length });
+  }
+  if (anchors.length < 2) return null;
+
+  const out = [];
+  for (let i = 0; i < anchors.length; i++) {
+    const a = anchors[i];
+    const sliceEnd = i + 1 < anchors.length ? anchors[i+1].index : body.length;
+    const block = body.slice(a.end, sliceEnd);
+
+    let name = '';
+    const names = [...block.matchAll(/Name\s*:\s*([^\n]+)/gi)];
+    if (names.length) {
+      name = names[0][1].replace(/\s+/g,' ').trim().replace(/\s*\d+\)\s*.*$/,'').trim();
+    }
+
+    let model = '';
+    const head = block.slice(0, 100).replace(/\n/g,' ').trim();
+    const modelM = head.match(/^([A-Z0-9][A-Z0-9._\-\/()]*(?:-[A-Z0-9._\-\/()]+)*)/i);
+    if (modelM) model = modelM[1];
+    if (!name) {
+      let rest = head.replace(model, '').replace(/Name:\s*/i,'').trim();
+      rest = rest.replace(/\d+\)\s*.*$/,'').trim();
+      if (/[a-zA-Z]{3,}/.test(rest)) name = rest.split(/  /)[0].trim();
+    }
+
+    // Numbers in block - typical row: FOB QTY Packing G.W Amount
+    const numMatches = [...block.matchAll(/\d+(?:\.\d+)?/g)];
+    const nums = numMatches.map(x => parseFloat(x[0]));
+
+    let fob = null, qty = null, bestScore = -1;
+    // Strategy A: last number is amount; find fob*qty ≈ amount
+    if (nums.length >= 3) {
+      const amount = nums[nums.length - 1];
+      if (amount >= 1) {
+        for (let x = 0; x < nums.length - 1; x++) {
+          for (let y = x + 1; y < nums.length - 1; y++) {
+            const u = nums[x], q = nums[y];
+            if (q < 10 || q > 5e6) continue;
+            if (Math.abs(q - Math.round(q)) > 0.01) continue;
+            if (u <= 0 || u >= 500) continue;
+            // FOB usually has decimals or is small
+            const prod = u * Math.round(q);
+            const err = Math.abs(prod - amount);
+            if (err <= Math.max(0.15, amount * 0.02)) {
+              // score: prefer earlier fob (left side of row), integer qty, u not looking like GW
+              let sc = 100 - err - x;
+              if (u < 50) sc += 20;
+              if (Math.round(q) >= 50) sc += 10;
+              if (sc > bestScore) {
+                bestScore = sc;
+                fob = u;
+                qty = Math.round(q);
+              }
+            }
+          }
+        }
+      }
+    }
+    // Strategy B: first small num + following integer >= 10 (classic FOB QTY at start of numeric row)
+    if (qty == null) {
+      for (let x = 0; x < nums.length - 1; x++) {
+        if (nums[x] > 0 && nums[x] < 100 && nums[x+1] >= 10 && Math.abs(nums[x+1]-Math.round(nums[x+1]))<0.01) {
+          fob = nums[x];
+          qty = Math.round(nums[x+1]);
+          break;
+        }
+      }
+    }
+
+    if (qty == null || qty <= 0) continue;
+    if (fob == null) fob = 0;
+    if (!name) name = model || ('Part ' + a.code);
+    name = name.replace(/^\d+\)\s*/,'').trim();
+    // strip trailing numbers accidentally captured in name
+    name = name.replace(/(?:\s+\d+(?:\.\d+)?){2,}\s*$/,'').trim();
+    if (name.length > 55) name = name.slice(0, 55).trim();
+
+    const desc = (name + (model && name.indexOf(model) < 0 ? ' — ' + model : '') + ' — ref. ' + a.code).replace(/\s+/g,' ').trim();
+    out.push({ nro: a.nro, sku: a.code, model: model, desc: desc, qty: qty, unit: fob, codigo: '' });
+  }
+  return out.length ? out : null;
+}
+
+function parsePdfInvoiceText(text){
+  // 0) Proforma estructurada (SN + Code + Name + FOB + QTY)
+  try {
+    const pro = parseProformaInvoiceText(text);
+    if (pro && pro.length >= 3) return pro;
+  } catch (e) { console.warn('proforma parse', e); }
+
+  // 1) Universal: qty * unit ≈ amount (cualquier proveedor)
+  try {
+    const uni = parseInvoiceByAmounts(text);
+    if (uni && uni.length >= 2) return uni;
+  } catch (e) { console.warn('amount parse', e); }
+
+  const rawLines = String(text||'').split(/\r?\n/).map(l => l.replace(/\s+/g,' ').trim()).filter(l => l.length > 1);
+
+  // 1) Try matrix path with scoring
+  const matrix = rawLines.map(l => {
+    if (l.includes('\t')) return l.split('\t').map(x => x.trim()).filter(Boolean);
+    const parts = l.split(/\s{2,}/).map(x => x.trim()).filter(Boolean);
+    if (parts.length >= 3) return parts;
+    // spaced single line: 1 411707 Rubber gasket 100 0.39 39.00
+    const tokens = l.split(/\s+/);
+    if (tokens.length >= 4) return tokens;
+    return [l];
+  });
+
+  let inv = rowsFromInvoiceMatrix(matrix);
+  if (inv && inv.length) {
+    inv = inv.filter(r => isValidProductLine(r.desc, r.sku, r.qty, r.unit) && scoreProductRow([r.nro, r.sku, r.desc, r.qty, r.unit]) >= 4);
+    if (inv.length >= 2) return inv;
+  }
+
+  // 2) Regex patterns for classic invoice lines
+  const out = [];
+  const seen = new Set();
+  const patterns = [
+    // nro sku desc qty unit total
+    /^(\d{1,4})[.\):\s]+([A-Z0-9][A-Z0-9._\-\/()]{2,})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s+(\d+(?:[.,]\d+)?)(?:\s+(\d+(?:[.,]\d+)?))?$/i,
+    // sku desc qty unit (no nro)
+    /^([A-Z0-9][A-Z0-9._\-\/()]{2,})\s+(.+?)\s+(\d{1,6})\s+(\d+(?:[.,]\d+)?)\s*$/i,
+    // nro desc qty unit
+    /^(\d{1,4})[.\):\s]+([A-Za-zÁÉÍÓÚáéíóúñÑ].+?)\s+(\d{1,6})\s+(\d+(?:[.,]\d+)?)\s*$/
+  ];
+
+  rawLines.forEach(l => {
+    if (/total|subtotal|invoice|buyer|seller|swift|bank |address|tel:|fax:|www\.|@|page\s*\d/i.test(l)) return;
+    if (l.length < 6) return;
+
+    for (let pi = 0; pi < patterns.length; pi++) {
+      const m = l.match(patterns[pi]);
+      if (!m) continue;
+      let nro = '', sku = '', desc = '', qty = 1, unit = 0;
+      if (pi === 0) {
+        nro = m[1]; sku = m[2]; desc = m[3].trim(); qty = parseFloat(m[4].replace(',','.')); unit = parseFloat(m[5].replace(',','.'));
+      } else if (pi === 1) {
+        sku = m[1]; desc = m[2].trim(); qty = parseFloat(m[3].replace(',','.')); unit = parseFloat(m[4].replace(',','.'));
+      } else {
+        nro = m[1]; desc = m[2].trim(); qty = parseFloat(m[3].replace(',','.')); unit = parseFloat(m[4].replace(',','.'));
+      }
+      if (isJunkInvoiceToken(desc) || isJunkInvoiceToken(sku)) continue;
+      if (!looksLikePartNumber(sku) && !/[a-záéíóúñ]{3,}/i.test(desc)) continue;
+      if (isNaN(qty) || qty <= 0) continue;
+      if (sku && desc && desc.toUpperCase().indexOf(sku.toUpperCase()) < 0)
+        desc = desc + ' — ref. ' + sku;
+      else if (sku && !desc) desc = 'Artículo ref. ' + sku;
+      const key = (sku||desc) + '|' + qty + '|' + unit;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ nro, sku, desc, qty, unit: isNaN(unit)?0:unit, codigo: '' });
+      break;
+    }
+  });
+
+  if (out.length >= 2) return out;
+
+  // 3) Token-window pass: find part numbers near quantities/prices
+  const tokens = rawLines.join(' \n ').split(/\s+/);
+  for (let i = 0; i < tokens.length - 3; i++) {
+    if (!looksLikePartNumber(tokens[i])) continue;
+    // look ahead for desc words, qty, price
+    let descParts = [];
+    let qty = null, unit = null;
+    for (let j = i + 1; j < Math.min(i + 12, tokens.length); j++) {
+      const t = tokens[j];
+      if (looksLikeQty(t) && qty == null && parseFloat(t) >= 1) { qty = parseFloat(t); continue; }
+      if (looksLikeMoney(t) && qty != null && unit == null) { unit = parseFloat(t.replace('$','')); break; }
+      if (looksLikePartNumber(t) && j > i) break;
+      if (!isJunkInvoiceToken(t) && /[a-záéíóúñ]/i.test(t) && !looksLikeMoney(t)) descParts.push(t);
+    }
+    if (qty == null) continue;
+    const sku = tokens[i];
+    let desc = descParts.join(' ').trim();
+    if (!desc) desc = 'Artículo ref. ' + sku;
+    else if (desc.toUpperCase().indexOf(sku.toUpperCase()) < 0) desc = desc + ' — ref. ' + sku;
+    const key = sku + '|' + qty + '|' + (unit||0);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ nro: '', sku, desc, qty, unit: unit||0, codigo: '' });
+  }
+
+  // final filter
+  return out.filter(r => isValidProductLine(r.desc, r.sku, r.qty, r.unit) && scoreProductRow([r.nro, r.sku, r.desc, r.qty, r.unit]) >= 4);
+}
+
+
+
+function cargarXlsxSiPosible(file, ta, ev){
+  // Dynamic SheetJS
+  const prev = window.XLSX;
+  const go = () => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+        if (!rows.length) { toast('Excel vacío'); return; }
+        const inv = rowsFromInvoiceMatrix(rows);
+        if (inv && inv.length) {
+          ta.value = inv.map(r => {
+            let line = r.desc + ' | ' + r.qty + ' | ' + r.unit;
+            if (r.codigo) line += ' || ' + r.codigo;
+            return line;
+          }).join(String.fromCharCode(10));
+          toast('Factura Excel detectada: ' + inv.length + ' ítems. Pulsa "Cargar texto a la relación"');
+        } else {
+          const out = [];
+          for (let i=0;i<rows.length;i++) {
+            const cols = rows[i].map(x => String(x==null?'':x).trim());
+            if (!cols.some(Boolean)) continue;
+            if (/^total$/i.test(cols[0])) continue;
+            if (i < 15 && /nro|codigo|descrip|invoice|buyer/i.test(cols.join(' '))) {
+              // possible header - try continue unless looks like data
+            }
+            out.push(cols.filter(Boolean).join(' | '));
+          }
+          ta.value = out.join(String.fromCharCode(10));
+          toast('Excel leído: ' + out.length + ' filas. Revisa y carga a la relación');
+        }
+      } catch(err) {
+        toast('No se pudo leer el Excel. Guárdalo como CSV y súbelo.');
+        console.error(err);
+      }
+      if (ev && ev.target) ev.target.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+  };
+  if (window.XLSX) { go(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+  s.onload = go;
+  s.onerror = () => {
+    toast('Sin conexión a SheetJS. Abre el Excel y "Guardar como CSV", luego súbelo.');
+    if (ev && ev.target) ev.target.value = '';
+  };
+  document.head.appendChild(s);
+}
+
+// Extend parseLoteLine to support || codigo
+function parseLoteLine(line){
+  line = String(line||'').trim();
+  if (!line) return null;
+  let codigo = '';
+  if (line.includes('||')) {
+    const sp = line.split('||');
+    line = sp[0].trim();
+    codigo = (sp[1]||'').trim();
+  }
+  const parts = line.split('|').map(s => s.trim());
+  let o;
+  if (parts.length >= 3) o = { desc: parts[0], qty: parseFloat(parts[1])||1, unit: parseFloat(parts[2])||0 };
+  else if (parts.length === 2) {
+    const n = parseFloat(parts[1]);
+    o = !isNaN(n) ? { desc: parts[0], qty: n, unit: 0 } : { desc: parts[0], qty: 1, unit: 0 };
+  } else o = { desc: line, qty: 1, unit: 0 };
+  if (codigo) o.codigo = codigo;
+  return o;
+}
+
+function integrarRespuestaIA(){
+  const ta = document.getElementById('loteRespuestaIA');
+  if (!ta) return;
+  const text = ta.value || '';
+  if (!text.trim()) { toast('Pega primero la respuesta de la IA'); return; }
+  if (!lineasMerc.length) { toast('No hay productos en la relación'); return; }
+
+  // Map: itemIndex (1-based among current lines) or id -> codigo
+  const found = []; // {n, codigo, id?}
+
+  // Pattern: Código: 8482.10.00 or Codigo: 8482100000
+  const reCod = /c[oó]digo\s*(?:sugerido|hs|arancelario)?\s*[:\-–]?\s*([0-9]{4}(?:[\.\s]?[0-9]{2}){1,3}[0-9]*)/gi;
+  // Pattern: ### Ítem 3  or Ítem 3 or Item #3
+  const reItem = /(?:###\s*)?(?:[ií]tem|producto|linea|línea)\s*#?\s*(\d+)/gi;
+  // Pattern: ID_app: 12
+  const reId = /ID_app\s*:\s*(\d+)/gi;
+  // Table: 3 | 8482.10.00 or 3, 8482.10.00
+  const reTable = /(?:^|\n)\s*(\d+)\s*[|\t,;]+\s*([0-9]{4}(?:[\.\s]?[0-9]{2}){1,3}[0-9]*)/g;
+
+  // Block-wise parse: split by ### or Ítem N
+  const blocks = text.split(/(?=###\s*[ií]tem\s*\d+)|(?=(?:^|\n)\s*[ií]tem\s*#?\s*\d+)/i);
+  blocks.forEach(block => {
+    if (!block.trim()) return;
+    let n = null, id = null, codigo = null;
+    const mItem = block.match(/[ií]tem\s*#?\s*(\d+)/i);
+    if (mItem) n = parseInt(mItem[1],10);
+    const mId = block.match(/ID_app\s*:\s*(\d+)/i);
+    if (mId) id = parseInt(mId[1],10);
+    const mCod = block.match(/c[oó]digo\s*(?:sugerido|hs|arancelario)?\s*[:\-–]?\s*([0-9]{4}(?:[\.\s]?[0-9]{2}){1,3}[0-9]*)/i);
+    if (mCod) codigo = mCod[1].replace(/\s+/g,'');
+    // also bare code line
+    if (!codigo) {
+      const m2 = block.match(/\b([0-9]{4}\.[0-9]{2}\.[0-9]{2}(?:\.[0-9]{2})?)\b/);
+      if (m2) codigo = m2[1];
+    }
+    if (codigo && (n != null || id != null)) found.push({n, id, codigo});
+  });
+
+  // Table rows
+  let tm;
+  const reTable2 = /(?:^|\n)\s*(\d+)\s*[|\t,;]+\s*([0-9]{4}(?:[\.\s]?[0-9]{2}){1,3}[0-9]*)/g;
+  while ((tm = reTable2.exec(text)) !== null) {
+    found.push({n: parseInt(tm[1],10), id: null, codigo: tm[2].replace(/\s+/g,'')});
+  }
+
+  // Sequential: all "Código: xxx" in order for lines without code
+  if (!found.length) {
+    const cods = [];
+    let m;
+    const re = /c[oó]digo\s*(?:sugerido|hs|arancelario)?\s*[:\-–]?\s*([0-9]{4}(?:[\.\s]?[0-9]{2}){1,3}[0-9]*)/gi;
+    while ((m = re.exec(text)) !== null) cods.push(m[1].replace(/\s+/g,''));
+    if (!cods.length) {
+      const re2 = /\b([0-9]{4}\.[0-9]{2}\.[0-9]{2}(?:\.[0-9]{2})?)\b/g;
+      while ((m = re2.exec(text)) !== null) cods.push(m[1]);
+    }
+    const pendientes = lineasMerc.filter(l => !(l.codigo||'').trim());
+    cods.forEach((cod, i) => {
+      if (pendientes[i]) found.push({n: null, id: pendientes[i].id, codigo: cod});
+    });
+  }
+
+  let aplicados = 0;
+  const used = new Set();
+  found.forEach(f => {
+    let L = null;
+    if (f.id != null) L = lineasMerc.find(x => x.id === f.id);
+    if (!L && f.n != null) {
+      // n is 1-based index in pendientes or all
+      const pendientes = lineasMerc.filter(l => !(l.codigo||'').trim());
+      if (pendientes.length && f.n <= pendientes.length) L = pendientes[f.n - 1];
+      else if (f.n <= lineasMerc.length) L = lineasMerc[f.n - 1];
+    }
+    if (!L || !f.codigo) return;
+    const key = L.id + ':' + f.codigo;
+    if (used.has(L.id)) return;
+    used.add(L.id);
+    L.codigo = normalizarCodigo(f.codigo) || f.codigo;
+    aplicarArancelALinea(L);
+    aplicados++;
+  });
+
+  renderMercLineas();
+  calcularMerc();
+  actualizarLoteStats();
+  if (aplicados) { try { revisarAp1Lote(); } catch(e){} toast(aplicados + ' código(s) integrados · Ap. I reconsultado'); }
+  else toast('No se detectaron códigos en el texto. Usa formato: Código: 8482.10.00 por Ítem N');
+}
+
+
+function importarLoteMerc(reemplazar){
+  const ta = document.getElementById('lotePaste');
+  if (!ta) return;
+  const lines = ta.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (!lines.length) { toast('Pega al menos una línea de producto'); return; }
+  if (reemplazar) {
+    lineasMerc = [];
+    nextMercId = 1;
+  }
+  let n = 0;
+  let omitidos = 0;
+  lines.forEach(line => {
+    const p = parseLoteLine(line);
+    if (!p || !p.desc) return;
+    // filtrar basura típica de OCR/PDF mal leído
+    const d = (p.desc||'').trim();
+    const low = d.toLowerCase();
+    if (d.length < 3) { omitidos++; return; }
+    if (/^artículo ref\.\s*(name|qty|pcs|packed|packing|power|with|to|can|make|when|and|term|color|details|swift|group|district|pudong|\d+\))?$/i.test(d)) { omitidos++; return; }
+    if (/^(name|qty|pcs|packed|packing|total|invoice)/i.test(low) && d.length < 20) { omitidos++; return; }
+    const pre = { desc: p.desc, qty: p.qty, unit: p.unit };
+    if (p.codigo) pre.codigo = p.codigo;
+    agregarMercLinea(pre);
+    if (p.codigo) {
+      const L = lineasMerc[lineasMerc.length-1];
+      if (L) aplicarArancelALinea(L);
+    }
+    n++;
+  });
+  renderMercLineas();
+  calcularMerc();
+  actualizarLoteStats();
+  toast(n + ' producto(s) ' + (reemplazar ? 'cargados (lista reemplazada)' : 'agregados') + (omitidos ? ' · ' + omitidos + ' líneas basura omitidas' : ''));
+}
+
+function actualizarLoteStats(){
+  const el = document.getElementById('loteStats');
+  const prog = document.getElementById('loteProgress');
+  const total = lineasMerc.length;
+  const conCod = lineasMerc.filter(l => (l.codigo||'').trim()).length;
+  const sinCod = total - conCod;
+  if (el) el.textContent = total ? ('· '+total+' ítems · '+conCod+' con código · '+sinCod+' pendientes') : '';
+  if (prog) prog.textContent = total ? ('Progreso clasificación: '+conCod+'/'+total+' ('+Math.round(100*conCod/Math.max(1,total))+'%)') : '';
+}
+
+function sugerirCodigosLoteLocal(){
+  const base = leerBaseArancelaria();
+  if (!base.length) {
+    toast('Carga la base arancelaria en este navegador primero');
+    return;
+  }
+  let aplicados = 0, sin = 0;
+  lineasMerc.forEach(L => {
+    if ((L.codigo||'').trim()) return;
+    if (!(L.desc||'').trim()) return;
+    const hits = buscarArancelPorDesc(L.desc, 1);
+    if (hits.length) {
+      L.codigo = hits[0].codigo;
+      aplicarArancelALinea(L);
+      aplicados++;
+    } else sin++;
+  });
+  renderMercLineas();
+  calcularMerc();
+  actualizarLoteStats();
+  toast('Base local: '+aplicados+' código(s) sugeridos'+(sin?'; '+sin+' sin coincidencia':''));
+}
+
+function exportarPromptsIALote(){
+  const pendientes = lineasMerc.filter(l => (l.desc||'').trim() && !(l.codigo||'').trim());
+  const todos = lineasMerc.filter(l => (l.desc||'').trim());
+  const lista = pendientes.length ? pendientes : todos;
+  if (!lista.length) { toast('No hay productos en la lista'); return; }
+
+  const lines = [];
+  lines.push('CLASIFICACIÓN ARANCELARIA — LOTE FACTURA / PACKING (VASMAR-CEYMA)');
+  lines.push('Fecha: ' + new Date().toISOString().slice(0,10));
+  lines.push('Cantidad de ítems: ' + lista.length + (pendientes.length ? ' (solo sin código HS)' : ''));
+  lines.push('');
+  lines.push('CONTEXTO:');
+  lines.push('- Esta lista proviene de una factura comercial de importación (repuestos / partes).');
+  lines.push('- El "Código" o "Ref" del proveedor NO es el código arancelario; es SKU del fabricante.');
+  lines.push('- Debes asignar código del Sistema Armonizado (HS/NANDINA), preferible a 6 dígitos y si puedes a 10.');
+  lines.push('- País de destino de la mercancía: Venezuela (orientar a nomenclatura andina/venezolana).');
+  lines.push('- Muchos ítems son RODAMIENTOS, yokes, cardanes, partes eléctricas de auto, etc. Clasifica según uso/material.');
+  lines.push('');
+  lines.push('FORMATO OBLIGATORIO DE RESPUESTA (para que una app lo lea automáticamente):');
+  lines.push('Para CADA ítem:');
+  lines.push('### Ítem N');
+  lines.push('ID_app: (copiar el ID_app que te indico)');
+  lines.push('Código: XXXX.XX.XX');
+  lines.push('Alternativas: código2; código3');
+  lines.push('Notas: justificación breve');
+  lines.push('');
+  lines.push('Al final, tabla resumen:');
+  lines.push('N | ID_app | Código | Ref proveedor');
+  lines.push('');
+  lines.push('--- LISTA DE PRODUCTOS A CLASIFICAR ---');
+  lines.push('');
+
+  lista.forEach((L, i) => {
+    lines.push('### Ítem ' + (i+1));
+    lines.push('ID_app: ' + L.id);
+    lines.push('Descripción: ' + (L.desc || ''));
+    // try extract ref from desc
+    const refM = String(L.desc||'').match(/ref\.\s*(.+)$/i);
+    if (refM) lines.push('Ref proveedor / SKU: ' + refM[1].trim());
+    if (L.qty) lines.push('Cantidad: ' + L.qty);
+    if (L.unit) lines.push('Precio unitario USD: ' + (Math.round(L.unit*10000)/10000));
+    lines.push('');
+  });
+
+  lines.push('--- FIN DE LISTA ---');
+  lines.push('Responde en español. Es sugerencia orientativa; validar con arancel oficial de Venezuela.');
+  lines.push('Si un grupo es idéntico (ej. todos rodamiento de bolas rígido de ranura profunda con sellos), puedes repetir el mismo HS y notarlo.');
+
+  const txt = lines.join('\n');
+  const blob = new Blob(['\ufeff'+txt], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'prompt_factura_arancel_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+  if (txt.length < 150000) {
+    navigator.clipboard.writeText(txt).then(() => toast('Prompt de factura copiado y descargado')).catch(()=>toast('Prompt descargado'));
+  } else toast('Prompt descargado (muy largo para portapapeles)');
+}
+
+function exportarLoteCSV(){
+  if (!lineasMerc.length) { toast('No hay productos'); return; }
+  const rows = [['id','descripcion','codigo','cantidad','unit_usd','ad_valorem','comex','ap1']];
+  lineasMerc.forEach(L => {
+    rows.push([
+      L.id,
+      '"'+String(L.desc||'').replace(/"/g,'""')+'"',
+      L.codigo||'',
+      L.qty||0,
+      L.unit||0,
+      L.ad||0,
+      L.comex?'SI':'NO',
+      L.ap1?'SI':'NO'
+    ]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lote_mercancias_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('CSV exportado');
+}
+
+function importarCodigosCSV(ev){
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const text = String(reader.result||'');
+    const lines = text.split(/\\r?\\n/).filter(Boolean);
+    let aplicados = 0;
+    lines.forEach((line, idx) => {
+      if (idx === 0 && /descripcion|codigo|id/i.test(line)) return; // header
+      // id,desc,codigo or desc,codigo or codigo only with matching order
+      const cols = line.split(',').map(s => s.trim().replace(/^"|"$/g,''));
+      if (cols.length >= 3 && /^\\d+$/.test(cols[0])) {
+        const id = parseInt(cols[0],10);
+        const codigo = cols[2];
+        const L = lineasMerc.find(x => x.id === id);
+        if (L && codigo) {
+          L.codigo = codigo;
+          if (cols[1] && !L.desc) L.desc = cols[1];
+          aplicarArancelALinea(L);
+          aplicados++;
+        }
+      } else if (cols.length >= 2) {
+        // try match by description
+        const desc = cols[0];
+        const codigo = cols[1];
+        const L = lineasMerc.find(x => (x.desc||'').trim() === desc.trim() && !(x.codigo||'').trim());
+        if (L && codigo) {
+          L.codigo = codigo;
+          aplicarArancelALinea(L);
+          aplicados++;
+        }
+      }
+    });
+    renderMercLineas();
+    calcularMerc();
+    actualizarLoteStats();
+    toast(aplicados+' código(s) importados y cruzados con la base');
+    ev.target.value = '';
+  };
+  reader.readAsText(f);
+}
+
+
+function agregarMercLinea(pre){
+  const id = nextMercId++;
+  lineasMerc.push(Object.assign({
+    id, desc:'', codigo:'', qty:1, unit:0, ad:15, iva:16, tasa:1,
+    ap1:false, comex:false, exoAd:0, exoIva:0, regimen:'', notas:''
+  }, pre||{}));
+  renderMercLineas();
+  calcularMerc();
+}
+
+function borrarMercLinea(id){
+  lineasMerc = lineasMerc.filter(x => x.id !== id);
+  renderMercLineas();
+  calcularMerc();
+}
+
+function onMercField(id, field, value, opts){
+  const L = lineasMerc.find(x => x.id === id);
+  if (!L) return;
+  if (field === 'qty' || field === 'unit' || field === 'ad' || field === 'iva' || field === 'tasa') {
+    L[field] = parseFloat(value) || 0;
+  } else {
+    L[field] = value;
+  }
+  if (field === 'codigo') {
+    aplicarArancelALinea(L);
+    // Actualizar solo banderas/notas sin re-render completo (no pierde el foco)
+    const root = document.querySelector('.merc-line[data-id="'+id+'"]');
+    if (root) {
+      const adEff = (L.ad||0) * (1 - (L.exoAd||0)/100);
+      const flags = [];
+      if (L.comex) flags.push('<span class="flag-warn">COMEX requerido</span>');
+      else if (L.codigo) flags.push('<span class="flag-info">Sin COMEX (según base)</span>');
+      if (L.ap1 || L.exoAd > 0) flags.push('<span class="flag-ok">Exo Ad-Val '+(L.exoAd||0)+'% → efectivo '+adEff.toFixed(2)+'%</span>');
+      if (L.exoIva > 0) flags.push('<span class="flag-ok">Exo IVA '+L.exoIva+'%</span>');
+      if (!L.codigo) flags.push('Ingresa un código para consultar la base');
+      else if (!L.ap1 && !L.comex && L.notas && L.notas.indexOf('no encontrado')>=0)
+        flags.push('<span class="flag-warn">No está en la base local</span>');
+      const fl = root.querySelector('.flags');
+      if (fl) fl.innerHTML = flags.join(' · ');
+      const hi = root.querySelector('.hint');
+      const fob = (L.qty||0)*(L.unit||0);
+      if (hi) hi.innerHTML = esc(L.notas||'')+' · FOB línea: $'+fmt(fob)+' · Ad efectivo: '+adEff.toFixed(2)+'%';
+      const adInp = root.querySelector('input[data-field="ad"]');
+      if (adInp && document.activeElement !== adInp) adInp.value = L.ad||0;
+      const descInp = root.querySelector('input[data-field="desc"]');
+      if (descInp && !descInp.value && L.desc) descInp.value = L.desc;
+    }
+    calcularMerc();
+    return;
+  }
+  if (opts && opts.skipRender) { calcularMerc(); return; }
+  renderMercLineas();
+  calcularMerc();
+}
+
+function aplicarArancelALinea(L){
+  const hit = buscarArancel(L.codigo);
+  const manual = !!L.ap1Manual;
+  const forcedOff = !!L.ap1ForcedOff;
+  if (!hit) {
+    L.notas = L.codigo
+      ? 'Código no encontrado en base (carga Ap. I / Cap. 84-85-87 en base_arancelaria.html). Puedes marcar Ap. I manual.'
+      : '';
+    if (forcedOff) {
+      L.ap1 = false; L.exoAd = 0; L.exoIva = 0;
+    } else if (manual) {
+      L.ap1 = true; L.exoAd = L.exoAd > 0 ? L.exoAd : 90; L.exoIva = L.exoIva > 0 ? L.exoIva : 90;
+      L.notas = '✓ Ap. I MANUAL: exo '+L.exoAd+'% Ad-Val + '+L.exoIva+'% IVA. ' + (L.notas||'');
+    } else {
+      L.ap1 = false; L.comex = false; L.exoAd = 0; L.exoIva = 0;
+    }
+    return;
+  }
+  L.codigo = normalizarCodigo(hit.codigo || L.codigo);
+  if (hit.ad != null && hit.ad !== '') L.ad = Number(hit.ad) || 0;
+  if (hit.iva != null) L.iva = Number(hit.iva) || 16;
+  if (hit.tasa != null) L.tasa = Number(hit.tasa) || 1;
+
+  const ap1Base = (typeof esBeneficioAp1 === 'function') ? esBeneficioAp1(hit) : !!(hit.ap1);
+  L.comex = !!(hit.comex || hit.listadoComex || (hit.regimen||'').toString().includes('9') || ap1Base);
+  // Beneficio Ap. I: automático desde base, o forzado manual / off
+  if (forcedOff) {
+    L.ap1 = false;
+    L.exoAd = 0;
+    L.exoIva = 0;
+  } else if (manual || ap1Base) {
+    L.ap1 = true;
+    L.exoAd = Number(hit.exoAd) > 0 ? Number(hit.exoAd) : 90;
+    L.exoIva = Number(hit.exoIva) > 0 ? Number(hit.exoIva) : 90;
+  } else {
+    L.ap1 = false;
+    L.exoAd = Number(hit.exoAd) || 0;
+    L.exoIva = Number(hit.exoIva) || 0;
+  }
+  L.regimen = hit.regimen || (L.comex ? 'RL9 COMEX' : '') || (L.ap1 ? 'Apéndice I' : '');
+  if (!L.desc && hit.desc) L.desc = hit.desc;
+  L.notas =
+    (L.ap1 ? ('✓ Ap. I'+(manual?' (manual)':'')+': Ad '+(L.ad||0)+'% × '+(100-(L.exoAd||0))+'% = '+(((L.ad||0)*(100-(L.exoAd||0))/100)).toFixed(2)+'% efectivo; IVA '+(L.iva||16)+'% → '+(((L.iva||16)*(100-(L.exoIva||0))/100)).toFixed(2)+'%. ') : 'Sin beneficio Ap. I según base. ') +
+    (L.comex ? '⚠ Requiere COMEX (RL9). ' : 'Sin COMEX según base. ') +
+    (hit.notas || '');
+}
+
+function setAp1Linea(id, on){
+  const L = lineasMerc.find(x => x.id === id);
+  if (!L) return;
+  if (on) {
+    L.ap1Manual = true;
+    L.ap1ForcedOff = false;
+    L.ap1 = true;
+    L.exoAd = 90;
+    L.exoIva = 90;
+    if (!L.iva) L.iva = 16;
+    aplicarArancelALinea(L); // refresh notes keeping manual
+  } else {
+    L.ap1Manual = false;
+    L.ap1ForcedOff = true;
+    L.ap1 = false;
+    L.exoAd = 0;
+    L.exoIva = 0;
+    L.notas = 'Ap. I desactivado manualmente. ' + (L.notas||'').replace(/✓ Ap\. I[^.]*(?:\. |$)/g,'');
+  }
+  renderMercLineas();
+  calcularMerc();
+  toast(on ? 'Ap. I: exo 90% Ad-Val + 90% IVA aplicado' : 'Ap. I desactivado en este ítem');
+}
+
+function aplicarAp1Todos(on){
+  let n = 0;
+  lineasMerc.forEach(L => {
+    if (!(L.codigo||L.desc)) return;
+    L.ap1Manual = !!on;
+    if (on) {
+      L.ap1 = true; L.exoAd = 90; L.exoIva = 90;
+      if (!L.iva) L.iva = 16;
+      n++;
+    } else {
+      aplicarArancelALinea(L);
+      n++;
+    }
+  });
+  if (on) {
+    // refresh notes
+    lineasMerc.forEach(L => { if (L.ap1Manual) aplicarArancelALinea(L); });
+  }
+  renderMercLineas();
+  calcularMerc();
+  toast(on ? ('Ap. I 90% aplicado a '+n+' ítem(s)') : ('Ap. I manual quitado en '+n+' ítem(s); base reconsultada'));
+}
+
+function revisarAp1Lote(){
+  const base = leerBaseArancelaria();
+  if (!base.length) {
+    toast('No hay base arancelaria. Abre base_arancelaria.html y carga Apéndice I');
+    return;
+  }
+  let auto = 0, sin = 0;
+  lineasMerc.forEach(L => {
+    if (!(L.codigo||'').trim()) { sin++; return; }
+    if (L.ap1Manual) { auto++; return; } // keep manual
+    aplicarArancelALinea(L);
+    if (L.ap1) auto++; else sin++;
+  });
+  renderMercLineas();
+  calcularMerc();
+  toast('Revisión Ap. I: '+auto+' con beneficio · '+sin+' sin beneficio / sin código');
+}
+
+
+function renderMercLineas(){
+  const box = document.getElementById('listaMerc');
+  if (!box) return;
+  if (!lineasMerc.length) {
+    box.innerHTML = '<div class="hint">Sin productos. Agrega al menos uno.</div>';
+    return;
+  }
+  box.innerHTML = lineasMerc.map(L => {
+    const fob = (L.qty||0)*(L.unit||0);
+    const adEff = (L.ad||0) * (1 - (L.exoAd||0)/100);
+    const flags = [];
+    if (L.comex) flags.push('<span class="flag-warn">COMEX requerido</span>');
+    else if (L.codigo) flags.push('<span class="flag-info">Sin COMEX (según base)</span>');
+    const ivaEff = (L.iva||16) * (1 - (L.exoIva||0)/100);
+    if (L.ap1 || L.exoAd > 0) {
+      flags.push('<span class="flag-ok">Ad '+(L.ad||0)+'% − exo '+ (L.exoAd||0) +'% Ap.I → <strong>'+adEff.toFixed(2)+'%</strong></span>');
+    }
+    if (L.exoIva > 0) {
+      flags.push('<span class="flag-ok">IVA '+(L.iva||16)+'% − exo '+L.exoIva+'% → <strong>'+ivaEff.toFixed(2)+'%</strong></span>');
+    }
+    if (L.ap1Manual) flags.push('<span class="flag-ok">Ap. I manual</span>');
+    return `<div class="merc-line" data-id="${L.id}">
+      <label>Descripción del producto</label>
+      <input type="text" data-field="desc" value="${esc(L.desc||'')}"
+        onchange="onMercField(${L.id},'desc',this.value)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();sugerirCodigoMerc(${L.id});}"
+        placeholder="Ej. Motor eléctrico 1.5 kW">
+      <div class="merc-tools">
+        <button type="button" class="btn btn-sm btn-outline" onclick="sugerirCodigoMerc(${L.id})">Sugerir código (base local)</button>
+        <button type="button" class="btn btn-sm btn-ok" style="background:#6A1B9A;color:#fff;border:none" onclick="consultarIACodigo(${L.id})">Consultar IA (copiar prompt)</button>
+        <button type="button" class="btn btn-sm btn-outline" onclick="buscarCodigoWeb(${L.id})">Buscar en web</button>
+      </div>
+      <div class="merc-suggest" id="suggest-${L.id}"></div>
+      <div class="row-tight r4" style="margin-top:6px">
+        <div>
+          <label>Código arancelario</label>
+          <input type="text" data-field="codigo" value="${esc(L.codigo||'')}"
+            oninput="onMercField(${L.id},'codigo',this.value)"
+            onchange="onMercField(${L.id},'codigo',this.value)"
+            placeholder="8501.10.19.00 o 8501101900">
+        </div>
+        <div>
+          <label>Cantidad</label>
+          <input type="number" min="0" step="1" value="${L.qty||0}" onchange="onMercField(${L.id},'qty',this.value)">
+        </div>
+        <div>
+          <label>Costo unit. USD</label>
+          <input type="number" min="0" step="0.01" value="${L.unit||0}" onchange="onMercField(${L.id},'unit',this.value)">
+        </div>
+        <div>
+          <label>Ad-Valorem %</label>
+          <input type="number" data-field="ad" min="0" step="0.01" value="${L.ad||0}" onchange="onMercField(${L.id},'ad',this.value)">
+        </div>
+      </div>
+      <div class="flags">${flags.join(' · ') || 'Ingresa un código para consultar la base'}</div>
+      <div class="hint">${esc(L.notas||'')} · FOB línea: $${fmt(fob)} · Ad efectivo: ${adEff.toFixed(2)}%</div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.85rem;cursor:pointer">
+        <input type="checkbox" ${L.ap1 || L.ap1Manual ? 'checked' : ''} onchange="setAp1Linea(${L.id}, this.checked)">
+        <span><strong>Apéndice I</strong>: reduce el <em>Ad del código</em> y el IVA en un <strong>90%</strong>
+          (ej. Ad 15% → <strong>1,5%</strong>; IVA 16% → <strong>1,6%</strong>).
+          ${L.ap1 || L.ap1Manual ? ' Ahora: Ad '+(L.ad||0)+'% → <strong>'+adEff.toFixed(2)+'%</strong> · IVA '+(L.iva||16)+'% → <strong>'+ivaEff.toFixed(2)+'%</strong>' : ''}
+        </span>
+      </label>
+      <button type="button" class="btn btn-sm btn-danger" style="margin-top:6px" onclick="borrarMercLinea(${L.id})">Quitar</button>
+    </div>`;
+  }).join(String.fromCharCode(10));
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function sumLineasM(arr){
+  return arr.reduce((s,l)=>s+(parseFloat(l.monto)||0),0);
+}
+
+function agregarLineaM(tipo){
+  if (tipo==='operacion') {
+    lineasOpM.push({id: nextOpMId++, concepto:'', monto:0});
+    renderLineasM();
+  } else {
+    lineasTerM.push({id: nextTerMId++, concepto:'', monto:0});
+    renderLineasM();
+  }
+  calcularMerc();
+}
+
+function renderLineasM(){
+  const ro = document.getElementById('listaOperacionM');
+  const rt = document.getElementById('listaTercerosM');
+  if (ro) ro.innerHTML = lineasOpM.map(l => `<div class="row" style="margin-bottom:6px">
+    <input type="text" placeholder="Concepto" value="${esc(l.concepto)}" onchange="(lineasOpM.find(x=>x.id===${l.id})||{}).concepto=this.value;calcularMerc()">
+    <input type="number" step="0.01" value="${l.monto||0}" onchange="(lineasOpM.find(x=>x.id===${l.id})||{}).monto=parseFloat(this.value)||0;calcularMerc()">
+    <button class="btn btn-sm btn-danger" onclick="lineasOpM=lineasOpM.filter(x=>x.id!==${l.id});renderLineasM();calcularMerc()">×</button>
+  </div>`).join('');
+  if (rt) rt.innerHTML = lineasTerM.map(l => `<div class="row" style="margin-bottom:6px">
+    <input type="text" placeholder="Concepto" value="${esc(l.concepto)}" onchange="(lineasTerM.find(x=>x.id===${l.id})||{}).concepto=this.value;calcularMerc()">
+    <input type="number" step="0.01" value="${l.monto||0}" onchange="(lineasTerM.find(x=>x.id===${l.id})||{}).monto=parseFloat(this.value)||0;calcularMerc()">
+    <button class="btn btn-sm btn-danger" onclick="lineasTerM=lineasTerM.filter(x=>x.id!==${l.id});renderLineasM();calcularMerc()">×</button>
+  </div>`).join('');
+}
+
+function calcularMerc(){
+  const flete = parseFloat(document.getElementById('mFlete')?.value)||0;
+  const seguro = parseFloat(document.getElementById('mSeguro')?.value)||0;
+  const fob = lineasMerc.reduce((s,l)=>s+(l.qty||0)*(l.unit||0),0);
+  const cif = fob + flete + seguro;
+  let adT=0, tasaT=0, ivaT=0;
+  const desglose = [];
+  lineasMerc.forEach(L => {
+    const fobL = (L.qty||0)*(L.unit||0);
+    const share = fob > 0 ? fobL / fob : 0;
+    const cifL = fobL + flete*share + seguro*share;
+    const adEff = (L.ad||0) * (1 - (L.exoAd||0)/100);
+    const ivaEff = (L.iva||16) * (1 - (L.exoIva||0)/100);
+    const tasa = L.tasa != null ? L.tasa : 1;
+    const adM = cifL * adEff / 100;
+    const tasaM = cifL * tasa / 100;
+    const ivaM = (cifL + adM + tasaM) * ivaEff / 100;
+    adT += adM; tasaT += tasaM; ivaT += ivaM;
+    desglose.push({desc: L.desc||L.codigo||'Ítem', codigo:L.codigo, cifL, adEff, adM, tasaM, ivaM, comex:L.comex, ap1:L.ap1});
+  });
+  const impT = adT + tasaT + ivaT;
+  const opT = sumLineasM(lineasOpM);
+  const terT = sumLineasM(lineasTerM);
+  const total = impT + opT + terT;
+
+  const el = id => document.getElementById(id);
+  if (el('mFobTotal')) el('mFobTotal').textContent = '$ '+fmt(fob);
+  if (el('mCifTotal')) el('mCifTotal').textContent = '$ '+fmt(cif);
+  if (el('mTotalImp')) el('mTotalImp').textContent = '$ '+fmt(impT);
+  if (el('mTotalOp')) el('mTotalOp').textContent = '$ '+fmt(opT);
+  if (el('mTotalTer')) el('mTotalTer').textContent = '$ '+fmt(terT);
+  if (el('mTotalGeneral')) el('mTotalGeneral').textContent = '$ '+fmt(total);
+
+  const box = el('mImpuestosDesglose');
+  if (box) {
+    if (!desglose.length) box.innerHTML = 'Agrega productos con código para calcular.';
+    else box.innerHTML = desglose.map(d =>
+      `<div style="margin-bottom:4px"><strong>${esc(d.desc)}</strong> (${esc(d.codigo||'—')})
+       · CIF $${fmt(d.cifL)} · Ad ${d.adEff.toFixed(2)}% = $${fmt(d.adM)} · Tasa $${fmt(d.tasaM)} · IVA $${fmt(d.ivaM)}
+       ${d.comex?' · <span style="color:#C65911">COMEX</span>':''}${d.ap1?' · <span style="color:#2E7D32">Ap.I</span>':''}</div>`
+    ).join('');
+  }
+  return {fob, flete, seguro, cif, adT, tasaT, ivaT, impT, opT, terT, total, desglose, lineas: lineasMerc};
+}
+
+function renderCatMerc(){
+  const box = document.getElementById('listaCatMerc');
+  if (!box) return;
+  if (!catalogoMerc.length) { box.innerHTML = '<div class="hint">Aún no hay productos guardados. Agrégalos en la relación y pulsa "Guardar productos al catálogo".</div>'; return; }
+  const q = ((document.getElementById('buscarCatMerc')||{}).value||'').toLowerCase().trim();
+  const items = catalogoMerc.map((p,i)=>({p,i})).filter(({p}) => {
+    if (!q) return true;
+    return (p.desc||'').toLowerCase().includes(q) || (p.codigo||'').toLowerCase().includes(q);
+  });
+  if (!items.length) { box.innerHTML = '<div class="hint">Sin coincidencias para "'+esc(q)+'".</div>'; return; }
+  box.innerHTML = items.map(({p,i}) =>
+    `<div class="item" style="display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid #ddd;border-radius:8px;padding:8px;margin-bottom:6px">
+      <div><strong>${esc(p.desc||'Producto')}</strong>
+        <div class="hint">${esc(p.codigo)} · Ad ${p.ad}% · $${fmt(p.unit||0)}
+          ${p.comex?' · <span class="flag-warn">COMEX</span>':''}
+          ${p.ap1?' · <span class="flag-ok">Ap.I</span>':''}
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline" onclick="usarProductoMerc(${i})">Usar</button>
+        <button class="btn btn-sm btn-danger" onclick="catalogoMerc.splice(${i},1);saveMerc();renderCatMerc()">×</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function usarProductoMerc(i){
+  const p = catalogoMerc[i];
+  if (!p) return;
+  agregarMercLinea({
+    desc: p.desc, codigo: p.codigo, qty: 1, unit: p.unit||0,
+    ad: p.ad||15, iva: p.iva||16, tasa: p.tasa||1,
+    ap1: !!p.ap1, comex: !!p.comex, exoAd: p.exoAd||0, exoIva: p.exoIva||0,
+    regimen: p.regimen||'', notas: p.notas||''
+  });
+  toast('Producto agregado a la relación');
+}
+
+function guardarProductosMercAlCatalogo(){
+  let n = 0;
+  lineasMerc.forEach(L => {
+    if (!L.desc && !L.codigo) return;
+    const exists = catalogoMerc.find(x => x.codigo === L.codigo && x.desc === L.desc);
+    if (exists) {
+      Object.assign(exists, {unit:L.unit, ad:L.ad, iva:L.iva, tasa:L.tasa, ap1:L.ap1, comex:L.comex, exoAd:L.exoAd, exoIva:L.exoIva, regimen:L.regimen, notas:L.notas});
+    } else {
+      catalogoMerc.push({
+        desc: L.desc, codigo: L.codigo, unit: L.unit, ad: L.ad, iva: L.iva, tasa: L.tasa,
+        ap1: L.ap1, comex: L.comex, exoAd: L.exoAd, exoIva: L.exoIva, regimen: L.regimen, notas: L.notas
+      });
+    }
+    n++;
+  });
+  saveMerc();
+  renderCatMerc();
+  toast(n ? (n+' producto(s) en catálogo de mercancías') : 'No hay productos para guardar');
+}
+
+function guardarMercRelacion(){
+  const d = calcularMerc();
+  historialMerc.unshift({
+    id: Date.now(),
+    fecha: document.getElementById('mFecha')?.value || new Date().toISOString().slice(0,10),
+    presupuesto: document.getElementById('mPresupuesto')?.value || '',
+    cliente: document.getElementById('mCliente')?.value || '',
+    ...d,
+    lineasOpM: JSON.parse(JSON.stringify(lineasOpM)),
+    lineasTerM: JSON.parse(JSON.stringify(lineasTerM))
+  });
+  if (historialMerc.length > 50) historialMerc.length = 50;
+  saveMerc();
+  toast('Relación de mercancías guardada');
+}
+
+function imprimirPDFMerc(){
+  const d = calcularMerc();
+  const si = document.getElementById('mVistaCliente')?.value === 'si';
+  const emp = document.getElementById('mEmpresaLogo')?.value || 'vasmar';
+  const info = EMPRESAS[emp] || EMPRESAS.vasmar;
+  const logoHtml = logos[emp]
+    ? '<img src="'+logos[emp]+'" style="max-height:48px;max-width:120px;object-fit:contain">'
+    : '<div class="logo-ph">'+(info.corto||'V').charAt(0)+'</div>';
+  const filasProd = (d.lineas||[]).map(L => {
+    const fobL = (L.qty||0)*(L.unit||0);
+    return '<tr><td>'+esc(L.desc||'—')+'<br><span style="color:#666;font-size:7.5pt">'+esc(L.codigo||'')+(L.comex?' · COMEX':'')+(L.ap1?' · Ap.I':'')+'</span></td><td style="text-align:right">'+
+      (L.qty||0)+' × $'+fmt(L.unit||0)+'<br>$'+fmt(fobL)+'</td></tr>';
+  }).join(String.fromCharCode(10));
+  const filasImp = (d.desglose||[]).map(x =>
+    '<tr><td>'+esc(x.desc)+'</td><td style="text-align:right">Ad $'+fmt(x.adM)+' · IVA $'+fmt(x.ivaM)+'</td></tr>'
+  ).join('');
+  const filaOp = lineasOpM.map(l=>'<tr><td>'+esc(l.concepto||'—')+'</td><td style="text-align:right">'+(si?'—':'$'+fmt(l.monto||0))+'</td></tr>').join('');
+  const filaTer = lineasTerM.map(l=>'<tr><td>'+esc(l.concepto||'—')+'</td><td style="text-align:right">'+(si?'—':'$'+fmt(l.monto||0))+'</td></tr>').join('');
+
+  const css = `@page{size:letter portrait;margin:7mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Segoe UI,Arial,sans-serif;font-size:8.5pt;color:#1a1a1a;line-height:1.2}
+.hdr{display:flex;align-items:center;gap:8px;border-bottom:2px solid #1F4E79;padding-bottom:5px;margin-bottom:6px}
+.logo-ph{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#1F4E79,#2E86AB);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16pt;font-weight:900}
+.hdr h1{font-size:11pt;color:#1F4E79}.hdr .sub{font-size:7.5pt;color:#555}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-bottom:6px;font-size:8pt}.meta strong{color:#1F4E79}
+.mod{border:1px solid #c5d0dc;border-radius:5px;margin-bottom:5px;overflow:hidden}
+.mod-h{padding:3px 8px;font-weight:700;font-size:8pt;color:#fff}
+.prod .mod-h{background:#00695C}.cif .mod-h{background:#2E7D32}.imp .mod-h{background:#C65911}
+.op .mod-h{background:#6A1B9A}.ter .mod-h{background:#00838F}
+.mod-b{padding:4px 8px}table{width:100%;border-collapse:collapse}td{padding:1px 0;font-size:8pt}td:last-child{text-align:right}
+tr.sub td{border-top:1px solid #e0e6ec;font-weight:700;color:#1F4E79;padding-top:2px}
+.grand{border:2px solid #1F4E79;border-radius:5px;padding:5px 10px;display:flex;justify-content:space-between;align-items:center;margin-top:2px}
+.grand .a{font-size:12pt;font-weight:800;color:#1F4E79}.grand .l{font-weight:800;color:#1F4E79;font-size:9pt}
+.foot{text-align:center;margin-top:5px;font-size:7pt;color:#888;border-top:1px solid #ddd;padding-top:4px}`;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${tituloPdfMerc()}</title><style>${css}</style></head><body>
+<div class="hdr">${logoHtml}<div><h1>RELACIÓN DE GASTOS — MERCANCÍAS</h1><div class="sub">${info.nombre}</div></div></div>
+<div class="meta">
+  <div><strong>Presupuesto:</strong> ${esc(document.getElementById('mPresupuesto')?.value||'—')}</div>
+  <div><strong>Fecha:</strong> ${esc(document.getElementById('mFecha')?.value||'—')}</div>
+  <div><strong>Cliente:</strong> ${esc(document.getElementById('mCliente')?.value||'—')}</div>
+  <div><strong>Ítems:</strong> ${(d.lineas||[]).length}</div>
+</div>
+<div class="mod prod"><div class="mod-h">1. Productos</div><div class="mod-b"><table>${filasProd}
+<tr class="sub"><td>FOB Total</td><td>$${fmt(d.fob)}</td></tr></table></div></div>
+<div class="mod cif"><div class="mod-h">2. Valores CIF (referencial)</div><div class="mod-b"><table>
+<tr><td>FOB</td><td>$${fmt(d.fob)}</td></tr>
+<tr><td>Flete</td><td>$${fmt(d.flete)}</td></tr>
+<tr><td>Seguro</td><td>$${fmt(d.seguro)}</td></tr>
+<tr class="sub"><td>CIF Total</td><td>$${fmt(d.cif)}</td></tr>
+</table></div></div>
+<div class="mod imp"><div class="mod-h">3. Impuestos</div><div class="mod-b"><table>${filasImp}
+<tr class="sub"><td>Total impuestos</td><td>$${fmt(d.impT)}</td></tr></table></div></div>
+<div class="mod op"><div class="mod-h">4. Gastos de operación</div><div class="mod-b"><table>${filaOp}
+<tr class="sub"><td>Total operación</td><td>$${fmt(d.opT)}</td></tr></table></div></div>
+<div class="mod ter"><div class="mod-h">5. Gastos de terceros</div><div class="mod-b"><table>${filaTer}
+<tr class="sub"><td>Total terceros</td><td>$${fmt(d.terT)}</td></tr></table></div></div>
+<div class="grand"><div class="l">TOTAL GENERAL</div><div class="a">$${fmt(d.total)}</div></div>
+<div class="foot">${info.nombre} · Mercancías · CIF no incluido en total</div>
+<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { toast('Permite ventanas emergentes'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+function initMercancias(){
+  const f = document.getElementById('mFecha');
+  if (f && !f.value) f.value = new Date().toISOString().slice(0,10);
+  // seed op/ter from vehicle plantillas if empty
+  if (!lineasOpM.length && typeof plantillaOp !== 'undefined' && plantillaOp.length) {
+    lineasOpM = plantillaOp.map((p,i)=>({id:++nextOpMId, concepto:p.concepto||p, monto:p.monto||0}));
+  }
+  if (!lineasTerM.length && typeof plantillaTer !== 'undefined' && plantillaTer.length) {
+    lineasTerM = plantillaTer.map((p,i)=>({id:++nextTerMId, concepto:p.concepto||p, monto:p.monto||0}));
+  }
+  if (!lineasMerc.length) agregarMercLinea();
+  else renderMercLineas();
+  renderLineasM();
+  renderCatMerc();
+  calcularMerc();
+  ['mFlete','mSeguro'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcularMerc);
+  });
+}
+
+
+document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
+llenarAnios();
+llenarSelectCodigo();
+actualizarHeaderLogo();
+cargarLineasDesdePlantilla();
+
+// Mostrar la última declaración guardada (si existe)
+if (historial.length) {
+  try { cargarHistorial(historial[0].id); }
+  catch(e) {
+    if (catalogo.length) {
+      document.getElementById('codigo').value = catalogo[0].codigo;
+      document.getElementById('modelo').value = catalogo[0].modelo;
+      document.getElementById('fobUnit').value = catalogo[0].fob;
+      document.getElementById('tipoVehiculo').value = catalogo[0].tipo || 'auto';
+      document.getElementById('cilindrada').value = catalogo[0].cc || 1600;
+      calcular();
+    }
+  }
+} else if (catalogo.length) {
+  document.getElementById('codigo').value = catalogo[0].codigo;
+  document.getElementById('modelo').value = catalogo[0].modelo;
+  document.getElementById('fobUnit').value = catalogo[0].fob;
+  document.getElementById('tipoVehiculo').value = catalogo[0].tipo || 'auto';
+  document.getElementById('cilindrada').value = catalogo[0].cc || 1600;
+  calcular();
+}
+</script>
+
+<div class="install-bar" id="installBar">
+  <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='192'%20height='192'%20viewBox='0%200%20192%20192'%3E%20%20%3Cdefs%3E%20%20%20%20%3ClinearGradient%20id='g'%20x1='0%'%20y1='0%'%20x2='100%'%20y2='100%'%3E%20%20%20%20%20%20%3Cstop%20offset='0%'%20style='stop-color:%231F4E79'/%3E%20%20%20%20%20%20%3Cstop%20offset='100%'%20style='stop-color:%232E86AB'/%3E%20%20%20%20%3C/linearGradient%3E%20%20%3C/defs%3E%20%20%3Crect%20width='192'%20height='192'%20rx='40'%20fill='url(%23g)'/%3E%20%20%3Crect%20x='12'%20y='12'%20width='168'%20height='168'%20rx='32'%20fill='none'%20stroke='rgba(255,255,255,0.25)'%20stroke-width='3'/%3E%20%20%3Ctext%20x='96'%20y='118'%20text-anchor='middle'%20font-family='Arial%20Black,%20Arial,%20sans-serif'%20font-size='92'%20font-weight='900'%20fill='%23ffffff'%3EV%3C/text%3E%20%20%3Ctext%20x='96'%20y='155'%20text-anchor='middle'%20font-family='Arial,%20sans-serif'%20font-size='18'%20font-weight='700'%20fill='%23F5C542'%20letter-spacing='2'%3EVASMAR%3C/text%3E%3C/svg%3E" alt="VASMAR">
+  <div class="txt"><strong>VASMAR Gastos</strong>Instalar como aplicación</div>
+  <button class="btn-inst" id="btnInstall">Instalar</button>
+  <button class="btn-x" id="btnInstallX" aria-label="Cerrar">×</button>
+</div>
+
+</body>
+</html>
