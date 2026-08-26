@@ -678,7 +678,7 @@
 
   <div class="card">
     <button type="button" class="btn btn-ok" style="width:100%;margin-bottom:8px" onclick="guardarMercRelacion()">Guardar relación</button>
-    <button type="button" class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="imprimirPDFMerc()">Descargar PDF</button>
+    <button type="button" class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="imprimirPDFMerc()">Guardar PDF…</button>
     <button type="button" class="btn btn-outline" style="width:100%" onclick="guardarProductosMercAlCatalogo()">Guardar productos al catálogo de mercancías</button>
   </div>
 
@@ -808,7 +808,7 @@
 </div>
 <footer class="no-print">
   <button class="btn btn-success" onclick="guardarEnHistorial()">Guardar</button>
-  <button class="btn btn-accent" onclick="imprimirPDF()">PDF</button>
+  <button class="btn btn-accent" onclick="imprimirPDF()">Guardar PDF…</button>
   <button class="btn btn-primary" onclick="calcular()">Calcular</button>
 </footer>
 <div id="toast"></div>
@@ -1223,55 +1223,129 @@ function abrirVentanaPdf(html, nombreArchivo){
 }
 
 /** Descarga PDF real con el nombre expediente_cliente_producto.pdf (html2pdf CDN) */
-function descargarPdfHtml(html, nombreArchivo){
-  const nombre = (nombreArchivo || 'documento').replace(/\.pdf$/i,'') + '.pdf';
-  toast('Generando PDF: ' + nombre + '…');
 
-  const go = function(){
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '210mm';
-    container.style.background = '#fff';
-    // Extraer body content del html completo si viene con doctype
-    let bodyHtml = html;
-    const bm = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    if (bm) bodyHtml = bm[1];
-    // quitar script de auto-print
-    bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, '');
-    container.innerHTML = bodyHtml;
-    document.body.appendChild(container);
-
-    const opt = {
-      margin: [8, 8, 8, 8],
-      filename: nombre,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-    html2pdf().set(opt).from(container).save().then(function(){
-      document.body.removeChild(container);
-      toast('PDF descargado: ' + nombre);
-    }).catch(function(err){
-      console.error(err);
-      try { document.body.removeChild(container); } catch(e){}
-      toast('No se pudo descargar; se abre vista para imprimir');
-      abrirVentanaPdf(html, nombre.replace(/\.pdf$/i,''));
-    });
-  };
-
-  if (window.html2pdf) { go(); return; }
+function preloadHtml2Pdf(){
+  if (window.html2pdf) return;
   const s = document.createElement('script');
   s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-  s.onload = go;
+  s.async = true;
+  document.head.appendChild(s);
+}
+setTimeout(preloadHtml2Pdf, 2000);
+
+function descargarPdfHtml(html, nombreArchivo){
+  let base = (nombreArchivo || '').replace(/\.pdf$/i,'').trim();
+  if (!base) base = 'Relacion_Gastos';
+  base = base.replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_').slice(0,100);
+  const nombre = base + '.pdf';
+  toast('Generando PDF: ' + nombre + '…');
+
+  // Extraer CSS del HTML completo (sin estilos el PDF sale en blanco)
+  let styles = '';
+  const sm = String(html).match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  if (sm) styles = sm[1];
+  let bodyHtml = html;
+  const bm = String(html).match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  if (bm) bodyHtml = bm[1];
+  bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+  function guardarBlob(blob){
+    // 1) Elegir carpeta/nombre (Chrome, Edge, PWA)
+    if (window.showSaveFilePicker) {
+      return window.showSaveFilePicker({
+        suggestedName: nombre,
+        types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }]
+      }).then(function(handle){
+        return handle.createWritable().then(function(writable){
+          return writable.write(blob).then(function(){ return writable.close(); });
+        });
+      }).then(function(){
+        toast('PDF guardado: ' + nombre);
+      }).catch(function(err){
+        if (err && err.name === 'AbortError') { toast('Guardado cancelado'); return; }
+        // Si falla el picker, descarga clásica
+        return descargaAncla(blob);
+      });
+    }
+    return descargaAncla(blob);
+  }
+
+  function descargaAncla(blob){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch(e){} }, 2000);
+    toast('PDF descargado: ' + nombre + ' (Revisa Descargas)');
+    return Promise.resolve();
+  }
+
+  function buildPdf(){
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:0;top:0;width:794px;height:1123px;border:0;opacity:0.01;pointer-events:none;z-index:-1;';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + styles +
+      'body{background:#fff !important;} .wrap{max-width:100% !important;}</style></head><body>' +
+      bodyHtml + '</body></html>');
+    doc.close();
+
+    // Esperar imágenes/layout
+    const run = function(){
+      const src = doc.body;
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: nombre,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          windowWidth: 794,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      html2pdf().set(opt).from(src).outputPdf('blob').then(function(blob){
+        try { document.body.removeChild(iframe); } catch(e){}
+        if (!blob || blob.size < 500) {
+          toast('PDF vacío — se abre vista para imprimir');
+          abrirVentanaPdf(html, base);
+          return;
+        }
+        return guardarBlob(blob);
+      }).catch(function(err){
+        console.error(err);
+        try { document.body.removeChild(iframe); } catch(e){}
+        toast('Error al generar PDF — abriendo impresión');
+        abrirVentanaPdf(html, base);
+      });
+    };
+
+    // Dar tiempo al iframe a renderizar
+    setTimeout(run, 400);
+  }
+
+  if (window.html2pdf) { buildPdf(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  s.onload = function(){ buildPdf(); };
   s.onerror = function(){
-    toast('Sin red para html2pdf. Abriendo impresión (pon el nombre al guardar).');
-    abrirVentanaPdf(html, nombre.replace(/\.pdf$/i,''));
+    alert('No se pudo cargar el generador de PDF (necesita internet la 1ª vez).\\n\\nSe abrirá la vista de impresión.\\nNombre sugerido:\\n' + nombre);
+    try { navigator.clipboard.writeText(nombre); } catch(e){}
+    abrirVentanaPdf(html, base);
   };
   document.head.appendChild(s);
 }
+
 
 function guardarVehiculoActual(){
   const codigo = (document.getElementById('codigo')||{}).value;
