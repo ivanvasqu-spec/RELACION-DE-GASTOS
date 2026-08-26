@@ -741,6 +741,7 @@
 <div id="historial" class="screen">
   <div class="card">
     <h2>Historial de relaciones</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Vehículos y mercancías guardadas. Puedes cargar cualquiera para seguir editando o imprimir.</p>
     <div id="listaHistorial"></div>
   </div>
 </div>
@@ -1238,9 +1239,12 @@ function descargarPdfHtml(html, nombreArchivo){
   if (!base) base = 'Relacion_Gastos';
   base = base.replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_').slice(0,100);
   const nombre = base + '.pdf';
-  toast('Generando PDF: ' + nombre + '…');
 
-  // Extraer CSS del HTML completo (sin estilos el PDF sale en blanco)
+  // 1) Siempre abrir la relación correcta (mismo diseño de trabajo) con título = nombre archivo
+  const w = abrirVentanaPdf(html, base);
+  if (!w) return;
+
+  // 2) Intentar además guardar archivo eligiendo carpeta (Chrome/Edge)
   let styles = '';
   const sm = String(html).match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   if (sm) styles = sm[1];
@@ -1249,101 +1253,74 @@ function descargarPdfHtml(html, nombreArchivo){
   if (bm) bodyHtml = bm[1];
   bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, '');
 
-  function guardarBlob(blob){
-    // 1) Elegir carpeta/nombre (Chrome, Edge, PWA)
-    if (window.showSaveFilePicker) {
-      return window.showSaveFilePicker({
-        suggestedName: nombre,
-        types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }]
-      }).then(function(handle){
-        return handle.createWritable().then(function(writable){
-          return writable.write(blob).then(function(){ return writable.close(); });
-        });
-      }).then(function(){
-        toast('PDF guardado: ' + nombre);
-      }).catch(function(err){
-        if (err && err.name === 'AbortError') { toast('Guardado cancelado'); return; }
-        // Si falla el picker, descarga clásica
-        return descargaAncla(blob);
-      });
-    }
-    return descargaAncla(blob);
-  }
-
-  function descargaAncla(blob){
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombre;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch(e){} }, 2000);
-    toast('PDF descargado: ' + nombre + ' (Revisa Descargas)');
-    return Promise.resolve();
-  }
-
-  function buildPdf(){
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;left:0;top:0;width:794px;height:1123px;border:0;opacity:0.01;pointer-events:none;z-index:-1;';
-    document.body.appendChild(iframe);
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + styles +
-      'body{background:#fff !important;} .wrap{max-width:100% !important;}</style></head><body>' +
-      bodyHtml + '</body></html>');
-    doc.close();
-
-    // Esperar imágenes/layout
-    const run = function(){
-      const src = doc.body;
+  function tryFileSave(){
+    if (!window.html2pdf) return;
+    try {
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:fixed;left:0;top:0;width:816px;background:#fff;z-index:-1;opacity:0;pointer-events:none;';
+      holder.innerHTML = '<style>' + styles + 'body{background:#fff}</style><div class="wrap">' +
+        (bodyHtml.indexOf('class="wrap"') >= 0 ? bodyHtml : bodyHtml) + '</div>';
+      // if body already has wrap, don't double
+      if (bodyHtml.indexOf('class="wrap"') >= 0 || bodyHtml.indexOf("class='wrap'") >= 0) {
+        holder.innerHTML = '<style>' + styles + '</style>' + bodyHtml;
+      }
+      document.body.appendChild(holder);
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: 8,
         filename: nombre,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 794,
-          scrollX: 0,
-          scrollY: 0
-        },
-        jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+        jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
       };
-      html2pdf().set(opt).from(src).outputPdf('blob').then(function(blob){
-        try { document.body.removeChild(iframe); } catch(e){}
-        if (!blob || blob.size < 500) {
-          toast('PDF vacío — se abre vista para imprimir');
-          abrirVentanaPdf(html, base);
-          return;
-        }
-        return guardarBlob(blob);
-      }).catch(function(err){
-        console.error(err);
-        try { document.body.removeChild(iframe); } catch(e){}
-        toast('Error al generar PDF — abriendo impresión');
-        abrirVentanaPdf(html, base);
-      });
-    };
-
-    // Dar tiempo al iframe a renderizar
-    setTimeout(run, 400);
+      setTimeout(function(){
+        html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
+          try { document.body.removeChild(holder); } catch(e){}
+          if (!blob || blob.size < 800) {
+            toast('Usa la ventana abierta → Imprimir → Guardar como PDF (' + nombre + ')');
+            return;
+          }
+          if (window.showSaveFilePicker) {
+            window.showSaveFilePicker({
+              suggestedName: nombre,
+              types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
+            }).then(function(handle){
+              return handle.createWritable().then(function(wr){
+                return wr.write(blob).then(function(){ return wr.close(); });
+              });
+            }).then(function(){ toast('PDF guardado: ' + nombre); })
+            .catch(function(err){
+              if (err && err.name === 'AbortError') return;
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = nombre;
+              a.click();
+              toast('PDF descargado: ' + nombre);
+            });
+          } else {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = nombre;
+            a.click();
+            toast('PDF descargado: ' + nombre);
+          }
+        }).catch(function(){
+          try { document.body.removeChild(holder); } catch(e){}
+          toast('En la ventana: Ctrl+P → Guardar como PDF · nombre: ' + nombre);
+        });
+      }, 500);
+    } catch(e) {
+      toast('En la ventana: Ctrl+P → Guardar como PDF · nombre: ' + nombre);
+    }
   }
 
-  if (window.html2pdf) { buildPdf(); return; }
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-  s.onload = function(){ buildPdf(); };
-  s.onerror = function(){
-    alert('No se pudo cargar el generador de PDF (necesita internet la 1ª vez).\\n\\nSe abrirá la vista de impresión.\\nNombre sugerido:\\n' + nombre);
-    try { navigator.clipboard.writeText(nombre); } catch(e){}
-    abrirVentanaPdf(html, base);
-  };
-  document.head.appendChild(s);
+  if (window.html2pdf) tryFileSave();
+  else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload = tryFileSave;
+    s.onerror = function(){ toast('En la ventana abierta: Imprimir → Guardar como PDF (' + nombre + ')'); };
+    document.head.appendChild(s);
+  }
 }
 
 
@@ -1654,25 +1631,85 @@ function guardarEnHistorial(){
   };
   historial.unshift(item);
   save();
+  try { renderHistorial(); } catch(e){}
   toast('Guardado en historial');
   const m = item.presupuesto.match(/P-(\d+)/i);
   if (m) document.getElementById('presupuesto').value = 'P-' + String(parseInt(m[1])+1).padStart(3,'0');
 }
 function renderHistorial(){
   const cont = document.getElementById('listaHistorial');
-  if (!historial.length) { cont.innerHTML = '<div class="empty">Aún no hay relaciones guardadas.</div>'; return; }
-  cont.innerHTML = historial.map(h => `
-    <div class="item-card">
-      <div class="name">${h.presupuesto} · ${h.fecha||'—'}</div>
-      <div class="meta">${h.cliente||'Sin cliente'} · ${h.modelo||h.codigo||'—'} × ${h.cantidad}</div>
+  if (!cont) return;
+  const veh = (historial||[]).map(h => ({...h, _tipo: 'vehiculo'}));
+  const merc = (historialMerc||[]).map(h => ({...h, _tipo: 'mercancia'}));
+  const all = veh.concat(merc).sort((a,b) => (b.id||0) - (a.id||0));
+  if (!all.length) {
+    cont.innerHTML = '<div class="empty">Aún no hay relaciones guardadas (vehículos ni mercancías).</div>';
+    return;
+  }
+  cont.innerHTML = all.map(h => {
+    if (h._tipo === 'mercancia') {
+      const nItems = (h.lineas && h.lineas.length) || (h.desglose && h.desglose.length) || 0;
+      const total = h.total != null ? h.total : ((h.impT||0)+(h.opT||0)+(h.terT||0));
+      return `<div class="item-card" style="border-left:4px solid #6A1B9A">
+        <div class="name"><span style="background:#6A1B9A;color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;margin-right:6px">MERCANCÍAS</span>${esc(h.presupuesto||'—')} · ${esc(h.fecha||'—')}</div>
+        <div class="meta">${esc(h.cliente||'Sin cliente')} · ${nItems} producto(s) · FOB $${fmt(h.fob||0)}</div>
+        <div class="meta" style="margin-top:4px;font-weight:600;color:#6A1B9A">Total: $${fmt(total)}</div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline" onclick="cargarHistorialMerc(${h.id})">Cargar</button>
+          <button class="btn btn-sm btn-danger" onclick="borrarHistorialMerc(${h.id})">Borrar</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="item-card" style="border-left:4px solid var(--primary)">
+      <div class="name"><span style="background:var(--primary);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;margin-right:6px">VEHÍCULO</span>${esc(h.presupuesto||'—')} · ${esc(h.fecha||'—')}</div>
+      <div class="meta">${esc(h.cliente||'Sin cliente')} · ${esc(h.modelo||h.codigo||'—')} × ${h.cantidad||1}</div>
       <div class="meta" style="margin-top:4px;font-weight:600;color:var(--primary)">Total: $${fmt(h.total)}</div>
       <div class="item-actions">
         <button class="btn btn-sm btn-outline" onclick="cargarHistorial(${h.id})">Cargar</button>
         <button class="btn btn-sm btn-danger" onclick="borrarHistorial(${h.id})">Borrar</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
+
+function cargarHistorialMerc(id){
+  const h = historialMerc.find(x => x.id === id);
+  if (!h) return;
+  // ir a pantalla mercancías
+  try {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const scr = document.getElementById('mercancias');
+    if (scr) scr.classList.add('active');
+    document.querySelectorAll('[data-screen]').forEach(b => {
+      b.classList.toggle('active', b.dataset.screen === 'mercancias');
+    });
+  } catch(e){}
+  if (document.getElementById('mPresupuesto')) document.getElementById('mPresupuesto').value = h.presupuesto || '';
+  if (document.getElementById('mFecha')) document.getElementById('mFecha').value = h.fecha || '';
+  if (document.getElementById('mCliente')) document.getElementById('mCliente').value = h.cliente || '';
+  if (document.getElementById('mFlete') && h.flete != null) document.getElementById('mFlete').value = h.flete;
+  if (document.getElementById('mSeguro') && h.seguro != null) document.getElementById('mSeguro').value = h.seguro;
+  if (document.getElementById('mEmpresaLogo') && h.empresa) document.getElementById('mEmpresaLogo').value = h.empresa;
+  if (h.lineas && h.lineas.length) {
+    lineasMerc = JSON.parse(JSON.stringify(h.lineas));
+    nextMercId = Math.max(nextMercId, ...lineasMerc.map(l => l.id||0)) + 1;
+  }
+  if (h.lineasOpM) lineasOpM = JSON.parse(JSON.stringify(h.lineasOpM));
+  if (h.lineasTerM) lineasTerM = JSON.parse(JSON.stringify(h.lineasTerM));
+  if (typeof renderMercLineas === 'function') renderMercLineas();
+  if (typeof renderLineasM === 'function') { try { renderLineasM('operacion'); renderLineasM('terceros'); } catch(e){} }
+  if (typeof calcularMerc === 'function') calcularMerc();
+  toast('Relación de mercancías cargada');
+}
+
+function borrarHistorialMerc(id){
+  if (!confirm('¿Borrar esta relación de mercancías del historial?')) return;
+  historialMerc = historialMerc.filter(x => x.id !== id);
+  if (typeof saveMerc === 'function') saveMerc();
+  renderHistorial();
+  toast('Eliminada del historial');
+}
+
 function cargarHistorial(id){
   const h = historial.find(x => x.id === id); if (!h) return;
   document.getElementById('presupuesto').value = h.presupuesto;
@@ -3769,13 +3806,19 @@ function guardarMercRelacion(){
     fecha: document.getElementById('mFecha')?.value || new Date().toISOString().slice(0,10),
     presupuesto: document.getElementById('mPresupuesto')?.value || '',
     cliente: document.getElementById('mCliente')?.value || '',
-    ...d,
+    empresa: document.getElementById('mEmpresaLogo')?.value || 'vasmar',
+    fob: d.fob, flete: d.flete, seguro: d.seguro, cif: d.cif,
+    adT: d.adT, tasaT: d.tasaT, ivaT: d.ivaT, impT: d.impT,
+    opT: d.opT, terT: d.terT, total: d.total,
+    lineas: JSON.parse(JSON.stringify(lineasMerc)),
+    desglose: d.desglose,
     lineasOpM: JSON.parse(JSON.stringify(lineasOpM)),
     lineasTerM: JSON.parse(JSON.stringify(lineasTerM))
   });
   if (historialMerc.length > 50) historialMerc.length = 50;
   saveMerc();
-  toast('Relación de mercancías guardada');
+  try { renderHistorial(); } catch(e){}
+  toast('Relación de mercancías guardada en historial');
 }
 
 function imprimirPDFMerc(){
@@ -3839,6 +3882,7 @@ tr.sub td{border-top:1px solid #e0e6ec;font-weight:700;color:#1F4E79;padding-top
 <script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
 </body></html>`;
 
+  try { guardarMercRelacion(); } catch(e){}
   const nombre = tituloPdfMerc();
   descargarPdfHtml(html, nombre);
 }
