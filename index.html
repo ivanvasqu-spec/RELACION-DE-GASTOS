@@ -1218,32 +1218,36 @@ function slugNombre(s){
 }
 
 function tituloPdfVehiculo(){
-  const cliente = (document.getElementById('cliente')||{}).value || '';
-  const modelo = (document.getElementById('modelo')||{}).value || '';
-  const pres = (document.getElementById('presupuesto')||{}).value || '';
-  // Orden: Expediente_Cliente_Producto
+  const pres = ((document.getElementById('presupuesto')||{}).value || '').trim();
+  const cliente = ((document.getElementById('cliente')||{}).value || '').trim();
+  let modelo = ((document.getElementById('modelo')||{}).value || '').trim();
+  const codigo = ((document.getElementById('codigo')||{}).value || '').trim();
+  const anio = ((document.getElementById('anioVehiculo')||{}).value || '').trim();
+  if (!modelo && codigo && typeof catalogo !== 'undefined') {
+    const cat = catalogo.find(x => x.codigo === codigo);
+    if (cat && cat.modelo) modelo = cat.modelo;
+  }
+  if (!modelo && codigo) modelo = codigo;
+  if (modelo && anio && modelo.indexOf(anio) < 0) modelo = modelo + ' ' + anio;
   const parts = [];
-  if (pres) parts.push(slugNombre(pres));
-  if (cliente) parts.push(slugNombre(cliente));
-  if (modelo) parts.push(slugNombre(modelo));
-  if (!parts.length) parts.push('Relacion_Gastos');
-  return parts.join('_').slice(0, 120);
+  parts.push(slugNombre(pres) || 'Sin_Expediente');
+  parts.push(slugNombre(cliente) || 'Sin_Cliente');
+  parts.push(slugNombre(modelo) || 'Sin_Vehiculo');
+  return parts.filter(Boolean).join('_').slice(0, 140);
 }
 
 function tituloPdfMerc(){
-  const cliente = (document.getElementById('mCliente')||{}).value || '';
-  const pres = (document.getElementById('mPresupuesto')||{}).value || '';
+  const pres = ((document.getElementById('mPresupuesto')||{}).value || '').trim();
+  const cliente = ((document.getElementById('mCliente')||{}).value || '').trim();
   let prod = '';
-  if (lineasMerc && lineasMerc[0] && lineasMerc[0].desc) prod = lineasMerc[0].desc;
+  if (lineasMerc && lineasMerc[0] && lineasMerc[0].desc) prod = String(lineasMerc[0].desc).trim();
   const parts = [];
-  if (pres) parts.push(slugNombre(pres));
-  if (cliente) parts.push(slugNombre(cliente));
-  if (prod) parts.push(slugNombre(prod));
-  if (!parts.length) parts.push('Relacion_Mercancias');
-  return parts.join('_').slice(0, 120);
+  parts.push(slugNombre(pres) || 'Sin_Expediente');
+  parts.push(slugNombre(cliente) || 'Sin_Cliente');
+  parts.push(slugNombre(prod) || 'Mercancias');
+  return parts.filter(Boolean).join('_').slice(0, 140);
 }
 
-/** Abre ventana de impresión con título = nombre de archivo sugerido */
 function abrirVentanaPdf(html, nombreArchivo){
   const nombre = (nombreArchivo || 'documento').replace(/\.pdf$/i,'');
   const w = window.open('', '_blank');
@@ -1277,6 +1281,9 @@ function descargarPdfHtml(html, nombreArchivo){
   if (!base) base = 'Relacion_Gastos';
   base = base.replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_').slice(0,100);
   const nombre = base + '.pdf';
+
+  try { navigator.clipboard.writeText(nombre); } catch(e){}
+  toast('Nombre del PDF: ' + nombre);
 
   // 1) Siempre abrir la relación correcta (mismo diseño de trabajo) con título = nombre archivo
   const w = abrirVentanaPdf(html, base);
@@ -1871,7 +1878,8 @@ tr.sub td{border-top:1px solid #e0e6ec;padding-top:2px;font-weight:700;color:#1F
 }
 `.replace(/\n/g,'');
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${tituloPdfVehiculo()}</title><style>${css}</style></head><body><div class="wrap">
+  const nombrePdfVeh = tituloPdfVehiculo();
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${nombrePdfVeh}</title><style>${css}</style></head><body><div class="wrap">
 <div class="hdr">${logoHtml}<div><h1>RELACIÓN DE GASTOS DE IMPORTACIÓN</h1><div class="sub">${info.nombre}</div></div></div>
 <div class="meta">
   <div><strong>Presupuesto:</strong> ${document.getElementById('presupuesto').value||'—'}</div>
@@ -1940,9 +1948,7 @@ ${(d.usarAddCosto && d.pdfAddCosto && d.addCostoT > 0) || (d.usarAddFlete && d.p
 <script>window.onload=function(){setTimeout(function(){window.print()},250)};<\/script>
 </body></html>`;
 
-  const nombre = tituloPdfVehiculo();
-  // Siempre intentar descarga con nombre correcto; además deja opción de imprimir
-  descargarPdfHtml(html, nombre);
+  descargarPdfHtml(html, nombrePdfVeh);
 }
 
 
@@ -3931,7 +3937,8 @@ tr.sub td{border-top:1px solid #e0e6ec;font-weight:700;color:#1F4E79;padding-top
 .grand .a{font-size:12pt;font-weight:800;color:#1F4E79}.grand .l{font-weight:800;color:#1F4E79;font-size:9pt}
 .foot{text-align:center;margin-top:5px;font-size:7pt;color:#888;border-top:1px solid #ddd;padding-top:4px}`;
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${tituloPdfMerc()}</title><style>${css}</style></head><body>
+  const nombrePdfMerc = tituloPdfMerc();
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${nombrePdfMerc}</title><style>${css}</style></head><body>
 <div class="hdr">${logoHtml}<div><h1>RELACIÓN DE GASTOS — MERCANCÍAS</h1><div class="sub">${info.nombre}</div></div></div>
 <div class="meta">
   <div><strong>Presupuesto:</strong> ${esc(document.getElementById('mPresupuesto')?.value||'—')}</div>
@@ -3959,8 +3966,7 @@ tr.sub td{border-top:1px solid #e0e6ec;font-weight:700;color:#1F4E79;padding-top
 </body></html>`;
 
   try { guardarMercRelacion(); } catch(e){}
-  const nombre = tituloPdfMerc();
-  descargarPdfHtml(html, nombre);
+  descargarPdfHtml(html, nombrePdfMerc);
 }
 
 function initMercancias(){
