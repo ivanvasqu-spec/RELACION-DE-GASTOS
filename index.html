@@ -444,22 +444,23 @@
     <div class="hint">Complementa con <strong>base_arancelaria.html</strong> (módulo separado). Solo lectura.</div>
   </div>
 
-  <div class="card" id="cifCard">
+    <div class="card" id="cifCard">
     <div class="section-title"><span class="mod-badge cif">3</span> Valores CIF <span class="qty-factor" style="font-weight:600"></span></div>
     <label>FOB Total</label>
     <input type="text" id="fobTotal" readonly class="calc">
     <div class="row">
       <div>
-        <label>Flete (unitario)</label>
+        <label>Flete (unitario) — para CIF</label>
         <input type="number" id="flete" value="0" step="0.01" min="0">
       </div>
       <div>
-        <label>Seguro (unitario)</label>
+        <label>Seguro (unitario) — para CIF</label>
         <input type="number" id="seguro" value="0" step="0.01" min="0">
       </div>
     </div>
     <label>CIF Total</label>
     <input type="text" id="cifTotal" readonly class="calc">
+    <div class="hint">FOB + Flete + Seguro · base de impuestos (referencial, no suma al total a cobrar)</div>
   </div>
 
   <div class="card" id="impuestosCard">
@@ -534,6 +535,43 @@
     <div id="listaTerceros"></div>
     <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('terceros')">+ Agregar concepto</button>
     <div class="subtotal">Total Terceros: <span id="totalTer">$0.00</span></div>
+  </div>
+
+
+  <div class="card" id="origenExtraCard" style="border-left:4px solid #E65100">
+    <div class="section-title"><span class="mod-badge" style="background:#E65100">7</span> Costos adicionales en origen (opcional)</div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px">
+      Independientes del FOB/flete/seguro del CIF. Si los activas, <strong>suman al TOTAL GENERAL</strong> (junto a impuestos, operación y terceros).
+    </p>
+    <div class="row">
+      <div style="flex:2">
+        <label>Costo en Origen (USD unitario)</label>
+        <input type="number" id="addCostoOrigen" value="0" step="0.01" min="0">
+      </div>
+      <div style="flex:1;padding-top:18px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;margin-bottom:6px">
+          <input type="checkbox" id="usarAddCostoOrigen"> Usar (sumar al total)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">
+          <input type="checkbox" id="pdfAddCostoOrigen" checked> Mostrar en PDF
+        </label>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div style="flex:2">
+        <label>Flete adicional en origen (USD unitario)</label>
+        <input type="number" id="addFleteOrigen" value="0" step="0.01" min="0">
+      </div>
+      <div style="flex:1;padding-top:18px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;margin-bottom:6px">
+          <input type="checkbox" id="usarAddFleteOrigen"> Usar (sumar al total)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">
+          <input type="checkbox" id="pdfAddFleteOrigen" checked> Mostrar en PDF
+        </label>
+      </div>
+    </div>
+    <div class="subtotal" style="margin-top:10px">Total origen adicional: <span id="totalOrigenExtra">$0.00</span></div>
   </div>
 
   <div class="total-box">
@@ -1553,7 +1591,19 @@ function onTipoVehiculoChange(){
   // Cantidad multiplica TODO: FOB, flete, seguro (ya en CIF), impuestos y cada renglón
   const opT = opMul ? opBase * qty : opBase;
   const terT = terMul ? terBase * qty : terBase;
-  const total = cif + impT + opT + terT;
+  // Adicionales origen (NO es el flete/FOB del CIF)
+  const addCostoU = parseFloat(document.getElementById('addCostoOrigen')?.value)||0;
+  const addFleteU = parseFloat(document.getElementById('addFleteOrigen')?.value)||0;
+  const usarAddCosto = !!(document.getElementById('usarAddCostoOrigen')?.checked);
+  const usarAddFlete = !!(document.getElementById('usarAddFleteOrigen')?.checked);
+  const pdfAddCosto = document.getElementById('pdfAddCostoOrigen') ? document.getElementById('pdfAddCostoOrigen').checked : true;
+  const pdfAddFlete = document.getElementById('pdfAddFleteOrigen') ? document.getElementById('pdfAddFleteOrigen').checked : true;
+  const addCostoT = (usarAddCosto ? addCostoU : 0) * qty;
+  const addFleteT = (usarAddFlete ? addFleteU : 0) * qty;
+  const origenExtraT = addCostoT + addFleteT;
+
+  // Total a cobrar: impuestos + operación + terceros + origen adicional (CIF NO se suma)
+  const total = impT + opT + terT + origenExtraT;
   const porV = qty > 0 ? total / qty : 0;
 
   document.getElementById('fobTotal').value = '$ ' + fmt(fobT);
@@ -1561,6 +1611,8 @@ function onTipoVehiculoChange(){
   document.getElementById('totalImpuestos').value = '$ ' + fmt(impT);
   document.getElementById('totalOp').textContent = '$ ' + fmt(opT);
   document.getElementById('totalTer').textContent = '$ ' + fmt(terT);
+  const toEx = document.getElementById('totalOrigenExtra');
+  if (toEx) toEx.textContent = '$ ' + fmt(origenExtraT);
   document.getElementById('totalGeneral').textContent = '$ ' + fmt(total);
   document.getElementById('porVehiculo').textContent = 'por vehículo: $ ' + fmt(porV);
 
@@ -1571,6 +1623,9 @@ function onTipoVehiculoChange(){
     lineasOp: JSON.parse(JSON.stringify(lineasOp)),
     lineasTer: JSON.parse(JSON.stringify(lineasTer)),
     opMul, terMul, cc, tipo, comb,
+    fleteU: flete, seguroU: seguro,
+    addCostoU, addFleteU, addCostoT, addFleteT, origenExtraT,
+    usarAddCosto, usarAddFlete, pdfAddCosto, pdfAddFlete,
     empresa: document.getElementById('empresaLogo').value
   };
 }
@@ -1592,13 +1647,18 @@ document.getElementById('codigo').addEventListener('change', function(){
   } else document.getElementById('modelo').value = '';
   calcular();
 });
-['cantidad','fobUnit','flete','seguro','cilindrada','tasaAduanal','iva','impLujoPct','tipoVehiculo','combustible'].forEach(id=>{
+['cantidad','fobUnit','flete','seguro','cilindrada','tasaAduanal','iva','impLujoPct','tipoVehiculo','combustible','addCostoOrigen','addFleteOrigen'].forEach(id=>{
   document.getElementById(id).addEventListener('input', calcular);
 });
 ['tipoVehiculo','combustible'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('change', calcular);
 });
+['usarAddCostoOrigen','pdfAddCostoOrigen','usarAddFleteOrigen','pdfAddFleteOrigen'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', calcular);
+});
+
 
 document.getElementById('tipoVehiculo').addEventListener('change', calcular);
 const anioEl = document.getElementById('anioVehiculo');
@@ -1732,6 +1792,12 @@ function cargarHistorial(id){
   if (h.lineasTer) lineasTer = h.lineasTer.map(l => ({...l, id: lineIdCounter++}));
   if (h.opMul !== undefined) document.getElementById('opMultiplica').checked = h.opMul;
   if (h.terMul !== undefined) document.getElementById('terMultiplica').checked = h.terMul;
+  if (h.addCostoU != null && document.getElementById('addCostoOrigen')) document.getElementById('addCostoOrigen').value = h.addCostoU;
+  if (h.addFleteU != null && document.getElementById('addFleteOrigen')) document.getElementById('addFleteOrigen').value = h.addFleteU;
+  if (document.getElementById('usarAddCostoOrigen') && h.usarAddCosto != null) document.getElementById('usarAddCostoOrigen').checked = !!h.usarAddCosto;
+  if (document.getElementById('usarAddFleteOrigen') && h.usarAddFlete != null) document.getElementById('usarAddFleteOrigen').checked = !!h.usarAddFlete;
+  if (document.getElementById('pdfAddCostoOrigen') && h.pdfAddCosto != null) document.getElementById('pdfAddCostoOrigen').checked = !!h.pdfAddCosto;
+  if (document.getElementById('pdfAddFleteOrigen') && h.pdfAddFlete != null) document.getElementById('pdfAddFleteOrigen').checked = !!h.pdfAddFlete;
   renderLineas();
   actualizarHeaderLogo();
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -1765,7 +1831,7 @@ function imprimirPDF(){
 
   const fleteT = (parseFloat(document.getElementById('flete').value)||0)*d.qty;
   const seguroT = (parseFloat(document.getElementById('seguro').value)||0)*d.qty;
-  const totalPdf = d.impT + d.opT + d.terT;
+  const totalPdf = d.impT + d.opT + d.terT + (d.origenExtraT||0);
 
   const css = `
 @page{size:letter portrait;margin:7mm}
@@ -1854,8 +1920,18 @@ tr.sub td{border-top:1px solid #e0e6ec;padding-top:2px;font-weight:700;color:#1F
   </table></div>
 </div>
 
+${(d.usarAddCosto && d.pdfAddCosto && d.addCostoT > 0) || (d.usarAddFlete && d.pdfAddFlete && d.addFleteT > 0) ? `
+<div class="mod" style="border-left:3px solid #E65100">
+  <div class="mh" style="color:#E65100">7 · Costos adicionales en origen</div>
+  <div class="mod-b"><table>
+    ${d.usarAddCosto && d.pdfAddCosto && d.addCostoT > 0 ? `<tr><td>Costo en Origen${qMark}</td><td>$${fmt(d.addCostoT)}</td></tr>` : ''}
+    ${d.usarAddFlete && d.pdfAddFlete && d.addFleteT > 0 ? `<tr><td>Flete adicional en origen${qMark}</td><td>$${fmt(d.addFleteT)}</td></tr>` : ''}
+    <tr class="sub"><td>Subtotal origen adicional</td><td>$${fmt(d.origenExtraT||0)}</td></tr>
+  </table></div>
+</div>` : ''}
+
 <div class="grand">
-  <div><div class="l">TOTAL GENERAL</div><div class="s">Impuestos + Operación + Terceros</div></div>
+  <div><div class="l">TOTAL GENERAL</div><div class="s">Impuestos + Operación + Terceros + Origen adicional</div></div>
   <div class="a">$${fmt(totalPdf)}</div>
 </div>
 
