@@ -696,15 +696,42 @@
 
   <div class="card" id="mOpCard" style="border-left-color:#6A1B9A">
     <h2><span class="mod-badge op">5</span> Gastos de operación</h2>
+    <div class="row" style="margin-bottom:8px;align-items:flex-end">
+      <div style="flex:2">
+        <label>Usar concepto guardado</label>
+        <select id="selPlantillaOpM" onchange="aplicarConceptoPlantillaM('operacion', this.value); this.value='';">
+          <option value="">— Elegir de la lista —</option>
+        </select>
+      </div>
+      <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-ok" style="width:auto" onclick="guardarPlantillaM('operacion')">Guardar lista actual</button>
+        <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cargarPlantillaM('operacion')">Cargar lista</button>
+      </div>
+    </div>
     <div id="listaOperacionM"></div>
-    <button type="button" class="btn btn-add" onclick="agregarLineaM('operacion')">+ Concepto</button>
+    <button type="button" class="btn btn-add" onclick="agregarLineaM('operacion')">+ Concepto nuevo</button>
+    <div class="hint" style="margin-top:6px">Los conceptos se recuerdan. Puedes eliminar uno de la lista guardada con el botón ߗ en cada renglón al editar la plantilla.</div>
+    <div id="gestPlantillaOpM" class="hint" style="margin-top:6px"></div>
     <div class="subtotal">Total operación: <span id="mTotalOp">$0.00</span></div>
   </div>
 
   <div class="card" id="mTerCard" style="border-left-color:#00838F">
     <h2><span class="mod-badge ter">6</span> Gastos de terceros</h2>
+    <div class="row" style="margin-bottom:8px;align-items:flex-end">
+      <div style="flex:2">
+        <label>Usar concepto guardado</label>
+        <select id="selPlantillaTerM" onchange="aplicarConceptoPlantillaM('terceros', this.value); this.value='';">
+          <option value="">— Elegir de la lista —</option>
+        </select>
+      </div>
+      <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-ok" style="width:auto" onclick="guardarPlantillaM('terceros')">Guardar lista actual</button>
+        <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cargarPlantillaM('terceros')">Cargar lista</button>
+      </div>
+    </div>
     <div id="listaTercerosM"></div>
-    <button type="button" class="btn btn-add" onclick="agregarLineaM('terceros')">+ Concepto</button>
+    <button type="button" class="btn btn-add" onclick="agregarLineaM('terceros')">+ Concepto nuevo</button>
+    <div id="gestPlantillaTerM" class="hint" style="margin-top:6px"></div>
     <div class="subtotal">Total terceros: <span id="mTotalTer">$0.00</span></div>
   </div>
 
@@ -1132,6 +1159,8 @@ function renderCatalogo(){
     </div>
   `).join('');
   llenarAnios();
+
+(function(){ var a=document.getElementById('anioVehiculo'); if(a) a.addEventListener('change', function(){ if(typeof calcular==='function') calcular(); }); })();
 llenarSelectCodigo();
 }
 function generarCodigoCatalogo(tipo){
@@ -1886,7 +1915,7 @@ tr.sub td{border-top:1px solid #e0e6ec;padding-top:2px;font-weight:700;color:#1F
   <div><strong>Fecha:</strong> ${document.getElementById('fecha').value||'—'}</div>
   <div><strong>Cliente:</strong> ${document.getElementById('cliente').value||'—'}</div>
   <div><strong>Cantidad:</strong> ${d.qty} ${(d.tipo==='moto'?'moto':d.tipo==='camion'?'camión':d.tipo==='carga'?'pickup':'vehículo')}${(d.qty>1?'s':'')}</div>
-  <div><strong>Producto:</strong> ${document.getElementById('modelo').value||'—'}${d.anio?' · Año '+d.anio:''}</div>
+  <div><strong>Producto:</strong> ${document.getElementById('modelo').value||'—'} · Año ${document.getElementById('anioVehiculo')?.value||d.anio||'—'}</div>
   <div><strong>Código:</strong> ${document.getElementById('codigo').value||'—'} · ${d.cc||'—'} CC</div>
 </div>
 
@@ -2169,6 +2198,17 @@ let lineasOpM = [];
 let lineasTerM = [];
 let catalogoMerc = JSON.parse(localStorage.getItem('vasmar_catalogo_merc') || '[]');
 let historialMerc = JSON.parse(localStorage.getItem('vasmar_historial_merc') || '[]');
+let plantillaOpM = JSON.parse(localStorage.getItem('vasmar_plantilla_op_m') || 'null') || [
+  { concepto: 'Honorarios de gestión / agenciamiento', monto: 1500 },
+  { concepto: 'Trámites aduanales y documentación', monto: 800 },
+  { concepto: 'Coordinación logística', monto: 500 }
+];
+let plantillaTerM = JSON.parse(localStorage.getItem('vasmar_plantilla_ter_m') || 'null') || [
+  { concepto: 'Almacenaje', monto: 300 },
+  { concepto: 'Transporte terrestre', monto: 400 },
+  { concepto: 'Inspección / aforo', monto: 200 }
+];
+
 let nextMercId = 1;
 let nextOpMId = 1;
 let nextTerMId = 1;
@@ -2176,6 +2216,9 @@ let nextTerMId = 1;
 function saveMerc(){
   localStorage.setItem('vasmar_catalogo_merc', JSON.stringify(catalogoMerc));
   localStorage.setItem('vasmar_historial_merc', JSON.stringify(historialMerc));
+  localStorage.setItem('vasmar_plantilla_op_m', JSON.stringify(plantillaOpM));
+  localStorage.setItem('vasmar_plantilla_ter_m', JSON.stringify(plantillaTerM));
+
 }
 
 function leerBaseArancelaria(){
@@ -3752,6 +3795,85 @@ function sumLineasM(arr){
   return arr.reduce((s,l)=>s+(parseFloat(l.monto)||0),0);
 }
 
+
+function refreshSelectsPlantillaM(){
+  const so = document.getElementById('selPlantillaOpM');
+  const st = document.getElementById('selPlantillaTerM');
+  if (so) {
+    so.innerHTML = '<option value="">— Elegir de la lista —</option>' +
+      (plantillaOpM||[]).map((p,i) => '<option value="'+i+'">'+esc(p.concepto)+' · $'+fmt(p.monto||0)+'</option>').join('');
+  }
+  if (st) {
+    st.innerHTML = '<option value="">— Elegir de la lista —</option>' +
+      (plantillaTerM||[]).map((p,i) => '<option value="'+i+'">'+esc(p.concepto)+' · $'+fmt(p.monto||0)+'</option>').join('');
+  }
+  renderGestPlantillaM('operacion');
+  renderGestPlantillaM('terceros');
+}
+
+function renderGestPlantillaM(tipo){
+  const box = document.getElementById(tipo==='operacion' ? 'gestPlantillaOpM' : 'gestPlantillaTerM');
+  if (!box) return;
+  const lista = tipo==='operacion' ? plantillaOpM : plantillaTerM;
+  if (!lista || !lista.length) {
+    box.innerHTML = '<em>Lista vacía. Agrega conceptos y pulsa «Guardar lista actual».</em>';
+    return;
+  }
+  box.innerHTML = '<strong>Lista guardada:</strong> ' + lista.map((p,i) =>
+    '<span style="display:inline-flex;align-items:center;gap:4px;background:#f0f0f0;padding:2px 8px;border-radius:12px;margin:2px;font-size:0.8rem">' +
+    esc(p.concepto) + ' ($' + fmt(p.monto||0) + ') ' +
+    '<button type="button" class="btn btn-sm btn-danger" style="padding:0 6px;min-width:auto" onclick="eliminarDePlantillaM(\''+tipo+'\','+i+')">×</button></span>'
+  ).join('');
+}
+
+function aplicarConceptoPlantillaM(tipo, idxStr){
+  if (idxStr === '' || idxStr == null) return;
+  const idx = parseInt(idxStr, 10);
+  const lista = tipo==='operacion' ? plantillaOpM : plantillaTerM;
+  const p = lista[idx];
+  if (!p) return;
+  if (tipo==='operacion') lineasOpM.push({ id: nextOpMId++, concepto: p.concepto, monto: p.monto||0 });
+  else lineasTerM.push({ id: nextTerMId++, concepto: p.concepto, monto: p.monto||0 });
+  renderLineasM();
+  calcularMerc();
+  toast('Concepto agregado: ' + p.concepto);
+}
+
+function guardarPlantillaM(tipo){
+  const lineas = tipo==='operacion' ? lineasOpM : lineasTerM;
+  const limpia = lineas
+    .filter(l => (l.concepto||'').trim() !== '' || (l.monto||0) > 0)
+    .map(l => ({ concepto: (l.concepto||'').trim(), monto: parseFloat(l.monto)||0 }));
+  if (!limpia.length) { toast('No hay conceptos para guardar'); return; }
+  let plant = tipo==='operacion' ? plantillaOpM.slice() : plantillaTerM.slice();
+  limpia.forEach(n => {
+    const i = plant.findIndex(x => (x.concepto||'').toLowerCase() === n.concepto.toLowerCase());
+    if (i >= 0) plant[i] = n; else plant.push(n);
+  });
+  if (tipo==='operacion') plantillaOpM = plant; else plantillaTerM = plant;
+  if (typeof saveMerc === 'function') saveMerc();
+  refreshSelectsPlantillaM();
+  toast('Lista guardada (' + plant.length + ' conceptos)');
+}
+
+function cargarPlantillaM(tipo){
+  const plant = tipo==='operacion' ? plantillaOpM : plantillaTerM;
+  if (!plant.length) { toast('No hay lista guardada'); return; }
+  if (tipo==='operacion') lineasOpM = plant.map(p => ({ id: nextOpMId++, concepto: p.concepto, monto: p.monto||0 }));
+  else lineasTerM = plant.map(p => ({ id: nextTerMId++, concepto: p.concepto, monto: p.monto||0 }));
+  renderLineasM();
+  calcularMerc();
+  toast('Lista cargada: ' + plant.length + ' conceptos');
+}
+
+function eliminarDePlantillaM(tipo, idx){
+  if (tipo==='operacion') plantillaOpM = plantillaOpM.filter(function(_,i){ return i !== idx; });
+  else plantillaTerM = plantillaTerM.filter(function(_,i){ return i !== idx; });
+  if (typeof saveMerc === 'function') saveMerc();
+  refreshSelectsPlantillaM();
+  toast('Concepto eliminado de la lista');
+}
+
 function agregarLineaM(tipo){
   if (tipo==='operacion') {
     lineasOpM.push({id: nextOpMId++, concepto:'', monto:0});
@@ -3972,17 +4094,17 @@ tr.sub td{border-top:1px solid #e0e6ec;font-weight:700;color:#1F4E79;padding-top
 function initMercancias(){
   const f = document.getElementById('mFecha');
   if (f && !f.value) f.value = new Date().toISOString().slice(0,10);
-  // seed op/ter from vehicle plantillas if empty
-  if (!lineasOpM.length && typeof plantillaOp !== 'undefined' && plantillaOp.length) {
-    lineasOpM = plantillaOp.map((p,i)=>({id:++nextOpMId, concepto:p.concepto||p, monto:p.monto||0}));
+  if (!lineasOpM.length && plantillaOpM && plantillaOpM.length) {
+    lineasOpM = plantillaOpM.map(p => ({id: nextOpMId++, concepto: p.concepto||'', monto: p.monto||0}));
   }
-  if (!lineasTerM.length && typeof plantillaTer !== 'undefined' && plantillaTer.length) {
-    lineasTerM = plantillaTer.map((p,i)=>({id:++nextTerMId, concepto:p.concepto||p, monto:p.monto||0}));
+  if (!lineasTerM.length && plantillaTerM && plantillaTerM.length) {
+    lineasTerM = plantillaTerM.map(p => ({id: nextTerMId++, concepto: p.concepto||'', monto: p.monto||0}));
   }
   if (!lineasMerc.length) agregarMercLinea();
   else renderMercLineas();
   renderLineasM();
   renderCatMerc();
+  refreshSelectsPlantillaM();
   calcularMerc();
   ['mFlete','mSeguro'].forEach(id => {
     const el = document.getElementById(id);
