@@ -344,6 +344,8 @@
 <nav>
   <button class="active" data-screen="nueva">Nueva</button>
   <button data-screen="mercancias">Mercancías</button>
+  <button data-screen="rifDb">RIF</button>
+  <button data-screen="ctrlVeh">Control veh.</button>
   <button data-screen="catalogo">Catálogo</button>
   <button data-screen="historial">Historial</button>
   <button data-screen="config">Config</button>
@@ -803,10 +805,147 @@
   </div>
 </div>
 
+<!-- ========== MÓDULO RIF (independiente) ========== -->
+<div id="rifDb" class="screen">
+  <div class="card" style="border-left-color:#455A64">
+    <h2><span class="mod-badge datos">RIF</span> Base de consignatarios</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">
+      Carga el PDF del SENIAT (como los B/L). Se extrae nombre, RIF y domicilio.
+      Queda disponible para <strong>Cliente</strong> en gastos y para el módulo de control/manifiesto.
+    </p>
+    <div id="rifDropzone" style="border:2px dashed var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#fafbfd;margin-bottom:12px">
+      <div style="font-weight:700;color:var(--primary);margin-bottom:4px">ߓ Toca o suelta PDF de RIF</div>
+      <div style="font-size:0.8rem;color:var(--muted)">Uno o varios · formatos SENIAT actuales</div>
+      <input type="file" id="rifFileInput" accept=".pdf,application/pdf" multiple style="display:none">
+    </div>
+    <div id="rifProgress" class="hint" style="margin-bottom:8px"></div>
+    <div class="row">
+      <div style="flex:2">
+        <label>Buscar en la base</label>
+        <input type="search" id="rifSearch" placeholder="Nombre o RIF..." oninput="renderRifLista()">
+      </div>
+      <div style="flex:1;display:flex;align-items:flex-end">
+        <button type="button" class="btn btn-primary" style="width:100%;margin:0" onclick="mostrarFormRif()">+ Manual</button>
+      </div>
+    </div>
+    <div id="listaRif" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card hidden" id="formRifCard" style="border-left-color:#1565C0">
+    <h2 id="formRifTitulo">Nuevo consignatario</h2>
+    <input type="hidden" id="rifEditId">
+    <label>Nombre / Razón social *</label>
+    <input type="text" id="rifNombre" placeholder="COMERCIALIZADORA EJEMPLO, C.A.">
+    <label>RIF *</label>
+    <input type="text" id="rifNumero" placeholder="J-12345678-9" style="text-transform:uppercase">
+    <label>Dirección</label>
+    <textarea id="rifDireccion" rows="2" placeholder="Av. ..., Edif. ..., Ciudad" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:1rem;background:var(--input-bg);color:#0000aa;font-family:inherit"></textarea>
+    <div class="row">
+      <div>
+        <label>Teléfono</label>
+        <input type="text" id="rifTelefono" placeholder="0212-...">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="rifEmail" placeholder="correo@empresa.com">
+      </div>
+    </div>
+    <label>Notas</label>
+    <input type="text" id="rifNotas" placeholder="Opcional">
+    <div class="row" style="margin-top:12px;gap:8px">
+      <button type="button" class="btn btn-success" style="flex:1" onclick="guardarRifForm()">Guardar</button>
+      <button type="button" class="btn btn-outline" style="flex:1" onclick="ocultarFormRif()">Cancelar</button>
+    </div>
+  </div>
+</div>
+<!-- ========== fin módulo RIF ========== -->
+
+<!-- ========== MÓDULO CONTROL DE VEHÍCULO (independiente) ========== -->
+<div id="ctrlVeh" class="screen">
+  <div class="card" style="border-left-color:#1565C0">
+    <h2><span class="mod-badge vehiculo">CV</span> Control de vehículo</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">
+      Carga PDFs de B/L. Extrae VIN, marca, año, color y B/L. Cruza consignatario con la base <strong>RIF</strong>.
+      Exporta Excel / PDF horizontal con logo VASMAR o CEYMA.
+    </p>
+    <div id="cvDropzone" style="border:2px dashed #90CAF9;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#E3F2FD;margin-bottom:10px">
+      <div style="font-weight:700;color:#1565C0;margin-bottom:4px">ߓ Toca o suelta PDF de B/L</div>
+      <div style="font-size:0.8rem;color:var(--muted)">Varios a la vez · OCR si es escaneado</div>
+      <input type="file" id="cvFileInput" accept=".pdf,application/pdf" multiple style="display:none">
+    </div>
+    <div id="cvLog" style="font-size:0.78rem;color:var(--muted);max-height:90px;overflow-y:auto;margin-bottom:8px;font-family:ui-monospace,monospace"></div>
+    <div id="cvProgress" class="hint" style="margin-bottom:8px"></div>
+
+    <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center">
+      <input type="search" id="cvSearch" placeholder="Buscar…" oninput="cvRenderTable()" style="flex:1;min-width:140px">
+      <select id="cvEmpresa" style="width:auto;min-width:110px">
+        <option value="vasmar">Logo VASMAR</option>
+        <option value="ceyma">Logo CEYMA</option>
+      </select>
+      <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cvAddRow()">+ Fila</button>
+      <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cvOpenPreview()">Revisar</button>
+      <button type="button" class="btn btn-sm btn-ok" style="width:auto;background:#2E7D32;color:#fff;border:none" onclick="cvGuardarHistorial()">ߒ Guardar</button>
+      <button type="button" class="btn btn-sm" style="width:auto;background:#8B3A2B;color:#fff;border:none" onclick="cvPrintPdf()">PDF / Imprimir</button>
+      <button type="button" class="btn btn-sm btn-danger" style="width:auto" onclick="cvClearAll()">Limpiar</button>
+      <span id="cvCount" style="font-size:0.8rem;color:#1565C0;font-weight:600"></span>
+    </div>
+
+    <div id="cvShipments" style="margin-bottom:8px"></div>
+
+    <div style="overflow-x:auto;max-height:420px;border:1px solid var(--border);border-radius:10px">
+      <table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:720px">
+        <thead>
+          <tr style="background:#1565C0;color:#fff">
+            <th style="padding:6px 4px;width:28px">#</th>
+            <th style="padding:6px 4px">Consignatario</th>
+            <th style="padding:6px 4px;width:100px">RIF</th>
+            <th style="padding:6px 4px">Marca / Modelo</th>
+            <th style="padding:6px 4px;width:150px">VIN</th>
+            <th style="padding:6px 4px;width:50px">Año</th>
+            <th style="padding:6px 4px;width:70px">Color</th>
+            <th style="padding:6px 4px;width:28px"></th>
+          </tr>
+        </thead>
+        <tbody id="cvTbody">
+          <tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">Sube un PDF de B/L para comenzar</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal seguimiento barco -->
+<div id="cvTrackModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center;padding:12px">
+  <div style="background:#fff;border-radius:14px 14px 0 0;max-width:520px;width:100%;max-height:85vh;overflow:auto;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="color:#1565C0">ߚ Seguimiento de embarque</strong>
+      <button type="button" class="btn btn-sm btn-outline" onclick="cvCloseTrack()">Cerrar</button>
+    </div>
+    <div id="cvTrackBody"></div>
+  </div>
+</div>
+
+<!-- Modal revisar antes de exportar -->
+<div id="cvPreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center;padding:12px">
+  <div style="background:#fff;border-radius:14px 14px 0 0;max-width:96vw;width:900px;max-height:90vh;overflow:auto;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <strong style="color:#1565C0">ߓ Revisar antes de exportar</strong>
+      <button type="button" class="btn btn-sm btn-outline" onclick="cvClosePreview()">Cerrar</button>
+    </div>
+    <p class="hint" style="margin-bottom:8px">Corrige aquí. Los cambios se guardan en el control.</p>
+    <div id="cvPreviewWrap" style="overflow-x:auto"></div>
+    <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn btn-ok" style="width:auto;background:#2E7D32;color:#fff;border:none" onclick="cvClosePreview();cvGuardarHistorial()">ߒ Guardar en historial</button>
+      <button type="button" class="btn" style="width:auto;background:#8B3A2B;color:#fff;border:none" onclick="cvClosePreview();cvPrintPdf()">ߖ️ PDF / Imprimir</button>
+    </div>
+  </div>
+</div>
+<!-- ========== fin módulo Control de vehículo ========== -->
+
 <div id="historial" class="screen">
   <div class="card">
     <h2>Historial de relaciones</h2>
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Vehículos y mercancías guardadas. Puedes cargar cualquiera para seguir editando o imprimir.</p>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Vehículos, mercancías y <strong>CONTROL</strong> (por B/L). Carga cualquiera para seguir editando o imprimir.</p>
     <div id="listaHistorial"></div>
   </div>
 </div>
@@ -1017,11 +1156,14 @@ document.querySelectorAll('nav button').forEach(btn=>{
     document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById(btn.dataset.screen).classList.add('active');
-      if(btn.dataset.screen==='mercancias') try{initMercancias();}catch(e){}
+    const scr = document.getElementById(btn.dataset.screen);
+    if(scr) scr.classList.add('active');
+    if(btn.dataset.screen==='mercancias') try{initMercancias();}catch(e){}
     if(btn.dataset.screen==='catalogo') renderCatalogo();
     if(btn.dataset.screen==='historial') renderHistorial();
     if(btn.dataset.screen==='config'){ renderPlantillas(); renderLogosPreview(); }
+    if(btn.dataset.screen==='rifDb') try{initRifModule();}catch(e){console.warn('RIF module',e);}
+    if(btn.dataset.screen==='ctrlVeh') try{initCtrlVeh();}catch(e){console.warn('Control veh',e);}
   });
 });
 
@@ -1735,14 +1877,30 @@ function guardarEnHistorial(){
 function renderHistorial(){
   const cont = document.getElementById('listaHistorial');
   if (!cont) return;
+  let histCtrl = [];
+  try { histCtrl = JSON.parse(localStorage.getItem('vasmar_historial_ctrl_v1') || '[]'); if(!Array.isArray(histCtrl)) histCtrl = []; } catch(e){ histCtrl = []; }
   const veh = (historial||[]).map(h => ({...h, _tipo: 'vehiculo'}));
   const merc = (historialMerc||[]).map(h => ({...h, _tipo: 'mercancia'}));
-  const all = veh.concat(merc).sort((a,b) => (b.id||0) - (a.id||0));
+  const ctrl = histCtrl.map(h => ({...h, _tipo: 'control'}));
+  const all = veh.concat(merc).concat(ctrl).sort((a,b) => (b.id||0) - (a.id||0));
   if (!all.length) {
-    cont.innerHTML = '<div class="empty">Aún no hay relaciones guardadas (vehículos ni mercancías).</div>';
+    cont.innerHTML = '<div class="empty">Aún no hay relaciones guardadas (vehículos, mercancías ni control).</div>';
     return;
   }
   cont.innerHTML = all.map(h => {
+    if (h._tipo === 'control') {
+      const nVeh = (h.rows && h.rows.length) || h.count || 0;
+      const bls = (h.bls && h.bls.length) ? h.bls.join(', ') : (h.bl || '—');
+      return `<div class="item-card" style="border-left:4px solid #1565C0">
+        <div class="name"><span style="background:#1565C0;color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;margin-right:6px">CONTROL</span>${esc(h.nombre||('CONTROL-'+(h.bl||'')))} · ${esc(h.fecha||'—')}</div>
+        <div class="meta">B/L: ${esc(bls)} · ${nVeh} vehículo(s)${h.consignatario ? ' · '+esc(h.consignatario) : ''}${h.rif ? ' · '+esc(h.rif) : ''}</div>
+        <div class="meta" style="margin-top:4px;font-weight:600;color:#1565C0">${esc(h.vessel||'')}${h.eta ? ' · ETA '+esc(h.eta) : ''}${h.status ? ' · '+esc(h.status) : ''}</div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline" onclick="cargarHistorialCtrl(${h.id})">Cargar / Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="borrarHistorialCtrl(${h.id})">Borrar</button>
+        </div>
+      </div>`;
+    }
     if (h._tipo === 'mercancia') {
       const nItems = (h.lineas && h.lineas.length) || (h.desglose && h.desglose.length) || 0;
       const total = h.total != null ? h.total : ((h.impT||0)+(h.opT||0)+(h.terT||0));
@@ -1982,7 +2140,13 @@ ${(d.usarAddCosto && d.pdfAddCosto && d.addCostoT > 0) || (d.usarAddFlete && d.p
 
 
 function exportarDatos(){
-  const data = {catalogo, historial, plantillaOp, plantillaTer, logos, exportado: new Date().toISOString()};
+  let rifExport = [];
+  let cvExport = [];
+  let cvHistExport = [];
+  try { rifExport = JSON.parse(localStorage.getItem('vasmar_rif_db_v1') || '[]'); } catch(e){}
+  try { cvExport = JSON.parse(localStorage.getItem('vasmar_ctrl_veh_v1') || '[]'); } catch(e){}
+  try { cvHistExport = JSON.parse(localStorage.getItem('vasmar_historial_ctrl_v1') || '[]'); } catch(e){}
+  const data = {catalogo, historial, plantillaOp, plantillaTer, logos, rifDb: rifExport, ctrlVeh: cvExport, historialCtrl: cvHistExport, exportado: new Date().toISOString()};
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2001,12 +2165,1144 @@ function importarDatos(e){
       if (data.plantillaOp) plantillaOp = data.plantillaOp;
       if (data.plantillaTer) plantillaTer = data.plantillaTer;
       if (data.logos) logos = data.logos;
+      if (data.rifDb && Array.isArray(data.rifDb)) {
+        try {
+          localStorage.setItem('vasmar_rif_db_v1', JSON.stringify(data.rifDb));
+          if (typeof rifDb !== 'undefined') rifDb = data.rifDb;
+          if (typeof renderRifLista === 'function') renderRifLista();
+          if (typeof renderRifDatalist === 'function') renderRifDatalist();
+        } catch(errR){}
+      }
+      if (data.ctrlVeh && Array.isArray(data.ctrlVeh)) {
+        try {
+          localStorage.setItem('vasmar_ctrl_veh_v1', JSON.stringify(data.ctrlVeh));
+          if (typeof cvRows !== 'undefined') cvRows = data.ctrlVeh;
+          if (typeof cvRenderTable === 'function') cvRenderTable();
+        } catch(errC){}
+      }
+      if (data.historialCtrl && Array.isArray(data.historialCtrl)) {
+        try { localStorage.setItem('vasmar_historial_ctrl_v1', JSON.stringify(data.historialCtrl)); } catch(errH){}
+      }
       nextId = catalogo.reduce((m,c)=>Math.max(m,c.id),0)+1;
       save(); cargarLineasDesdePlantilla(); renderCatalogo(); actualizarHeaderLogo();
       toast('Datos importados');
     } catch(err) { toast('Archivo invalido'); }
   };
   r.readAsText(f);
+}
+
+
+/* ============================================================
+   MÓDULO RIF — independiente (no modifica lógica de otros módulos)
+   Storage: vasmar_rif_db_v1
+   ============================================================ */
+const RIF_DB_KEY = 'vasmar_rif_db_v1';
+let rifDb = [];
+try { rifDb = JSON.parse(localStorage.getItem(RIF_DB_KEY) || '[]'); if(!Array.isArray(rifDb)) rifDb = []; } catch(e){ rifDb = []; }
+
+function saveRifDb(){
+  try { localStorage.setItem(RIF_DB_KEY, JSON.stringify(rifDb)); } catch(e){ console.warn(e); }
+}
+
+function normalizarRif(rif){
+  if(!rif) return '';
+  let s = String(rif).toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9\-]/g,'');
+  const m = s.match(/^([JVEGP])-?(\d{8,9})-?(\d)?$/);
+  if(m) return m[1] + '-' + m[2] + (m[3] ? '-' + m[3] : '');
+  return s;
+}
+
+function buscarRif(q){
+  const t = String(q||'').toLowerCase().trim();
+  if(!t) return [];
+  const tRif = normalizarRif(q).toLowerCase();
+  return rifDb.filter(r => {
+    const nom = (r.nombre||'').toLowerCase();
+    const rif = normalizarRif(r.rif).toLowerCase();
+    const dir = (r.direccion||'').toLowerCase();
+    return nom.includes(t) || rif.includes(tRif) || rif.includes(t) || dir.includes(t);
+  });
+}
+
+function findRifByNumber(rif){
+  const n = normalizarRif(rif);
+  return rifDb.find(r => normalizarRif(r.rif) === n) || null;
+}
+
+function findRifByNombre(nombre){
+  const low = String(nombre||'').toLowerCase().trim();
+  if(!low) return null;
+  return rifDb.find(r => (r.nombre||'').toLowerCase() === low)
+    || rifDb.find(r => (r.nombre||'').toLowerCase().includes(low))
+    || null;
+}
+
+function upsertRif(data){
+  const rif = normalizarRif(data.rif);
+  if(!rif || !(data.nombre||'').trim()) return null;
+  const existing = findRifByNumber(rif);
+  const record = {
+    id: existing ? existing.id : Date.now(),
+    nombre: String(data.nombre).trim(),
+    rif,
+    direccion: (data.direccion||'').trim(),
+    telefono: (data.telefono||'').trim(),
+    email: (data.email||'').trim(),
+    notas: (data.notas||'').trim(),
+    fechaInscripcion: data.fechaInscripcion || (existing && existing.fechaInscripcion) || '',
+    fechaActualizacion: data.fechaActualizacion || (existing && existing.fechaActualizacion) || '',
+    fechaVencimiento: data.fechaVencimiento || (existing && existing.fechaVencimiento) || '',
+    sourceFile: data.sourceFile || (existing && existing.sourceFile) || '',
+    updatedAt: new Date().toISOString().slice(0,10),
+    createdAt: existing ? existing.createdAt : new Date().toISOString().slice(0,10)
+  };
+  if(existing){
+    const i = rifDb.findIndex(r => r.id === existing.id);
+    rifDb[i] = Object.assign({}, existing, record);
+  } else {
+    rifDb.push(record);
+  }
+  saveRifDb();
+  return record;
+}
+
+function parseRifText(text){
+  if(!text) return null;
+  const t = text.replace(/\r/g,'\n').replace(/[ \t]+/g,' ');
+
+  let rif = '';
+  let m = t.match(/\bRIF\s*[:\-]?\s*([JVEGP])\s*-?\s*(\d{8,9})\s*-?\s*(\d)?\b/i);
+  if(m) rif = normalizarRif(m[1]+m[2]+(m[3]||''));
+  else {
+    m = t.match(/\b([JVEGP])\s*-?\s*(\d{8,9})\s*-?\s*(\d)?\b/i);
+    if(m) rif = normalizarRif(m[1]+m[2]+(m[3]||''));
+  }
+
+  let nombre = '';
+  m = t.match(/RIF\s*[:\-]?\s*[JVEGP]-?\d{8,9}-?\d?\s*\n+\s*([A-ZÁÉÍÓÚÑ0-9][^\n]{4,90}?)(?=\n\s*\n|DOMICILIO|FECHA|DATOS|$)/i);
+  if(m) nombre = m[1].trim();
+  else {
+    m = t.match(/\b[JVEGP]-?\d{8,9}-?\d?\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ0-9\s\.,&\-]{4,90}?)(?=\n|DOMICILIO|FECHA|$)/i);
+    if(m) nombre = m[1].trim();
+  }
+  nombre = nombre.replace(/\s{2,}/g,' ').replace(/\s*,\s*/g,', ')
+    .replace(/,?\s*C\.?\s*A\.?\s*$/i,', C.A.')
+    .replace(/,?\s*S\.?\s*A\.?\s*$/i,', S.A.').trim();
+
+  let direccion = '';
+  m = t.match(/DOMICILIO\s*FISCAL\s*[:\-]?\s*([\s\S]{8,220}?)(?=DIVISI[OÓ]N|FECHA\s*DE|CONDICI[OÓ]N|FIRMA|ÁREA\s*DE|N[°º]?\s*COMPROBANTE|IDENTIFICACI[OÓ]N|$)/i);
+  if(m){
+    direccion = m[1].replace(/\n+/g,', ').replace(/\s{2,}/g,' ')
+      .replace(/\s*,\s*/g,', ').replace(/^,\s*|,\s*$/g,'').trim();
+  }
+
+  const insc = (t.match(/FECHA\s*DE\s*INSCRIPCI[OÓ]N\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i)||[])[1]||'';
+  const act  = (t.match(/(?:[UÚ]LTIMA\s*)?ACTUALIZACI[OÓ]N\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i)||[])[1]||'';
+  const venc = (t.match(/VENCIMIENTO\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i)||[])[1]||'';
+
+  if(!rif && !nombre) return null;
+  return { rif, nombre, direccion, fechaInscripcion: insc, fechaActualizacion: act, fechaVencimiento: venc };
+}
+
+function seedRifIfEmpty(){
+  if(rifDb.length) return;
+  upsertRif({
+    rif: 'J-304470126',
+    nombre: 'FLETMAR FLETES MARITIMOS, S.A.',
+    direccion: 'Calle Plaza entre Urdaneta y Mariño, Local 148, Sector Centro, Puerto Cabello, Carabobo, Zona Postal 2050',
+    fechaInscripcion: '17/09/1997',
+    fechaActualizacion: '12/12/2025',
+    fechaVencimiento: '12/12/2028',
+    sourceFile: 'RIF FLETMAR ACTUALIZADO.pdf'
+  });
+  upsertRif({
+    rif: 'J-308388300',
+    nombre: 'AGENTES DE ADUANAS CEYMA C.A.',
+    direccion: 'Calle Segrestaa, Edif. Pallasa 2, Piso 1, Of. 01-E, Zona 2050, Puerto Cabello, Carabobo, Zona Postal 2050',
+    fechaInscripcion: '09/08/2001',
+    fechaActualizacion: '26/08/2026',
+    sourceFile: 'RIF CEYMA SEP 2026.pdf'
+  });
+}
+
+async function extractRifPdfText(file){
+  // Reutiliza loaders si ya existen en la app (mercancías); si no, los carga
+  const loadPdfJs = () => new Promise((resolve, reject) => {
+    if (window.pdfjsLib) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve();
+    };
+    s.onerror = () => reject(new Error('PDF.js'));
+    document.head.appendChild(s);
+  });
+  const loadTesseract = () => new Promise((resolve, reject) => {
+    if (window.Tesseract) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Tesseract'));
+    document.head.appendChild(s);
+  });
+
+  await loadPdfJs();
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let full = '';
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const items = content.items || [];
+    const linesMap = {};
+    items.forEach(it => {
+      const y = Math.round((it.transform && it.transform[5]) || 0);
+      if (!linesMap[y]) linesMap[y] = [];
+      linesMap[y].push({x: (it.transform && it.transform[4]) || 0, str: it.str || ''});
+    });
+    Object.keys(linesMap).map(Number).sort((a,b) => b-a).forEach(y => {
+      full += linesMap[y].sort((a,b)=>a.x-b.x).map(t=>t.str).join(' ') + '\n';
+    });
+    full += '\n';
+  }
+  const letters = (full.match(/[A-Za-zÁÉÍÓÚáéíóúñÑ]{3,}/g) || []).length;
+  if (letters >= 20) return full;
+
+  // OCR si poco texto
+  const prog = document.getElementById('rifProgress');
+  if (prog) prog.textContent = 'Poco texto — OCR…';
+  await loadTesseract();
+  let ocrFull = full;
+  const maxPages = Math.min(pdf.numPages, 3);
+  for (let p = 1; p <= maxPages; p++) {
+    if (prog) prog.textContent = 'OCR RIF pág. ' + p + '/' + maxPages + '…';
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale: 2.2 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const result = await Tesseract.recognize(canvas, 'spa+eng');
+    ocrFull += '\n' + ((result && result.data && result.data.text) || '');
+  }
+  return ocrFull;
+}
+
+async function handleRifFiles(fileList){
+  const files = Array.from(fileList).filter(f =>
+    f.type === 'application/pdf' || (f.name||'').toLowerCase().endsWith('.pdf')
+  );
+  if(!files.length){ toast('No hay PDF de RIF válidos'); return; }
+  const prog = document.getElementById('rifProgress');
+  let ok = 0, fail = 0;
+  for(let i = 0; i < files.length; i++){
+    const file = files[i];
+    try{
+      if(prog) prog.textContent = 'Leyendo ' + (i+1) + '/' + files.length + ': ' + file.name;
+      const text = await extractRifPdfText(file);
+      const parsed = parseRifText(text);
+      if(!parsed || !parsed.rif){
+        fail++;
+        continue;
+      }
+      parsed.sourceFile = file.name;
+      const saved = upsertRif(parsed);
+      ok++;
+      toast((saved.rif) + ' · ' + (saved.nombre||'').substring(0,40));
+    } catch(err){
+      console.error(err);
+      fail++;
+    }
+  }
+  if(prog) prog.textContent = ok + ' RIF guardado(s)' + (fail ? ' · ' + fail + ' con error' : '');
+  renderRifLista();
+  renderRifDatalist();
+  toast('RIF: ' + ok + ' guardado(s)' + (fail ? ', ' + fail + ' error' : ''));
+}
+
+function renderRifLista(){
+  const box = document.getElementById('listaRif');
+  if(!box) return;
+  const q = (document.getElementById('rifSearch') && document.getElementById('rifSearch').value || '').trim();
+  const list = q ? buscarRif(q) : rifDb.slice().sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+  if(!list.length){
+    box.innerHTML = '<div class="empty">No hay consignatarios' + (q ? ' para esa búsqueda' : '') + '. Carga un PDF o agrega uno manual.</div>';
+    return;
+  }
+  box.innerHTML = list.map(r =>
+    '<div class="item-card">' +
+      '<div class="name">' + esc(r.nombre) + '</div>' +
+      '<div class="meta"><strong>RIF:</strong> ' + esc(r.rif) +
+        (r.direccion ? ' · ' + esc((r.direccion||'').substring(0,70)) + ((r.direccion||'').length>70?'…':'') : '') +
+      '</div>' +
+      '<div class="item-actions">' +
+        '<button type="button" class="btn btn-sm btn-outline" onclick="aplicarRifACliente(' + r.id + ')">Usar como cliente</button>' +
+        '<button type="button" class="btn btn-sm btn-outline" onclick="editarRif(' + r.id + ')">Editar</button>' +
+        '<button type="button" class="btn btn-sm btn-danger" onclick="borrarRif(' + r.id + ')">×</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function renderRifDatalist(){
+  let dl = document.getElementById('rifDatalist');
+  if(!dl){
+    dl = document.createElement('datalist');
+    dl.id = 'rifDatalist';
+    document.body.appendChild(dl);
+  }
+  dl.innerHTML = rifDb
+    .slice()
+    .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''))
+    .map(r => '<option value="' + esc(r.nombre) + '">' + esc(r.rif) + '</option>')
+    .join('');
+  // Enlazar inputs de cliente sin romper otros módulos
+  ['cliente','mCliente'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el.getAttribute('list') !== 'rifDatalist') el.setAttribute('list', 'rifDatalist');
+  });
+}
+
+function mostrarFormRif(id){
+  const card = document.getElementById('formRifCard');
+  if(!card) return;
+  card.classList.remove('hidden');
+  document.getElementById('formRifTitulo').textContent = id ? 'Editar consignatario' : 'Nuevo consignatario';
+  document.getElementById('rifEditId').value = id || '';
+  if(!id){
+    ['rifNombre','rifNumero','rifDireccion','rifTelefono','rifEmail','rifNotas'].forEach(i => {
+      const el = document.getElementById(i); if(el) el.value = '';
+    });
+  }
+}
+
+function ocultarFormRif(){
+  const card = document.getElementById('formRifCard');
+  if(card) card.classList.add('hidden');
+}
+
+function editarRif(id){
+  const r = rifDb.find(x => x.id === id);
+  if(!r) return;
+  mostrarFormRif(id);
+  document.getElementById('rifNombre').value = r.nombre || '';
+  document.getElementById('rifNumero').value = r.rif || '';
+  document.getElementById('rifDireccion').value = r.direccion || '';
+  document.getElementById('rifTelefono').value = r.telefono || '';
+  document.getElementById('rifEmail').value = r.email || '';
+  document.getElementById('rifNotas').value = r.notas || '';
+}
+
+function guardarRifForm(){
+  const nombre = (document.getElementById('rifNombre').value || '').trim();
+  const rif = normalizarRif(document.getElementById('rifNumero').value);
+  if(!nombre || !rif){ toast('Nombre y RIF son obligatorios'); return; }
+  const editId = document.getElementById('rifEditId').value;
+  const data = {
+    nombre, rif,
+    direccion: (document.getElementById('rifDireccion').value || '').trim(),
+    telefono: (document.getElementById('rifTelefono').value || '').trim(),
+    email: (document.getElementById('rifEmail').value || '').trim(),
+    notas: (document.getElementById('rifNotas').value || '').trim()
+  };
+  if(editId){
+    const i = rifDb.findIndex(x => x.id === Number(editId));
+    if(i >= 0){
+      rifDb[i] = Object.assign({}, rifDb[i], data, { updatedAt: new Date().toISOString().slice(0,10) });
+      saveRifDb();
+    }
+  } else {
+    if(findRifByNumber(rif)){ toast('Ese RIF ya está registrado'); return; }
+    upsertRif(data);
+  }
+  ocultarFormRif();
+  renderRifLista();
+  renderRifDatalist();
+  toast('Consignatario guardado');
+}
+
+function borrarRif(id){
+  if(!confirm('¿Eliminar este consignatario de la base?')) return;
+  rifDb = rifDb.filter(x => x.id !== id);
+  saveRifDb();
+  renderRifLista();
+  renderRifDatalist();
+  toast('Eliminado');
+}
+
+function aplicarRifACliente(id){
+  const r = rifDb.find(x => x.id === id);
+  if(!r) return;
+  const c1 = document.getElementById('cliente');
+  const c2 = document.getElementById('mCliente');
+  if(c1) c1.value = r.nombre;
+  if(c2) c2.value = r.nombre;
+  toast('Cliente: ' + r.nombre + ' (' + r.rif + ')');
+  // Ir a Nueva si existe
+  try {
+    const btn = document.querySelector('nav button[data-screen="nueva"]');
+    if(btn) btn.click();
+  } catch(e){}
+}
+
+function initRifModule(){
+  try { rifDb = JSON.parse(localStorage.getItem(RIF_DB_KEY) || '[]'); if(!Array.isArray(rifDb)) rifDb = []; } catch(e){ rifDb = []; }
+  seedRifIfEmpty();
+  renderRifLista();
+  renderRifDatalist();
+
+  const dz = document.getElementById('rifDropzone');
+  const inp = document.getElementById('rifFileInput');
+  if(dz && inp && !dz.dataset.bound){
+    dz.dataset.bound = '1';
+    dz.addEventListener('click', () => inp.click());
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#1F4E79'; });
+    dz.addEventListener('dragleave', () => { dz.style.borderColor = ''; });
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.style.borderColor = '';
+      if(e.dataTransfer.files && e.dataTransfer.files.length) handleRifFiles(e.dataTransfer.files);
+    });
+    inp.addEventListener('change', e => {
+      if(e.target.files && e.target.files.length) handleRifFiles(e.target.files);
+      e.target.value = '';
+    });
+  }
+}
+
+// Precarga ligera del datalist (no interfiere con otros módulos)
+try { renderRifDatalist(); } catch(e){}
+
+
+/* ============================================================
+   MÓDULO CONTROL DE VEHÍCULO — independiente
+   Storage: vasmar_ctrl_veh_v1
+   Usa: vasmar_rif_db_v1, vasmar_logos, EMPRESAS
+   ============================================================ */
+const CV_KEY = 'vasmar_ctrl_veh_v1';
+let cvRows = [];
+let cvIdCounter = 0;
+let cvFilter = '';
+let cvTrackBl = null;
+
+const CV_BRANDS = ["Toyota","Honda","Nissan","Ford","Chevrolet","Hyundai","Kia","Mazda","BMW","Mercedes-Benz","Mercedes","Audi","Volkswagen","VW","Subaru","Mitsubishi","Suzuki","Lexus","Jeep","Dodge","Chrysler","RAM","GMC","Buick","Cadillac","Volvo","Land Rover","Porsche","Peugeot","Renault","Fiat","Isuzu","MG","Chery","Geely","BYD","JAC","Acura","Infiniti","Mini","Jaguar","Tesla","Changan"];
+const CV_COLORS = ['WHITE','BLACK','GRAY','GREY','SILVER','RED','BLUE','GREEN','YELLOW','BROWN','BEIGE','GOLD','MAROON','ORANGE','PURPLE','PEARL','CHAMPAGNE','BRONZE','NAVY','CREAM','IVORY','BLANCO','NEGRO','GRIS','PLATA','PLATEADO','ROJO','AZUL','VERDE','AMARILLO','MARRON','MARRÓN','DORADO','NARANJA','MORADO','PERLA','CREMA','MARFIL','CAFE','CAFÉ','BORGOÑA'];
+const CV_COLOR_MAP = {
+  WHITE:'Blanco',BLANCO:'Blanco',BLACK:'Negro',NEGRO:'Negro',GRAY:'Gris',GREY:'Gris',GRIS:'Gris',
+  SILVER:'Plata',PLATA:'Plata',PLATEADO:'Plata',RED:'Rojo',ROJO:'Rojo',BLUE:'Azul',AZUL:'Azul',
+  GREEN:'Verde',VERDE:'Verde',YELLOW:'Amarillo',AMARILLO:'Amarillo',BROWN:'Marrón',MARRON:'Marrón','MARRÓN':'Marrón',
+  CAFE:'Marrón','CAFÉ':'Marrón',BEIGE:'Beige',GOLD:'Dorado',DORADO:'Dorado',MAROON:'Granate',BORGOÑA:'Granate',
+  ORANGE:'Naranja',NARANJA:'Naranja',PURPLE:'Morado',MORADO:'Morado',PEARL:'Perla',PERLA:'Perla',
+  CHAMPAGNE:'Champagne',BRONZE:'Bronce',NAVY:'Azul navy',CREAM:'Crema',CREMA:'Crema',IVORY:'Marfil',MARFIL:'Marfil'
+};
+const CV_CARRIERS = {
+  'MAEU':{name:'Maersk',url:bl=>`https://www.maersk.com/tracking/${bl}`},
+  'MSCU':{name:'MSC',url:bl=>`https://www.msc.com/en/track-a-shipment?agencyPath=msc&trackingNumber=${bl}`},
+  'MEDU':{name:'MSC',url:bl=>`https://www.msc.com/en/track-a-shipment?agencyPath=msc&trackingNumber=${bl}`},
+  'HLCU':{name:'Hapag-Lloyd',url:bl=>`https://www.hapag-lloyd.com/en/online-business/track/track-by-booking-solution.html?blno=${bl}`},
+  'COSU':{name:'COSCO',url:bl=>`https://elines.coscoshipping.com/ebusiness/cargoTracking?trackingType=BILLOFLADING&number=${bl}`},
+  'ZIMU':{name:'ZIM',url:bl=>`https://www.zim.com/tools/track-a-shipment?consnumber=${bl}`},
+  'CMDU':{name:'CMA CGM',url:bl=>`https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=Reference&Reference=${bl}`},
+  'ONEY':{name:'ONE',url:bl=>`https://ecomm.one-line.com/one-ecom/manage-shipment/cargo-tracking?bl=${bl}`},
+  'OOLU':{name:'OOCL',url:bl=>`https://www.oocl.com/eng/ourservices/eservices/cargotracking/Pages/cargotracking.aspx?ContainerNumber=${bl}`},
+  'EGLV':{name:'Evergreen',url:bl=>`https://www.evergreen-line.com/telms/track/TrackCargo.jsp?blNo=${bl}`},
+  'YMLU':{name:'Yang Ming',url:bl=>`https://www.yangming.com/e-service/Track_Trace/track_trace_cargo_tracking.aspx?bl_no=${bl}`}
+};
+const CV_YEAR_CODES = {
+  'A':[1980,2010],'B':[1981,2011],'C':[1982,2012],'D':[1983,2013],'E':[1984,2014],
+  'F':[1985,2015],'G':[1986,2016],'H':[1987,2017],'J':[1988,2018],'K':[1989,2019],
+  'L':[1990,2020],'M':[1991,2021],'N':[1992,2022],'P':[1993,2023],'R':[1994,2024],
+  'S':[1995,2025],'T':[1996,2026],'V':[1997,2027],'W':[1998,2028],'X':[1999,2029],
+  'Y':[2000,2030],'1':[2001],'2':[2002],'3':[2003],'4':[2004],'5':[2005],'6':[2006],'7':[2007],'8':[2008],'9':[2009]
+};
+
+function cvSave(){ try{ localStorage.setItem(CV_KEY, JSON.stringify(cvRows)); }catch(e){} }
+function cvLoad(){
+  try{
+    const s = localStorage.getItem(CV_KEY);
+    if(s){ cvRows = JSON.parse(s); cvIdCounter = cvRows.reduce((m,r)=>Math.max(m,r.id||0),0); }
+  }catch(e){ cvRows = []; }
+}
+function cvLog(msg, cls){
+  const el = document.getElementById('cvLog');
+  if(!el) return;
+  const d = document.createElement('div');
+  if(cls==='ok') d.style.color = '#2E7D32';
+  else if(cls==='err') d.style.color = '#c62828';
+  else if(cls==='warn') d.style.color = '#C65911';
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function cvExtractColor(text){
+  if(!text) return '';
+  const upper = text.toUpperCase();
+  const labeled = upper.match(/(?:COLOU?R|COLOR|COLOUR|CLR)\s*[:\-]?\s*([A-ZÁÉÍÓÚÑ]{3,15})/i);
+  if(labeled){
+    const key = labeled[1].toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(CV_COLOR_MAP[key]) return CV_COLOR_MAP[key];
+  }
+  for(const c of CV_COLORS){
+    if(new RegExp('\\b'+c+'\\b','i').test(upper)){
+      const key = c.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      return CV_COLOR_MAP[key] || (c.charAt(0)+c.slice(1).toLowerCase());
+    }
+  }
+  return '';
+}
+function cvDecodeVinYear(vin){
+  if(!vin || vin.length < 10) return '';
+  const code = vin.charAt(9).toUpperCase();
+  const opts = CV_YEAR_CODES[code];
+  if(!opts) return '';
+  const cy = new Date().getFullYear();
+  const valid = opts.filter(y => y <= cy + 1);
+  return String(valid.length ? Math.max(...valid) : opts[0]);
+}
+function cvValidateVin(vin){
+  if(!vin || vin.length !== 17) return false;
+  const v = vin.toUpperCase();
+  if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return false;
+  return true;
+}
+function cvCleanVin(raw){
+  if(!raw) return '';
+  let v = String(raw).toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g,'');
+  if(v.length === 17 && cvValidateVin(v)) return v;
+  const fixes = [[/O/g,'0'],[/Q/g,'0'],[/I/g,'1'],[/L/g,'1'],[/S/g,'5'],[/Z/g,'2'],[/B/g,'8']];
+  let candidates = [v];
+  for(const [re,rep] of fixes){
+    const next = [];
+    for(const c of candidates){ if(re.test(c)) next.push(c.replace(re,rep)); }
+    candidates = candidates.concat(next);
+  }
+  for(const c of candidates){ if(c.length===17 && cvValidateVin(c)) return c; }
+  return v.length >= 15 ? v : '';
+}
+function cvExtractBL(text, filename){
+  if(filename){
+    const m = filename.match(/^(\d{6,15})/) || filename.match(/\b(\d{6,15})\b/);
+    if(m) return m[1];
+  }
+  const clean = (text||'').replace(/(?:VERIFY|COPY|DRAFT|ORIGINAL|SAMPLE|NOT NEGOTIABLE|NON[- ]NEGOTIABLE)\s*/gi,' ');
+  const patterns = [
+    /\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU)[A-Z0-9]{6,12})\b/i,
+    /(?:B\/?L\s*(?:No\.?|Number|#)?|Bill\s*of\s*Lading(?:\s*No\.?)?|Conocimiento\s*(?:de\s*Embarque)?(?:\s*No\.?)?)\s*[:\-]?\s*([A-Z]{0,4}\d{6,15}|[A-Z]{2,4}\d{6,12})/i,
+    /(?:Customer\s*Code|Booking\s*(?:No\.?|Number)?)\s*[:\-]?\s*([A-Z0-9]{6,15})/i
+  ];
+  for(const re of patterns){ const m = clean.match(re); if(m) return m[1].trim().toUpperCase(); }
+  const num = clean.match(/\b(\d{8,15})\b/);
+  return num ? num[1] : '';
+}
+function cvExtractConsignatario(text){
+  const patterns = [
+    /(?:Consignee|Consignatario)\s*(?:\([^)]*\))?\.?\s*(?:As\s+principal[^\n]*?\.)?\s*[:\-]?\s*([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúñ0-9.,&\-\s]{2,70}?)(?=\n|RIF|ADDRESS|TEL|EMAIL|PHONE|Fax|Notify|$)/i,
+    /(?:Consignee|Consignatario)\s*[:\-]?\s*\n?\s*([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúñ0-9.,&\-\s]{3,60})/i,
+    /Invoice\s*Party\s*[:\-]?\s*([A-Za-zÁÉÍÓÚáéíóúñ\s&.]{3,40}?)(?=\s*\d{6,}|$)/i
+  ];
+  for(const re of patterns){
+    const m = text.match(re);
+    if(m) return m[1].trim().replace(/[,.\s]+$/,'').replace(/\s{2,}/g,' ').substring(0,60);
+  }
+  return '';
+}
+function cvExtractVessel(text){
+  const m = text.match(/(?:Vessel|Buque|Ship|M\/V|B\/V|VSL)\s*(?:Name)?\s*[:\-]?\s*([A-Za-zÁÉÍÓÚáéíóúñ0-9\-\s]{2,35}?)(?=\s{2,}|\n|,|Voyage|Viaje|Voy\.|Place|Port|\.|$)/i);
+  return m ? m[1].trim().replace(/\s{2,}/g,' ').substring(0,35) : '';
+}
+function cvExtractFecha(text){
+  const m = text.match(/(?:Fecha(?:\s*de\s*(?:Embarque|Zarpe|Salida|Emisión))?|Date(?:\s*of\s*(?:Issue|Shipment|Sailing))?|Shipped\s*on\s*Board)\s*[:\-]?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
+  if(m) return m[1];
+  const any = text.match(/\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\b/);
+  return any ? any[1] : '';
+}
+function cvExtractRifFromText(text){
+  const m = (text||'').match(/\b([JVEGP])\s*-?\s*(\d{8,9})\s*-?\s*(\d)?\b/i);
+  return m ? (typeof normalizarRif==='function' ? normalizarRif(m[1]+m[2]+(m[3]||'')) : (m[1]+'-'+m[2]).toUpperCase()) : '';
+}
+function cvCrossRif(consignatario, rifFromText){
+  let consignatarioOut = consignatario || '';
+  let rif = rifFromText || '';
+  let direccion = '';
+  try {
+    if(rif && typeof findRifByNumber === 'function'){
+      const hit = findRifByNumber(rif);
+      if(hit){ consignatarioOut = hit.nombre || consignatarioOut; rif = hit.rif; direccion = hit.direccion || ''; }
+    }
+    if(!rif && consignatarioOut && typeof findRifByNombre === 'function'){
+      const hit = findRifByNombre(consignatarioOut) || (typeof buscarRif==='function' ? buscarRif(consignatarioOut)[0] : null);
+      if(hit){ consignatarioOut = hit.nombre; rif = hit.rif; direccion = hit.direccion || ''; }
+    }
+  } catch(e){}
+  return { consignatario: consignatarioOut, rif, direccion };
+}
+function cvExtractFields(text, filename){
+  let consignatario = cvExtractConsignatario(text);
+  const bl = cvExtractBL(text, filename);
+  const vessel = cvExtractVessel(text);
+  const fecha = cvExtractFecha(text);
+  const rifTxt = cvExtractRifFromText(text);
+  const cross = cvCrossRif(consignatario, rifTxt);
+  consignatario = cross.consignatario;
+  const rif = cross.rif;
+  const direccion = cross.direccion;
+
+  const normalized = text
+    .replace(/CHASSIS\s*NO\.?/gi,'CHASSIS NO')
+    .replace(/VIN\s*(?:NO\.?|NUMBER|#)?/gi,'VIN')
+    .replace(/FRAME\s*NO\.?/gi,'FRAME NO');
+
+  const results = [];
+  const seen = new Set();
+
+  // Estrategia 1: línea tipo año + marca + chassis
+  const re1 = /(\d{4})\s*(?:YM|YEAR|AÑO)?\s+([A-Za-z][A-Za-z\-]{1,20})\s+([\s\S]{0,80}?)\s*(?:CHASSIS\s*NO|VIN|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi;
+  for(const m of normalized.matchAll(re1)){
+    const vin = cvCleanVin(m[4]);
+    if(!vin || vin.length < 15 || seen.has(vin)) continue;
+    seen.add(vin);
+    let rest = (m[3]||'').trim().replace(/\s+/g,' ');
+    let color = cvExtractColor(rest + ' ' + m[2]);
+    if(color) rest = rest.replace(new RegExp('\\b('+CV_COLORS.join('|')+')\\b','ig'),'').trim();
+    let marcaModelo = [m[2].trim(), rest.substring(0,35)].filter(Boolean).join(' ').trim().substring(0,50);
+    results.push({ vin, marcaModelo, anio: m[1], anioFromVin:false, color, consignatario, rif, direccion, bl, vessel, fecha });
+  }
+  if(results.length) return results;
+
+  // Estrategia 2: VINs sueltos + contexto
+  const vins = [...new Set((normalized.match(/\b([A-HJ-NPR-Z0-9]{15,20})\b/gi)||[]).map(v=>cvCleanVin(v)).filter(v=>v&&v.length>=15))];
+  for(const vin of vins){
+    if(seen.has(vin)) continue;
+    seen.add(vin);
+    const vinYear = cvDecodeVinYear(vin);
+    const escVin = vin.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const ctxM = normalized.match(new RegExp('[\\s\\S]{0,180}'+escVin+'[\\s\\S]{0,180}','i'));
+    const ctx = ctxM ? ctxM[0] : '';
+    let anio = vinYear, anioFromVin = !!vinYear;
+    const yCtx = ctx.match(/\b(19[89]\d|20[0-3]\d)\b/);
+    if(yCtx){ anio = yCtx[1]; anioFromVin = false; }
+    let marcaModelo = '';
+    const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx));
+    if(brand) marcaModelo = brand;
+    const color = cvExtractColor(ctx);
+    results.push({ vin, marcaModelo: marcaModelo.substring(0,50), anio, anioFromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
+  }
+  if(results.length) return results;
+
+  // Estrategia 3: CHASSIS etiquetado
+  const re3 = /(?:CHASSIS\s*NO|VIN|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi;
+  for(const m of normalized.matchAll(re3)){
+    const vin = cvCleanVin(m[1]);
+    if(!vin || seen.has(vin)) continue;
+    seen.add(vin);
+    results.push({ vin, marcaModelo:'', anio: cvDecodeVinYear(vin), anioFromVin:true, color:'', consignatario, rif, direccion, bl, vessel, fecha });
+  }
+  return results;
+}
+
+async function cvExtractPdfText(file){
+  const loadPdfJs = () => new Promise((resolve, reject) => {
+    if (window.pdfjsLib) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; resolve(); };
+    s.onerror = () => reject(new Error('PDF.js'));
+    document.head.appendChild(s);
+  });
+  const loadTesseract = () => new Promise((resolve, reject) => {
+    if (window.Tesseract) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Tesseract'));
+    document.head.appendChild(s);
+  });
+  await loadPdfJs();
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let full = '';
+  const prog = document.getElementById('cvProgress');
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    let native = (content.items||[]).map(it=>it.str).join(' ');
+    native = native.replace(/([A-HJ-NPR-Z0-9]{8,})\s+([A-HJ-NPR-Z0-9]{5,})/g,'$1$2');
+    let pageText = native;
+    if(native.trim().length < 80){
+      if(prog) prog.textContent = 'OCR pág. '+i+'/'+pdf.numPages+'…';
+      await loadTesseract();
+      const viewport = page.getViewport({ scale: 2.5 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width; canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      const result = await Tesseract.recognize(canvas, 'spa+eng');
+      pageText = native + '\n' + ((result&&result.data&&result.data.text)||'');
+    } else if(prog) prog.textContent = 'Pág. '+i+'/'+pdf.numPages+' texto OK';
+    full += pageText + '\n\n';
+  }
+  return full.replace(/\r\n/g,'\n').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n');
+}
+
+function cvNewRow(file, fields){
+  cvIdCounter++;
+  return {
+    id: cvIdCounter,
+    file: file || '',
+    consignatario: fields.consignatario || '',
+    rif: fields.rif || '',
+    direccion: fields.direccion || '',
+    marcaModelo: fields.marcaModelo || '',
+    vin: (fields.vin || '').toUpperCase(),
+    anio: fields.anio || '',
+    anioFromVin: !!fields.anioFromVin,
+    color: fields.color || '',
+    bl: fields.bl || '',
+    vessel: fields.vessel || '',
+    fecha: fields.fecha || '',
+    eta: fields.eta || '',
+    status: fields.status || '',
+    fechaProceso: new Date().toISOString().slice(0,10)
+  };
+}
+
+async function cvHandleFiles(fileList){
+  const files = Array.from(fileList).filter(f => f.type==='application/pdf' || (f.name||'').toLowerCase().endsWith('.pdf'));
+  if(!files.length){ toast('No hay PDF válidos'); return; }
+  const prog = document.getElementById('cvProgress');
+  cvLog('Procesando '+files.length+' archivo(s)…','info');
+  for(let i=0;i<files.length;i++){
+    const file = files[i];
+    try{
+      if(prog) prog.textContent = 'Leyendo '+(i+1)+'/'+files.length+': '+file.name;
+      const text = await cvExtractPdfText(file);
+      const extracted = cvExtractFields(text, file.name);
+      let bl = extracted.length ? extracted[0].bl : '';
+      if(!bl) bl = cvExtractBL('', file.name);
+      if(!extracted.length){
+        cvRows.push(cvNewRow(file.name, { bl }));
+        cvLog('⚠ '+file.name+': sin VIN, fila vacía','warn');
+      } else {
+        extracted.forEach(f => {
+          if(!f.bl && bl) f.bl = bl;
+          cvRows.push(cvNewRow(file.name, f));
+        });
+        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s)','ok');
+      }
+    }catch(err){
+      console.error(err);
+      cvLog('❌ '+file.name+': '+err.message,'err');
+    }
+  }
+  if(prog) prog.textContent = '';
+  cvSave();
+  cvRenderTable();
+  toast('Control: '+cvRows.length+' vehículo(s)');
+}
+
+function cvGetFiltered(){
+  if(!cvFilter.trim()) return cvRows;
+  const low = cvFilter.toLowerCase();
+  return cvRows.filter(r =>
+    [r.consignatario,r.rif,r.marcaModelo,r.vin,r.anio,r.color,r.bl,r.vessel,r.fecha,r.file]
+      .some(x => String(x||'').toLowerCase().includes(low))
+  );
+}
+
+function cvRenderTable(){
+  const tbody = document.getElementById('cvTbody');
+  const count = document.getElementById('cvCount');
+  if(!tbody) return;
+  cvFilter = (document.getElementById('cvSearch')||{}).value || '';
+  const filtered = cvGetFiltered();
+  if(count) count.textContent = cvRows.length ? (cvRows.length+' veh.'+(cvFilter?' · '+filtered.length+' filt.':'')) : '';
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">'+(cvRows.length?'Sin coincidencias':'Sube un PDF de B/L para comenzar')+'</td></tr>';
+    cvRenderShipments();
+    return;
+  }
+  const groups = {};
+  filtered.forEach(r => { const k = r.bl || 'Sin B/L'; (groups[k]=groups[k]||[]).push(r); });
+  let html = '', idx = 0;
+  Object.keys(groups).forEach(blKey => {
+    const g = groups[blKey];
+    const f = g[0];
+    html += '<tr style="background:#1565C0;color:#fff"><td colspan="8" style="padding:8px">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:0.78rem">'+
+      '<span><b>B/L:</b> '+esc(blKey)+'</span>'+
+      '<span>ߑ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="consignatario" list="rifDatalist" value="'+esc(f.consignatario||'')+'" placeholder="Consignatario" style="width:140px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
+      '<span>RIF <input data-cv-bl="'+esc(blKey)+'" data-cv-field="rif" value="'+esc(f.rif||'')+'" placeholder="J-…" style="width:100px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
+      '<span>ߚ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="vessel" value="'+esc(f.vessel||'')+'" placeholder="Barco" style="width:100px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
+      '<span>ߓ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="fecha" value="'+esc(f.fecha||'')+'" placeholder="Fecha" style="width:80px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
+      (f.eta?'<span>ߏ ETA: '+esc(f.eta)+'</span>':'')+
+      (f.status?'<span>ߓ '+esc(f.status)+'</span>':'')+
+      '<button type="button" class="btn btn-sm" style="width:auto;padding:2px 8px;background:#F5C542;color:#1F4E79;border:none;font-size:0.75rem" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
+      '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:2px 8px;font-size:0.75rem" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
+      '</div></td></tr>';
+    g.forEach(r => {
+      idx++;
+      const vinBad = r.vin && !cvValidateVin(r.vin);
+      html += '<tr style="border-bottom:1px solid #e8eef4">' +
+        '<td style="padding:4px;text-align:center;color:#888">'+idx+'</td>'+
+        '<td style="padding:4px;font-size:0.75rem;color:#555">'+(esc(r.consignatario)||'—')+'</td>'+
+        '<td style="padding:4px;font-size:0.75rem;font-family:monospace">'+(esc(r.rif)||'—')+'</td>'+
+        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="marcaModelo" value="'+esc(r.marcaModelo)+'" maxlength="50" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.82rem"></td>'+
+        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="vin" value="'+esc(r.vin)+'" maxlength="17" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.75rem;font-family:monospace;text-transform:uppercase">'+(vinBad?' <span style="color:#c62828;font-size:0.65rem">⚠</span>':'')+'</td>'+
+        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="anio" value="'+esc(r.anio)+'" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.82rem;text-align:center"></td>'+
+        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="color" value="'+esc(r.color)+'" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.82rem"></td>'+
+        '<td style="padding:2px;text-align:center"><button type="button" style="background:none;border:none;color:#c62828;cursor:pointer;font-size:1rem" onclick="cvDeleteRow('+r.id+')">×</button></td>'+
+        '</tr>';
+    });
+  });
+  tbody.innerHTML = html;
+  tbody.querySelectorAll('input[data-cv-id]').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const id = Number(e.target.dataset.cvId);
+      const field = e.target.dataset.cvField;
+      const row = cvRows.find(r => r.id === id);
+      if(!row) return;
+      let val = e.target.value;
+      if(field==='vin') val = val.toUpperCase();
+      if(field==='marcaModelo') val = val.substring(0,50);
+      row[field] = val;
+      if(field==='anio') row.anioFromVin = false;
+      if(field==='vin'){
+        const y = cvDecodeVinYear(val);
+        if(y && !row.anio){ row.anio = y; row.anioFromVin = true; }
+      }
+      if(field==='consignatario' || field==='rif'){
+        const cross = cvCrossRif(field==='consignatario'?val:row.consignatario, field==='rif'?val:row.rif);
+        if(cross.rif) row.rif = cross.rif;
+        if(cross.consignatario) row.consignatario = cross.consignatario;
+        if(cross.direccion) row.direccion = cross.direccion;
+      }
+      cvSave();
+      cvRenderTable();
+    });
+  });
+  tbody.querySelectorAll('input[data-cv-bl]').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const bl = e.target.dataset.cvBl;
+      const field = e.target.dataset.cvField;
+      let val = e.target.value;
+      cvRows.forEach(r => {
+        if(r.bl === bl){
+          r[field] = val;
+          if(field==='consignatario' || field==='rif'){
+            const cross = cvCrossRif(field==='consignatario'?val:r.consignatario, field==='rif'?val:r.rif);
+            if(cross.rif) r.rif = cross.rif;
+            if(cross.consignatario) r.consignatario = cross.consignatario;
+            if(cross.direccion) r.direccion = cross.direccion;
+          }
+        }
+      });
+      cvSave();
+      cvRenderTable();
+    });
+  });
+  cvRenderShipments();
+}
+
+function cvRenderShipments(){
+  const box = document.getElementById('cvShipments');
+  if(!box) return;
+  const groups = {};
+  cvRows.forEach(r => {
+    const k = r.bl || '';
+    if(!k || k==='Sin B/L') return;
+    if(!groups[k]) groups[k] = { bl:k, consignatario:r.consignatario, rif:r.rif, vessel:r.vessel, fecha:r.fecha, eta:r.eta, status:r.status, count:0 };
+    groups[k].count++;
+  });
+  const keys = Object.keys(groups);
+  if(!keys.length){ box.innerHTML = ''; return; }
+  box.innerHTML = keys.map(k => {
+    const g = groups[k];
+    return '<div style="background:#f5f8fc;border:1px solid #c5d0dc;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:0.8rem">'+
+      '<div style="font-weight:700;color:#1565C0">ߚ B/L: '+esc(g.bl)+' ('+g.count+')</div>'+
+      '<div style="color:#555;margin-top:2px">ߑ '+esc(g.consignatario||'—')+(g.rif?' · '+esc(g.rif):'')+' · ߚ '+esc(g.vessel||'—')+' · ߓ '+esc(g.fecha||'—')+
+      (g.eta?' · ߏ '+esc(g.eta):'')+(g.status?' · '+esc(g.status):'')+
+      ' <button type="button" class="btn btn-sm btn-outline" style="width:auto;padding:1px 6px;font-size:0.72rem" onclick="cvOpenTrack(\''+esc(g.bl).replace(/'/g,"\\'")+'\')">Rastrear</button></div></div>';
+  }).join('');
+}
+
+function cvAddRow(){
+  cvRows.push(cvNewRow('(manual)', {}));
+  cvSave(); cvRenderTable();
+}
+function cvDeleteRow(id){
+  if(!confirm('¿Eliminar este vehículo?')) return;
+  cvRows = cvRows.filter(r => r.id !== id);
+  cvSave(); cvRenderTable();
+}
+function cvDeleteBl(bl){
+  if(!confirm('¿Eliminar todos los vehículos del B/L '+bl+'?')) return;
+  cvRows = cvRows.filter(r => r.bl !== bl);
+  cvSave(); cvRenderTable();
+}
+function cvClearAll(){
+  if(!cvRows.length) return;
+  if(!confirm('¿Eliminar TODOS los vehículos del control?')) return;
+  cvRows = [];
+  cvSave();
+  document.getElementById('cvLog').innerHTML = '';
+  cvRenderTable();
+}
+
+function cvOpenTrack(bl){
+  cvTrackBl = bl;
+  const modal = document.getElementById('cvTrackModal');
+  const body = document.getElementById('cvTrackBody');
+  if(!modal||!body) return;
+  const group = cvRows.filter(r => r.bl === bl);
+  const f = group[0] || {};
+  const prefix = (bl||'').slice(0,4).toUpperCase();
+  const carrier = CV_CARRIERS[prefix];
+  body.innerHTML =
+    '<div style="background:#E3F2FD;padding:10px;border-radius:8px;margin-bottom:10px;font-size:0.85rem">'+
+    '<div><b>B/L:</b> '+esc(bl)+'</div>'+
+    '<div><b>Naviera:</b> '+(carrier?carrier.name:'Desconocida')+'</div>'+
+    '<div><b>Vehículos:</b> '+group.length+'</div></div>'+
+    '<label>ߚ Barco</label><input id="cvTrkVessel" value="'+esc(f.vessel||'')+'" style="width:100%;margin-bottom:6px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
+    '<label>ߓ Fecha zarpe</label><input id="cvTrkFecha" value="'+esc(f.fecha||'')+'" style="width:100%;margin-bottom:6px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
+    '<label>ߏ ETA llegada</label><input id="cvTrkEta" value="'+esc(f.eta||'')+'" placeholder="DD/MM/YYYY" style="width:100%;margin-bottom:6px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
+    '<label>ߓ Estado</label><select id="cvTrkStatus" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
+    ['','En tránsito','En puerto','Llegado','Retirado','Demorado'].map(s=>'<option value="'+s+'"'+(f.status===s?' selected':'')+'>'+(s||'— Seleccionar —')+'</option>').join('')+
+    '</select>'+
+    '<div class="row" style="gap:8px">'+
+    '<button type="button" class="btn btn-primary" style="flex:1" onclick="cvSaveTrack()">ߒ Guardar</button>'+
+    '<button type="button" class="btn btn-outline" style="flex:1" onclick="cvOpenCarrier()">Abrir naviera</button>'+
+    '</div>';
+  modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+}
+function cvCloseTrack(){
+  const m = document.getElementById('cvTrackModal');
+  if(m){ m.classList.add('hidden'); m.style.display='none'; }
+}
+function cvSaveTrack(){
+  const bl = cvTrackBl;
+  if(!bl) return;
+  const vessel = (document.getElementById('cvTrkVessel')||{}).value||'';
+  const fecha = (document.getElementById('cvTrkFecha')||{}).value||'';
+  const eta = (document.getElementById('cvTrkEta')||{}).value||'';
+  const status = (document.getElementById('cvTrkStatus')||{}).value||'';
+  cvRows.forEach(r => { if(r.bl===bl){ r.vessel=vessel; r.fecha=fecha; r.eta=eta; r.status=status; }});
+  cvSave(); cvRenderTable(); cvCloseTrack();
+  toast('Seguimiento guardado: '+bl);
+}
+function cvOpenCarrier(){
+  const bl = cvTrackBl;
+  if(!bl) return;
+  const prefix = bl.slice(0,4).toUpperCase();
+  const carrier = CV_CARRIERS[prefix];
+  if(carrier) window.open(carrier.url(bl),'_blank');
+  else window.open('https://www.google.com/search?q=tracking+bill+of+lading+'+encodeURIComponent(bl),'_blank');
+}
+
+function cvOpenPreview(){
+  if(!cvRows.length){ toast('No hay vehículos'); return; }
+  const wrap = document.getElementById('cvPreviewWrap');
+  const modal = document.getElementById('cvPreviewModal');
+  if(!wrap||!modal) return;
+  let h = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem"><thead><tr style="background:#1565C0;color:#fff">'+
+    '<th style="padding:4px">#</th><th>B/L</th><th>Consignatario</th><th>RIF</th><th>Marca</th><th>VIN</th><th>Año</th><th>Color</th><th>Barco</th><th>ETA</th></tr></thead><tbody>';
+  cvRows.forEach((r,i) => {
+    h += '<tr style="border-bottom:1px solid #eee">'+
+      '<td style="padding:3px">'+(i+1)+'</td>'+
+      ['bl','consignatario','rif','marcaModelo','vin','anio','color','vessel','eta'].map(f =>
+        '<td style="padding:2px"><input data-cv-prev-id="'+r.id+'" data-cv-field="'+f+'" value="'+esc(r[f]||'')+'" style="width:100%;min-width:60px;font-size:0.72rem;padding:2px;border:1px solid #ddd;border-radius:3px"></td>'
+      ).join('') + '</tr>';
+  });
+  h += '</tbody></table>';
+  wrap.innerHTML = h;
+  wrap.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const row = cvRows.find(r => r.id === Number(e.target.dataset.cvPrevId));
+      if(row){ row[e.target.dataset.cvField] = e.target.dataset.cvField==='vin' ? e.target.value.toUpperCase() : e.target.value; cvSave(); }
+    });
+  });
+  modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+}
+function cvClosePreview(){
+  const m = document.getElementById('cvPreviewModal');
+  if(m){ m.classList.add('hidden'); m.style.display='none'; }
+  cvRenderTable();
+}
+
+const CV_HIST_KEY = 'vasmar_historial_ctrl_v1';
+
+function cvLeerHistorialCtrl(){
+  try {
+    const a = JSON.parse(localStorage.getItem(CV_HIST_KEY) || '[]');
+    return Array.isArray(a) ? a : [];
+  } catch(e){ return []; }
+}
+function cvEscribirHistorialCtrl(arr){
+  try { localStorage.setItem(CV_HIST_KEY, JSON.stringify(arr)); } catch(e){}
+}
+
+/** Guarda por B/L: nombre = CONTROL-{BL}. Si ya existe ese B/L, actualiza. */
+function cvGuardarHistorial(){
+  if(!cvRows.length){ toast('No hay vehículos para guardar'); return; }
+  const groups = {};
+  cvRows.forEach(r => {
+    const k = (r.bl || '').trim() || 'Sin B/L';
+    (groups[k] = groups[k] || []).push(r);
+  });
+  let hist = cvLeerHistorialCtrl();
+  let guardados = 0;
+  Object.keys(groups).forEach(blKey => {
+    const rows = groups[blKey];
+    const f = rows[0] || {};
+    const nombre = 'CONTROL-' + blKey;
+    const existing = hist.find(h => (h.bl === blKey) || (h.nombre === nombre));
+    const item = {
+      id: existing ? existing.id : Date.now() + Math.floor(Math.random()*1000),
+      nombre,
+      bl: blKey,
+      bls: [blKey],
+      fecha: new Date().toISOString().slice(0,10),
+      consignatario: f.consignatario || '',
+      rif: f.rif || '',
+      vessel: f.vessel || '',
+      fechaEmbarque: f.fecha || '',
+      eta: f.eta || '',
+      status: f.status || '',
+      count: rows.length,
+      rows: JSON.parse(JSON.stringify(rows)),
+      updatedAt: new Date().toISOString()
+    };
+    if(existing){
+      const i = hist.findIndex(h => h.id === existing.id);
+      hist[i] = item;
+    } else {
+      hist.unshift(item);
+    }
+    guardados++;
+  });
+  if(hist.length > 80) hist.length = 80;
+  cvEscribirHistorialCtrl(hist);
+  try { renderHistorial(); } catch(e){}
+  toast(guardados === 1
+    ? ('Guardado: CONTROL-' + Object.keys(groups)[0])
+    : (guardados + ' controles guardados (uno por B/L)'));
+}
+
+function cargarHistorialCtrl(id){
+  const hist = cvLeerHistorialCtrl();
+  const h = hist.find(x => x.id === id);
+  if(!h || !h.rows){ toast('No se encontró el control'); return; }
+  cvRows = JSON.parse(JSON.stringify(h.rows));
+  cvIdCounter = cvRows.reduce((m,r) => Math.max(m, r.id||0), 0);
+  cvSave();
+  // Ir a pantalla Control veh.
+  try {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    const scr = document.getElementById('ctrlVeh');
+    if(scr) scr.classList.add('active');
+    const btn = document.querySelector('nav button[data-screen="ctrlVeh"]');
+    if(btn) btn.classList.add('active');
+  } catch(e){}
+  if(typeof initCtrlVeh === 'function') initCtrlVeh();
+  else cvRenderTable();
+  toast('Cargado: ' + (h.nombre || ('CONTROL-'+(h.bl||''))) + ' — puedes modificar y volver a guardar');
+}
+
+function borrarHistorialCtrl(id){
+  if(!confirm('¿Borrar este CONTROL del historial?')) return;
+  let hist = cvLeerHistorialCtrl().filter(x => x.id !== id);
+  cvEscribirHistorialCtrl(hist);
+  renderHistorial();
+  toast('CONTROL eliminado del historial');
+}
+
+function cvPrintPdf(){
+  if(!cvRows.length){ toast('No hay datos'); return; }
+  const empKey = (document.getElementById('cvEmpresa')||{}).value || 'vasmar';
+  const info = (typeof EMPRESAS !== 'undefined' && EMPRESAS[empKey]) ? EMPRESAS[empKey] : { nombre:'VASMAR Asesores y Logística, C.A.', corto:'VASMAR' };
+  const logoSrc = (typeof logos !== 'undefined' && logos[empKey]) ? logos[empKey] : '';
+  const logoHtml = logoSrc
+    ? '<img src="'+logoSrc+'" style="max-height:48px;max-width:120px;object-fit:contain">'
+    : '<div class="logo-ph">'+(info.corto||'V').charAt(0)+'</div>';
+  const today = new Date();
+  const folio = 'VSM-CV-'+today.toISOString().slice(0,10).replace(/-/g,'')+'-'+String(cvRows.length).padStart(3,'0');
+  const groups = {};
+  cvRows.forEach(r => { const k=r.bl||'Sin B/L'; (groups[k]=groups[k]||[]).push(r); });
+  const n = cvRows.length;
+  let fs = 8.5, pad = '3px 5px';
+  if(n>25){ fs=7.5; pad='2px 4px'; }
+  if(n>40){ fs=6.5; pad='1.5px 3px'; }
+  let filas = '';
+  let num = 0;
+  Object.keys(groups).forEach(blKey => {
+    const g = groups[blKey];
+    const f = g[0];
+    filas += '<tr class="bl-row"><td colspan="7">B/L: <strong>'+esc(blKey)+'</strong> · Consignatario: '+esc(f.consignatario||'—')+
+      (f.rif?' · RIF: '+esc(f.rif):'')+' · Barco: '+esc(f.vessel||'—')+(f.eta?' · ETA: '+esc(f.eta):'')+(f.status?' · '+esc(f.status):'')+'</td></tr>';
+    g.forEach(r => {
+      num++;
+      filas += '<tr><td class="c">'+num+'</td><td>'+esc((r.marcaModelo||'—').substring(0,36))+'</td><td class="vin">'+esc(r.vin||'—')+'</td>'+
+        '<td class="c">'+esc(r.anio||'—')+'</td><td>'+esc(r.color||'—')+'</td><td>'+esc(r.consignatario||'—')+'</td><td class="vin">'+esc(r.rif||'—')+'</td></tr>';
+    });
+  });
+  const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box;margin:0;padding:0}'+
+    'body{font-family:Segoe UI,Arial,sans-serif;font-size:'+fs+'pt;color:#1a1a1a;line-height:1.25}'+
+    '.hdr{display:flex;align-items:center;gap:10px;border-bottom:2.5px solid #1F4E79;padding-bottom:6px;margin-bottom:8px}'+
+    '.hdr img{max-height:48px!important;max-width:120px!important}'+
+    '.logo-ph{width:42px;height:42px;border-radius:8px;background:linear-gradient(135deg,#1F4E79,#2E86AB);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16pt;font-weight:900}'+
+    '.hdr h1{font-size:13pt;color:#1F4E79;margin:0 0 1px}.hdr .sub{font-size:8pt;color:#555}'+
+    '.folio{margin-left:auto;border:1.5px solid #1F4E79;border-radius:6px;padding:5px 10px;text-align:center;min-width:100px}'+
+    '.folio .l{font-size:7pt;color:#1F4E79;font-weight:700}.folio .v{font-size:9pt;font-weight:800;color:#1F4E79}.folio .d{font-size:7pt;color:#666}'+
+    '.meta{margin-bottom:6px;font-size:8pt;color:#444}table{width:100%;border-collapse:collapse}'+
+    'th{background:#1F4E79;color:#fff;padding:'+pad+';text-align:left;font-size:'+(fs-0.5)+'pt}'+
+    'td{padding:'+pad+';border-bottom:1px solid #d0d7de}tr:nth-child(even):not(.bl-row) td{background:#f5f8fc}'+
+    '.bl-row td{background:#1F4E79!important;color:#fff!important;font-weight:600;padding:4px 6px;font-size:'+(fs-0.5)+'pt}'+
+    '.vin{font-family:Consolas,Courier New,monospace;font-size:'+(fs-0.5)+'pt}.c{text-align:center}'+
+    '.foot{margin-top:8px;border-top:1px solid #1F4E79;padding-top:5px;font-size:7pt;color:#888;display:flex;justify-content:space-between}'+
+    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Control '+folio+'</title><style>'+css+'</style></head><body>'+
+    '<div class="hdr">'+logoHtml+'<div><h1>CONTROL DE VEHÍCULOS — IMPORTACIÓN</h1><div class="sub">'+esc(info.nombre)+'</div></div>'+
+    '<div class="folio"><div class="l">FOLIO</div><div class="v">'+folio+'</div><div class="d">'+today.toLocaleDateString('es-ES')+'</div></div></div>'+
+    '<div class="meta">Total vehículos: <strong>'+cvRows.length+'</strong> · B/L: <strong>'+Object.keys(groups).length+'</strong></div>'+
+    '<table><thead><tr><th style="width:28px">#</th><th>Marca / Modelo</th><th>VIN</th><th style="width:48px">Año</th><th style="width:70px">Color</th><th>Consignatario</th><th style="width:100px">RIF</th></tr></thead>'+
+    '<tbody>'+filas+'</tbody></table>'+
+    '<div class="foot"><span>'+esc(info.nombre)+' · Control de vehículo · Documento interno</span><span>Generado: '+today.toLocaleString('es-ES')+'</span></div>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print()},280)}<\/script></body></html>';
+  if(typeof descargarPdfHtml === 'function'){
+    try { descargarPdfHtml(html, 'Control_'+folio); }
+    catch(e){ const w=window.open('','_blank'); w.document.write(html); w.document.close(); }
+  } else {
+    const w = window.open('','_blank');
+    w.document.write(html);
+    w.document.close();
+  }
+}
+
+function initCtrlVeh(){
+  cvLoad();
+  cvRenderTable();
+  try { if(typeof renderRifDatalist==='function') renderRifDatalist(); } catch(e){}
+  const dz = document.getElementById('cvDropzone');
+  const inp = document.getElementById('cvFileInput');
+  if(dz && inp && !dz.dataset.bound){
+    dz.dataset.bound = '1';
+    dz.addEventListener('click', () => inp.click());
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor='#1565C0'; });
+    dz.addEventListener('dragleave', () => { dz.style.borderColor=''; });
+    dz.addEventListener('drop', e => {
+      e.preventDefault(); dz.style.borderColor='';
+      if(e.dataTransfer.files&&e.dataTransfer.files.length) cvHandleFiles(e.dataTransfer.files);
+    });
+    inp.addEventListener('change', e => {
+      if(e.target.files&&e.target.files.length) cvHandleFiles(e.target.files);
+      e.target.value='';
+    });
+  }
+  // Sync empresa select with main if present
+  const emp = document.getElementById('empresaLogo');
+  const cvEmp = document.getElementById('cvEmpresa');
+  if(emp && cvEmp) cvEmp.value = emp.value || 'vasmar';
 }
 
 
