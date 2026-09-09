@@ -149,6 +149,10 @@
 
   .screen { display: none; padding: 12px; max-width: 640px; margin: 0 auto; }
   .screen.active { display: block; }
+  #ctrlVeh.screen { max-width: 960px; padding: 16px 14px 28px; }
+  #ctrlVeh .card { padding: 22px 18px; margin-bottom: 16px; }
+  #rifDb.screen { max-width: 720px; padding: 16px 14px 28px; }
+  footer.no-print[style*="display: none"] { display: none !important; }
   .card {
     background: var(--card); border-radius: 14px; padding: 20px 16px;
     margin-bottom: 28px; box-shadow: 0 3px 14px rgba(0,0,0,0.09);
@@ -1158,6 +1162,12 @@ document.querySelectorAll('nav button').forEach(btn=>{
     btn.classList.add('active');
     const scr = document.getElementById(btn.dataset.screen);
     if(scr) scr.classList.add('active');
+    // Footer solo para módulos de gastos (Nueva / Mercancías)
+    const foot = document.querySelector('footer.no-print');
+    if(foot){
+      const showFoot = (btn.dataset.screen === 'nueva' || btn.dataset.screen === 'mercancias');
+      foot.style.display = showFoot ? '' : 'none';
+    }
     if(btn.dataset.screen==='mercancias') try{initMercancias();}catch(e){}
     if(btn.dataset.screen==='catalogo') renderCatalogo();
     if(btn.dataset.screen==='historial') renderHistorial();
@@ -2656,6 +2666,9 @@ function cvDecodeVinYear(vin){
   const opts = CV_YEAR_CODES[code];
   if(!opts) return '';
   const cy = new Date().getFullYear();
+  // Preferir años de esta década / recientes (2015 … cy+1)
+  const recent = opts.filter(y => y >= 2015 && y <= cy + 1);
+  if(recent.length) return String(Math.max(...recent));
   const valid = opts.filter(y => y <= cy + 1);
   return String(valid.length ? Math.max(...valid) : opts[0]);
 }
@@ -2680,19 +2693,35 @@ function cvCleanVin(raw){
   return v.length >= 15 ? v : '';
 }
 function cvExtractBL(text, filename){
+  // 1) Del nombre de archivo: ..._GGZ3139446(1).pdf / GGZ3139446.pdf
   if(filename){
-    const m = filename.match(/^(\d{6,15})/) || filename.match(/\b(\d{6,15})\b/);
+    const fn = String(filename).toUpperCase();
+    let m = fn.match(/\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU|GGZ|CMAU)[A-Z0-9]{5,12})\b/);
+    if(m) return m[1];
+    m = fn.match(/(?:COPY[_-]?)?([A-Z]{2,4}\d{6,12})(?:\s*\(|_|\.|$)/);
+    if(m) return m[1];
+    m = fn.match(/\b(\d{8,15})\b/);
     if(m) return m[1];
   }
-  const clean = (text||'').replace(/(?:VERIFY|COPY|DRAFT|ORIGINAL|SAMPLE|NOT NEGOTIABLE|NON[- ]NEGOTIABLE)\s*/gi,' ');
-  const patterns = [
-    /\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU)[A-Z0-9]{6,12})\b/i,
-    /(?:B\/?L\s*(?:No\.?|Number|#)?|Bill\s*of\s*Lading(?:\s*No\.?)?|Conocimiento\s*(?:de\s*Embarque)?(?:\s*No\.?)?)\s*[:\-]?\s*([A-Z]{0,4}\d{6,15}|[A-Z]{2,4}\d{6,12})/i,
-    /(?:Customer\s*Code|Booking\s*(?:No\.?|Number)?)\s*[:\-]?\s*([A-Z0-9]{6,15})/i
+  const raw = text || '';
+  // 2) Etiquetas explícitas (CMA CGM y similares)
+  const labeled = [
+    /BILL\s*OF\s*LADING\s*NUMBER\s*[:\-]?\s*([A-Z0-9]{6,16})/i,
+    /B\/?L\s*(?:NO\.?|NUMBER|#)\s*[:\-]?\s*([A-Z0-9]{6,16})/i,
+    /(?:Bill\s*of\s*Lading|Conocimiento\s*(?:de\s*Embarque)?)\s*(?:No\.?|Number|#)?\s*[:\-]?\s*([A-Z0-9]{6,16})/i,
+    /(?:N[°º]?\s*(?:de\s*)?(?:B\/?L|BL|Conocimiento))\s*[:\-]?\s*([A-Z0-9]{6,16})/i
   ];
-  for(const re of patterns){ const m = clean.match(re); if(m) return m[1].trim().toUpperCase(); }
-  const num = clean.match(/\b(\d{8,15})\b/);
-  return num ? num[1] : '';
+  for(const re of labeled){
+    const m = raw.match(re);
+    if(m) return m[1].trim().toUpperCase();
+  }
+  // 3) Prefijos de naviera
+  const pref = raw.match(/\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU|GGZ)[A-Z0-9]{5,12})\b/i);
+  if(pref) return pref[1].toUpperCase();
+  // 4) Booking / customer code
+  const book = raw.match(/(?:Customer\s*Code|Booking\s*(?:No\.?|Number)?)\s*[:\-]?\s*([A-Z0-9]{6,15})/i);
+  if(book) return book[1].toUpperCase();
+  return '';
 }
 function cvExtractConsignatario(text){
   const patterns = [
@@ -2738,9 +2767,27 @@ function cvCrossRif(consignatario, rifFromText){
 }
 function cvExtractFields(text, filename){
   let consignatario = cvExtractConsignatario(text);
+  // CMA: "FLETMAR FLETES MARITIMOS, S.A." a veces en bloque CONSIGNEE
+  if(!consignatario){
+    const m = text.match(/CONSIGNEE\s*([\s\S]{5,120}?)(?:NOTIFY|EXPORT|RIF|ADDRESS)/i);
+    if(m){
+      const line = m[1].replace(/\n/g,' ').match(/([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúñ0-9.,&\-\s]{4,60}?)(?:\s*,?\s*S\.?\s*A\.?|\s*,?\s*C\.?\s*A\.?)?/i);
+      if(line) consignatario = (line[0]||'').trim().replace(/\s{2,}/g,' ').substring(0,60);
+    }
+  }
   const bl = cvExtractBL(text, filename);
-  const vessel = cvExtractVessel(text);
-  const fecha = cvExtractFecha(text);
+  let vessel = cvExtractVessel(text);
+  // CMA: VESSEL row "GUANG XING 3"
+  if(!vessel){
+    const vm = text.match(/VESSEL\s*([A-Z0-9][A-Z0-9\s\-]{2,30}?)(?:\s+NANSHA|\s+PORT|\s+PLACE|\n)/i);
+    if(vm) vessel = vm[1].trim().replace(/\s{2,}/g,' ').substring(0,35);
+  }
+  let fecha = cvExtractFecha(text);
+  // CMA: "12 AUG 2026" / PLACE AND DATE OF ISSUE
+  if(!fecha){
+    const dm = text.match(/(?:DATE\s*OF\s*ISSUE|PLACE\s*AND\s*DATE\s*OF\s*ISSUE|Shipped\s*on\s*Board)[^\d]{0,40}(\d{1,2}\s*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s*\d{2,4}|\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
+    if(dm) fecha = dm[1].trim();
+  }
   const rifTxt = cvExtractRifFromText(text);
   const cross = cvCrossRif(consignatario, rifTxt);
   consignatario = cross.consignatario;
@@ -2749,11 +2796,66 @@ function cvExtractFields(text, filename){
 
   const normalized = text
     .replace(/CHASSIS\s*NO\.?/gi,'CHASSIS NO')
-    .replace(/VIN\s*(?:NO\.?|NUMBER|#)?/gi,'VIN')
-    .replace(/FRAME\s*NO\.?/gi,'FRAME NO');
+    .replace(/VIN\s*(?:NO\.?|NUMBER|#)?\s*[:\.]?/gi,'VIN ')
+    .replace(/FRAME\s*NO\.?/gi,'FRAME NO')
+    .replace(/YEAR\s*OF\s*MANUFACTURE/gi,'YEAR OF MANUFACTURE')
+    .replace(/BRAND\s*NAME/gi,'BRAND NAME');
 
   const results = [];
   const seen = new Set();
+
+  // Estrategia 0 — formato CMA / estructurado (VIN + YEAR OF MANUFACTURE + BRAND NAME + COLOR)
+  const vinHits = [...normalized.matchAll(/(?:VIN|CHASSIS\s*NO|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi)];
+  for(const vh of vinHits){
+    const vin = cvCleanVin(vh[1]);
+    if(!vin || vin.length < 15 || seen.has(vin)) continue;
+    seen.add(vin);
+    const pos = vh.index || 0;
+    const ctx = normalized.substring(Math.max(0, pos - 220), Math.min(normalized.length, pos + 280));
+    let anio = '', anioFromVin = false;
+    const yMan = ctx.match(/YEAR\s*OF\s*MANUFACTURE\s*[:\-]?\s*(20[12]\d)/i);
+    if(yMan) anio = yMan[1];
+    else {
+      const yAny = ctx.match(/\b(20[12]\d)\b/);
+      if(yAny) anio = yAny[1];
+      else { anio = cvDecodeVinYear(vin); anioFromVin = !!anio; }
+    }
+    // Preferir década actual si VIN da dos opciones
+    if(!yMan && anio){
+      const cy = new Date().getFullYear();
+      const fromVin = cvDecodeVinYear(vin);
+      if(fromVin && Math.abs(Number(fromVin) - cy) <= Math.abs(Number(anio) - cy) + 2) {
+        /* keep explicit year if present */
+      }
+    }
+    let marcaModelo = '';
+    const brandName = ctx.match(/BRAND\s*NAME\s*[:\-]?\s*([A-Z0-9][A-Za-z0-9\s\-]{2,40}?)(?=\s*(?:MODEL|ENGINE|VIN|COLOR|YEAR|$))/i);
+    const modelName = ctx.match(/\bMODEL\s*(?:NO\.?)?\s*[:\-]?\s*([A-Z0-9][A-Za-z0-9\s\-]{1,30}?)(?=\s*(?:ENGINE|VIN|COLOR|YEAR|BRAND|$))/i);
+    if(brandName){
+      marcaModelo = brandName[1].trim();
+      if(modelName && !marcaModelo.toUpperCase().includes(modelName[1].trim().toUpperCase().split(/\s+/)[0])){
+        marcaModelo = (marcaModelo + ' ' + modelName[1].trim()).replace(/\s{2,}/g,' ').substring(0,50);
+      }
+    } else if(modelName){
+      marcaModelo = modelName[1].trim();
+    }
+    if(!marcaModelo){
+      // Línea descriptiva antes del VIN (CHANGAN CS55 PLUS 1.5T / TOYOTA FRONTLANDER 2.0)
+      const before = normalized.substring(Math.max(0, pos - 120), pos);
+      const desc = before.match(/([A-Z][A-Z0-9][A-Za-z0-9\s\.\-]{4,45}?)(?:\s*(?:VIN|COLOR|YEAR|BRAND))/i)
+        || before.match(/(CHANGAN|TOYOTA|HONDA|NISSAN|HYUNDAI|KIA|FORD|BMW|MAZDA|CHERY|BYD|JAC|MG)[A-Za-z0-9\s\.\-]{0,35}/i);
+      if(desc) marcaModelo = desc[1].trim().replace(/\s{2,}/g,' ').substring(0,50);
+    }
+    if(!marcaModelo){
+      const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx));
+      if(brand) marcaModelo = brand;
+    }
+    // Si aún vacío, usar año VIN como apoyo
+    if(!anio){ anio = cvDecodeVinYear(vin); anioFromVin = !!anio; }
+    const color = cvExtractColor(ctx);
+    results.push({ vin, marcaModelo: (marcaModelo||'').substring(0,50), anio, anioFromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
+  }
+  if(results.length) return results;
 
   // Estrategia 1: línea tipo año + marca + chassis
   const re1 = /(\d{4})\s*(?:YM|YEAR|AÑO)?\s+([A-Za-z][A-Za-z\-]{1,20})\s+([\s\S]{0,80}?)\s*(?:CHASSIS\s*NO|VIN|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi;
@@ -2776,26 +2878,24 @@ function cvExtractFields(text, filename){
     seen.add(vin);
     const vinYear = cvDecodeVinYear(vin);
     const escVin = vin.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    const ctxM = normalized.match(new RegExp('[\\s\\S]{0,180}'+escVin+'[\\s\\S]{0,180}','i'));
+    const ctxM = normalized.match(new RegExp('[\\s\\S]{0,220}'+escVin+'[\\s\\S]{0,220}','i'));
     const ctx = ctxM ? ctxM[0] : '';
     let anio = vinYear, anioFromVin = !!vinYear;
-    const yCtx = ctx.match(/\b(19[89]\d|20[0-3]\d)\b/);
-    if(yCtx){ anio = yCtx[1]; anioFromVin = false; }
+    const yMan = ctx.match(/YEAR\s*OF\s*MANUFACTURE\s*[:\-]?\s*(20[12]\d)/i);
+    if(yMan){ anio = yMan[1]; anioFromVin = false; }
+    else {
+      const yCtx = ctx.match(/\b(20[12]\d)\b/);
+      if(yCtx){ anio = yCtx[1]; anioFromVin = false; }
+    }
     let marcaModelo = '';
-    const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx));
-    if(brand) marcaModelo = brand;
+    const brandName = ctx.match(/BRAND\s*NAME\s*[:\-]?\s*([A-Z0-9][A-Za-z0-9\s\-]{2,40}?)(?=\s*(?:MODEL|ENGINE|VIN|COLOR|YEAR|$))/i);
+    if(brandName) marcaModelo = brandName[1].trim();
+    else {
+      const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx));
+      if(brand) marcaModelo = brand;
+    }
     const color = cvExtractColor(ctx);
     results.push({ vin, marcaModelo: marcaModelo.substring(0,50), anio, anioFromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
-  }
-  if(results.length) return results;
-
-  // Estrategia 3: CHASSIS etiquetado
-  const re3 = /(?:CHASSIS\s*NO|VIN|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi;
-  for(const m of normalized.matchAll(re3)){
-    const vin = cvCleanVin(m[1]);
-    if(!vin || seen.has(vin)) continue;
-    seen.add(vin);
-    results.push({ vin, marcaModelo:'', anio: cvDecodeVinYear(vin), anioFromVin:true, color:'', consignatario, rif, direccion, bl, vessel, fecha });
   }
   return results;
 }
@@ -2926,30 +3026,28 @@ function cvRenderTable(){
   Object.keys(groups).forEach(blKey => {
     const g = groups[blKey];
     const f = g[0];
-    html += '<tr style="background:#1565C0;color:#fff"><td colspan="8" style="padding:8px">'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:0.78rem">'+
-      '<span><b>B/L:</b> '+esc(blKey)+'</span>'+
-      '<span>ߑ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="consignatario" list="rifDatalist" value="'+esc(f.consignatario||'')+'" placeholder="Consignatario" style="width:140px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
-      '<span>RIF <input data-cv-bl="'+esc(blKey)+'" data-cv-field="rif" value="'+esc(f.rif||'')+'" placeholder="J-…" style="width:100px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
-      '<span>ߚ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="vessel" value="'+esc(f.vessel||'')+'" placeholder="Barco" style="width:100px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
-      '<span>ߓ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="fecha" value="'+esc(f.fecha||'')+'" placeholder="Fecha" style="width:80px;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:0.78rem"></span>'+
+    html += '<tr style="background:#1565C0;color:#fff"><td colspan="8" style="padding:10px 12px">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:0.82rem">'+
+      '<span style="font-weight:700">B/L: '+esc(blKey)+'</span>'+
+      '<span>ߚ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="vessel" value="'+esc(f.vessel||'')+'" placeholder="Barco" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;font-size:0.8rem"></span>'+
+      '<span>ߓ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="fecha" value="'+esc(f.fecha||'')+'" placeholder="Fecha" style="width:90px;padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;font-size:0.8rem"></span>'+
       (f.eta?'<span>ߏ ETA: '+esc(f.eta)+'</span>':'')+
       (f.status?'<span>ߓ '+esc(f.status)+'</span>':'')+
-      '<button type="button" class="btn btn-sm" style="width:auto;padding:2px 8px;background:#F5C542;color:#1F4E79;border:none;font-size:0.75rem" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
-      '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:2px 8px;font-size:0.75rem" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
+      '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#F5C542;color:#1F4E79;border:none;font-size:0.78rem" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
+      '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:4px 10px;font-size:0.78rem" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
       '</div></td></tr>';
     g.forEach(r => {
       idx++;
       const vinBad = r.vin && !cvValidateVin(r.vin);
       html += '<tr style="border-bottom:1px solid #e8eef4">' +
-        '<td style="padding:4px;text-align:center;color:#888">'+idx+'</td>'+
-        '<td style="padding:4px;font-size:0.75rem;color:#555">'+(esc(r.consignatario)||'—')+'</td>'+
-        '<td style="padding:4px;font-size:0.75rem;font-family:monospace">'+(esc(r.rif)||'—')+'</td>'+
-        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="marcaModelo" value="'+esc(r.marcaModelo)+'" maxlength="50" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.82rem"></td>'+
-        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="vin" value="'+esc(r.vin)+'" maxlength="17" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.75rem;font-family:monospace;text-transform:uppercase">'+(vinBad?' <span style="color:#c62828;font-size:0.65rem">⚠</span>':'')+'</td>'+
-        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="anio" value="'+esc(r.anio)+'" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.82rem;text-align:center"></td>'+
-        '<td style="padding:2px"><input data-cv-id="'+r.id+'" data-cv-field="color" value="'+esc(r.color)+'" style="width:100%;border:none;background:transparent;padding:4px;font-size:0.82rem"></td>'+
-        '<td style="padding:2px;text-align:center"><button type="button" style="background:none;border:none;color:#c62828;cursor:pointer;font-size:1rem" onclick="cvDeleteRow('+r.id+')">×</button></td>'+
+        '<td style="padding:6px 4px;text-align:center;color:#888">'+idx+'</td>'+
+        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="consignatario" list="rifDatalist" value="'+esc(r.consignatario||'')+'" placeholder="Consignatario" style="width:100%;min-width:110px;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.78rem"></td>'+
+        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="rif" value="'+esc(r.rif||'')+'" placeholder="J-…" style="width:100%;min-width:90px;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.75rem;font-family:monospace"></td>'+
+        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="marcaModelo" value="'+esc(r.marcaModelo)+'" maxlength="50" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.8rem"></td>'+
+        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="vin" value="'+esc(r.vin)+'" maxlength="17" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.72rem;font-family:monospace;text-transform:uppercase">'+(vinBad?' <span style="color:#c62828;font-size:0.65rem">⚠</span>':'')+'</td>'+
+        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="anio" value="'+esc(r.anio)+'" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.8rem;text-align:center"></td>'+
+        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="color" value="'+esc(r.color)+'" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.8rem"></td>'+
+        '<td style="padding:4px;text-align:center"><button type="button" title="Quitar este vehículo" style="background:#ffebee;border:1px solid #ef9a9a;border-radius:6px;color:#c62828;cursor:pointer;font-size:0.95rem;padding:2px 8px" onclick="cvDeleteRow('+r.id+')">×</button></td>'+
         '</tr>';
     });
   });
@@ -2972,29 +3070,22 @@ function cvRenderTable(){
       if(field==='consignatario' || field==='rif'){
         const cross = cvCrossRif(field==='consignatario'?val:row.consignatario, field==='rif'?val:row.rif);
         if(cross.rif) row.rif = cross.rif;
-        if(cross.consignatario) row.consignatario = cross.consignatario;
+        if(cross.consignatario && field==='consignatario' && !val) row.consignatario = cross.consignatario;
+        else if(cross.consignatario && field==='rif') row.consignatario = cross.consignatario;
         if(cross.direccion) row.direccion = cross.direccion;
+        if(cross.rif && field==='consignatario') row.rif = cross.rif;
       }
       cvSave();
       cvRenderTable();
     });
   });
+  // Solo barco/fecha se propagan a todo el B/L (no consignatario)
   tbody.querySelectorAll('input[data-cv-bl]').forEach(inp => {
     inp.addEventListener('change', e => {
       const bl = e.target.dataset.cvBl;
       const field = e.target.dataset.cvField;
       let val = e.target.value;
-      cvRows.forEach(r => {
-        if(r.bl === bl){
-          r[field] = val;
-          if(field==='consignatario' || field==='rif'){
-            const cross = cvCrossRif(field==='consignatario'?val:r.consignatario, field==='rif'?val:r.rif);
-            if(cross.rif) r.rif = cross.rif;
-            if(cross.consignatario) r.consignatario = cross.consignatario;
-            if(cross.direccion) r.direccion = cross.direccion;
-          }
-        }
-      });
+      cvRows.forEach(r => { if(r.bl === bl) r[field] = val; });
       cvSave();
       cvRenderTable();
     });
@@ -3055,16 +3146,25 @@ function cvOpenTrack(bl){
   const group = cvRows.filter(r => r.bl === bl);
   const f = group[0] || {};
   const prefix = (bl||'').slice(0,4).toUpperCase();
-  const carrier = CV_CARRIERS[prefix];
+  // GGZ… de CMA CGM
+  let carrier = CV_CARRIERS[prefix];
+  if(!carrier && /^GGZ/i.test(bl||'')) carrier = CV_CARRIERS['CMDU'];
+  // Copiar B/L al portapapeles al abrir
+  try {
+    if(navigator.clipboard && bl){
+      navigator.clipboard.writeText(bl).then(()=> toast('B/L copiado: '+bl)).catch(()=>{});
+    }
+  } catch(e){}
   body.innerHTML =
-    '<div style="background:#E3F2FD;padding:10px;border-radius:8px;margin-bottom:10px;font-size:0.85rem">'+
-    '<div><b>B/L:</b> '+esc(bl)+'</div>'+
-    '<div><b>Naviera:</b> '+(carrier?carrier.name:'Desconocida')+'</div>'+
+    '<div style="background:#E3F2FD;padding:12px;border-radius:10px;margin-bottom:12px;font-size:0.88rem">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>B/L:</b> <code style="font-size:1rem;background:#fff;padding:2px 8px;border-radius:4px">'+esc(bl)+'</code>'+
+    ' <button type="button" class="btn btn-sm btn-outline" style="width:auto;padding:2px 8px" onclick="navigator.clipboard.writeText(\''+esc(bl).replace(/'/g,"\\'")+'\').then(()=>toast(\'B/L copiado\'))">ߓ Copiar</button></div>'+
+    '<div style="margin-top:6px"><b>Naviera:</b> '+(carrier?carrier.name:'CMA CGM / ver web')+'</div>'+
     '<div><b>Vehículos:</b> '+group.length+'</div></div>'+
-    '<label>ߚ Barco</label><input id="cvTrkVessel" value="'+esc(f.vessel||'')+'" style="width:100%;margin-bottom:6px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
-    '<label>ߓ Fecha zarpe</label><input id="cvTrkFecha" value="'+esc(f.fecha||'')+'" style="width:100%;margin-bottom:6px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
-    '<label>ߏ ETA llegada</label><input id="cvTrkEta" value="'+esc(f.eta||'')+'" placeholder="DD/MM/YYYY" style="width:100%;margin-bottom:6px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
-    '<label>ߓ Estado</label><select id="cvTrkStatus" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ccc;border-radius:6px">'+
+    '<label>ߚ Barco</label><input id="cvTrkVessel" value="'+esc(f.vessel||'')+'" style="width:100%;margin-bottom:8px;padding:10px;border:1px solid #ccc;border-radius:8px">'+
+    '<label>ߓ Fecha zarpe</label><input id="cvTrkFecha" value="'+esc(f.fecha||'')+'" style="width:100%;margin-bottom:8px;padding:10px;border:1px solid #ccc;border-radius:8px">'+
+    '<label>ߏ ETA llegada</label><input id="cvTrkEta" value="'+esc(f.eta||'')+'" placeholder="DD/MM/YYYY" style="width:100%;margin-bottom:8px;padding:10px;border:1px solid #ccc;border-radius:8px">'+
+    '<label>ߓ Estado</label><select id="cvTrkStatus" style="width:100%;margin-bottom:12px;padding:10px;border:1px solid #ccc;border-radius:8px">'+
     ['','En tránsito','En puerto','Llegado','Retirado','Demorado'].map(s=>'<option value="'+s+'"'+(f.status===s?' selected':'')+'>'+(s||'— Seleccionar —')+'</option>').join('')+
     '</select>'+
     '<div class="row" style="gap:8px">'+
@@ -3092,10 +3192,13 @@ function cvSaveTrack(){
 function cvOpenCarrier(){
   const bl = cvTrackBl;
   if(!bl) return;
+  // Asegurar B/L en portapapeles antes de abrir
+  try { if(navigator.clipboard) navigator.clipboard.writeText(bl); } catch(e){}
   const prefix = bl.slice(0,4).toUpperCase();
-  const carrier = CV_CARRIERS[prefix];
+  let carrier = CV_CARRIERS[prefix];
+  if(!carrier && /^GGZ/i.test(bl)) carrier = CV_CARRIERS['CMDU'];
   if(carrier) window.open(carrier.url(bl),'_blank');
-  else window.open('https://www.google.com/search?q=tracking+bill+of+lading+'+encodeURIComponent(bl),'_blank');
+  else window.open('https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=Reference&Reference='+encodeURIComponent(bl),'_blank');
 }
 
 function cvOpenPreview(){
@@ -3223,7 +3326,7 @@ function cvPrintPdf(){
   const info = (typeof EMPRESAS !== 'undefined' && EMPRESAS[empKey]) ? EMPRESAS[empKey] : { nombre:'VASMAR Asesores y Logística, C.A.', corto:'VASMAR' };
   const logoSrc = (typeof logos !== 'undefined' && logos[empKey]) ? logos[empKey] : '';
   const logoHtml = logoSrc
-    ? '<img src="'+logoSrc+'" style="max-height:48px;max-width:120px;object-fit:contain">'
+    ? '<img src="'+logoSrc+'" style="max-height:72px;max-width:160px;object-fit:contain">'
     : '<div class="logo-ph">'+(info.corto||'V').charAt(0)+'</div>';
   const today = new Date();
   const folio = 'VSM-CV-'+today.toISOString().slice(0,10).replace(/-/g,'')+'-'+String(cvRows.length).padStart(3,'0');
@@ -3238,8 +3341,7 @@ function cvPrintPdf(){
   Object.keys(groups).forEach(blKey => {
     const g = groups[blKey];
     const f = g[0];
-    filas += '<tr class="bl-row"><td colspan="7">B/L: <strong>'+esc(blKey)+'</strong> · Consignatario: '+esc(f.consignatario||'—')+
-      (f.rif?' · RIF: '+esc(f.rif):'')+' · Barco: '+esc(f.vessel||'—')+(f.eta?' · ETA: '+esc(f.eta):'')+(f.status?' · '+esc(f.status):'')+'</td></tr>';
+    filas += '<tr class="bl-row"><td colspan="7">B/L: <strong>'+esc(blKey)+'</strong> · Barco: '+esc(f.vessel||'—')+(f.eta?' · ETA: '+esc(f.eta):'')+(f.status?' · '+esc(f.status):'')+'</td></tr>';
     g.forEach(r => {
       num++;
       filas += '<tr><td class="c">'+num+'</td><td>'+esc((r.marcaModelo||'—').substring(0,36))+'</td><td class="vin">'+esc(r.vin||'—')+'</td>'+
@@ -3248,9 +3350,9 @@ function cvPrintPdf(){
   });
   const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Segoe UI,Arial,sans-serif;font-size:'+fs+'pt;color:#1a1a1a;line-height:1.25}'+
-    '.hdr{display:flex;align-items:center;gap:10px;border-bottom:2.5px solid #1F4E79;padding-bottom:6px;margin-bottom:8px}'+
-    '.hdr img{max-height:48px!important;max-width:120px!important}'+
-    '.logo-ph{width:42px;height:42px;border-radius:8px;background:linear-gradient(135deg,#1F4E79,#2E86AB);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16pt;font-weight:900}'+
+    '.hdr{display:flex;align-items:center;gap:12px;border-bottom:2.5px solid #1F4E79;padding-bottom:8px;margin-bottom:8px}'+
+    '.hdr img{max-height:72px!important;max-width:160px!important}'+
+    '.logo-ph{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#1F4E79,#2E86AB);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20pt;font-weight:900}'+
     '.hdr h1{font-size:13pt;color:#1F4E79;margin:0 0 1px}.hdr .sub{font-size:8pt;color:#555}'+
     '.folio{margin-left:auto;border:1.5px solid #1F4E79;border-radius:6px;padding:5px 10px;text-align:center;min-width:100px}'+
     '.folio .l{font-size:7pt;color:#1F4E79;font-weight:700}.folio .v{font-size:9pt;font-weight:800;color:#1F4E79}.folio .d{font-size:7pt;color:#666}'+
