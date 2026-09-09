@@ -149,9 +149,32 @@
 
   .screen { display: none; padding: 12px; max-width: 640px; margin: 0 auto; }
   .screen.active { display: block; }
-  #ctrlVeh.screen { max-width: 960px; padding: 16px 14px 28px; }
-  #ctrlVeh .card { padding: 22px 18px; margin-bottom: 16px; }
-  #rifDb.screen { max-width: 720px; padding: 16px 14px 28px; }
+  #ctrlVeh.screen {
+    max-width: 1200px;
+    width: 100%;
+    padding: 18px 16px 40px;
+    margin: 0 auto;
+  }
+  #ctrlVeh .card {
+    padding: 24px 20px;
+    margin-bottom: 18px;
+  }
+  #ctrlVeh table {
+    font-size: 0.88rem !important;
+    min-width: 100% !important;
+  }
+  #ctrlVeh th, #ctrlVeh td {
+    padding: 8px 8px !important;
+  }
+  #ctrlVeh input[data-cv-id],
+  #ctrlVeh input[data-cv-bl] {
+    font-size: 0.88rem !important;
+    padding: 7px 8px !important;
+  }
+  #rifDb.screen { max-width: 800px; padding: 16px 14px 28px; }
+  @media (min-width: 1100px) {
+    #ctrlVeh.screen { max-width: 1280px; padding: 20px 24px 48px; }
+  }
   footer.no-print[style*="display: none"] { display: none !important; }
   .card {
     background: var(--card); border-radius: 14px; padding: 20px 16px;
@@ -302,13 +325,16 @@
   }
   .logo-upload-box img { max-height: 80px; max-width: 100%; margin: 8px 0; }
   .logo-upload-box .name { font-weight: 700; color: var(--primary); margin-bottom: 6px; }
-  footer {
+  footer#appFooter {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: white; border-top: 1px solid var(--border);
     padding: 8px 12px; display: flex; gap: 8px; z-index: 100;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
   }
-  footer .btn { margin-top: 0; padding: 10px; font-size: 0.85rem; }
+  footer#appFooter .btn { margin-top: 0; padding: 10px; font-size: 0.85rem; }
+  /* Oculto en RIF, Control, Catálogo, Historial, Config */
+  footer#appFooter.footer-hidden { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; padding: 0 !important; border: none !important; }
+  body.footer-off { padding-bottom: 12px !important; }
   #toast {
     position: fixed; bottom: 80px; left: 50%;
     transform: translateX(-50%) translateY(20px);
@@ -889,32 +915,44 @@
       <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cvAddRow()">+ Fila</button>
       <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cvOpenPreview()">Revisar</button>
       <button type="button" class="btn btn-sm btn-ok" style="width:auto;background:#2E7D32;color:#fff;border:none" onclick="cvGuardarHistorial()">ߒ Guardar</button>
-      <button type="button" class="btn btn-sm" style="width:auto;background:#8B3A2B;color:#fff;border:none" onclick="cvPrintPdf()">PDF / Imprimir</button>
+      <button type="button" class="btn btn-sm" style="width:auto;background:#8B3A2B;color:#fff;border:none" onclick="cvPrintMenu()">PDF / Informe</button>
       <button type="button" class="btn btn-sm btn-danger" style="width:auto" onclick="cvClearAll()">Limpiar</button>
       <span id="cvCount" style="font-size:0.8rem;color:#1565C0;font-weight:600"></span>
     </div>
 
     <div id="cvShipments" style="margin-bottom:8px"></div>
 
-    <div style="overflow-x:auto;max-height:420px;border:1px solid var(--border);border-radius:10px">
-      <table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:720px">
-        <thead>
-          <tr style="background:#1565C0;color:#fff">
-            <th style="padding:6px 4px;width:28px">#</th>
-            <th style="padding:6px 4px">Consignatario</th>
-            <th style="padding:6px 4px;width:100px">RIF</th>
-            <th style="padding:6px 4px">Marca / Modelo</th>
-            <th style="padding:6px 4px;width:150px">VIN</th>
-            <th style="padding:6px 4px;width:50px">Año</th>
-            <th style="padding:6px 4px;width:70px">Color</th>
-            <th style="padding:6px 4px;width:28px"></th>
-          </tr>
-        </thead>
-        <tbody id="cvTbody">
-          <tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">Sube un PDF de B/L para comenzar</td></tr>
-        </tbody>
-      </table>
+    <div id="cvTableWrap" style="overflow-x:auto;max-height:62vh;border:1px solid var(--border);border-radius:10px;background:#fff">
+      <div id="cvTbody" style="padding:20px;color:var(--muted);text-align:center">Sube un PDF de B/L para comenzar</div>
     </div>
+  </div>
+</div>
+
+<!-- Modal impresión / informe -->
+<div id="cvPrintModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:410;display:none;align-items:flex-end;justify-content:center;padding:12px">
+  <div style="background:#fff;border-radius:14px 14px 0 0;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="color:#1565C0">PDF / Informe</strong>
+      <button type="button" class="btn btn-sm btn-outline" onclick="cvClosePrintMenu()">Cerrar</button>
+    </div>
+    <p class="hint" style="margin-bottom:10px">Un PDF por B/L, o un informe por fechas con comisión.</p>
+    <label>Modo</label>
+    <select id="cvPrintMode" onchange="cvTogglePrintMode()" style="width:100%;margin-bottom:10px;padding:10px;border:1px solid #ccc;border-radius:8px">
+      <option value="bl">Un solo B/L (elige abajo)</option>
+      <option value="informe">Informe por fechas / mes (varios B/L)</option>
+    </select>
+    <div id="cvPrintBlBox">
+      <label>B/L a imprimir</label>
+      <select id="cvPrintBl" style="width:100%;margin-bottom:10px;padding:10px;border:1px solid #ccc;border-radius:8px"></select>
+    </div>
+    <div id="cvPrintInfBox" class="hidden">
+      <div class="row" style="gap:8px">
+        <div style="flex:1"><label>Desde</label><input type="date" id="cvInfDesde" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px"></div>
+        <div style="flex:1"><label>Hasta</label><input type="date" id="cvInfHasta" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px"></div>
+      </div>
+      <p class="hint" style="margin-top:6px">Filtra por fecha de proceso del control. Agrupa por B/L e incluye comisión.</p>
+    </div>
+    <button type="button" class="btn btn-primary" style="margin-top:12px" onclick="cvDoPrint()">ߖ️ Generar PDF</button>
   </div>
 </div>
 
@@ -1015,7 +1053,7 @@
     <p style="font-size:0.75rem;color:#666;margin-top:10px">Si no ves fichas, ábrelas y guárdalas primero en <em>base_arancelaria.html</em> (mismo navegador).</p>
   </div>
 </div>
-<footer class="no-print">
+<footer id="appFooter" class="no-print">
   <button class="btn btn-success" onclick="guardarEnHistorial()">Guardar</button>
   <button class="btn btn-accent" onclick="imprimirPDF()">Guardar PDF…</button>
   <button class="btn btn-primary" onclick="calcular()">Calcular</button>
@@ -1162,12 +1200,7 @@ document.querySelectorAll('nav button').forEach(btn=>{
     btn.classList.add('active');
     const scr = document.getElementById(btn.dataset.screen);
     if(scr) scr.classList.add('active');
-    // Footer solo para módulos de gastos (Nueva / Mercancías)
-    const foot = document.querySelector('footer.no-print');
-    if(foot){
-      const showFoot = (btn.dataset.screen === 'nueva' || btn.dataset.screen === 'mercancias');
-      foot.style.display = showFoot ? '' : 'none';
-    }
+    updateAppFooter(btn.dataset.screen);
     if(btn.dataset.screen==='mercancias') try{initMercancias();}catch(e){}
     if(btn.dataset.screen==='catalogo') renderCatalogo();
     if(btn.dataset.screen==='historial') renderHistorial();
@@ -1176,6 +1209,21 @@ document.querySelectorAll('nav button').forEach(btn=>{
     if(btn.dataset.screen==='ctrlVeh') try{initCtrlVeh();}catch(e){console.warn('Control veh',e);}
   });
 });
+
+/** Footer (Guardar / PDF / Calcular) solo en Nueva (vehículo) */
+function updateAppFooter(screen){
+  const foot = document.getElementById('appFooter');
+  if(!foot) return;
+  const show = (screen === 'nueva');
+  foot.classList.toggle('footer-hidden', !show);
+  document.body.classList.toggle('footer-off', !show);
+  foot.style.display = show ? 'flex' : 'none';
+}
+// Estado inicial
+try {
+  const act = document.querySelector('nav button.active');
+  updateAppFooter(act ? act.dataset.screen : 'nueva');
+} catch(e){}
 
 function fmt(n){ return (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function toast(msg){
@@ -1963,6 +2011,7 @@ function cargarHistorialMerc(id){
   if (typeof renderMercLineas === 'function') renderMercLineas();
   if (typeof renderLineasM === 'function') { try { renderLineasM('operacion'); renderLineasM('terceros'); } catch(e){} }
   if (typeof calcularMerc === 'function') calcularMerc();
+  if(typeof updateAppFooter==='function') updateAppFooter('mercancias');
   toast('Relación de mercancías cargada');
 }
 
@@ -2008,6 +2057,7 @@ function cargarHistorial(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelector('nav button[data-screen="nueva"]').classList.add('active');
   document.getElementById('nueva').classList.add('active');
+  if(typeof updateAppFooter==='function') updateAppFooter('nueva');
   toast('Cargado');
 }
 function borrarHistorial(id){
@@ -2693,34 +2743,58 @@ function cvCleanVin(raw){
   return v.length >= 15 ? v : '';
 }
 function cvExtractBL(text, filename){
-  // 1) Del nombre de archivo: ..._GGZ3139446(1).pdf / GGZ3139446.pdf
+  const CARRIER_RE = /\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU|GGZ|CMAU)[A-Z0-9]{5,14})\b/gi;
+  const isJunk = (s) => /^(NUMBER|LADING|SHIPPING|INSTRUCTION|CONTAINER|REFERENCE|ORIGINAL)$/i.test(s);
+
+  // 1) Nombre de archivo
   if(filename){
     const fn = String(filename).toUpperCase();
-    let m = fn.match(/\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU|GGZ|CMAU)[A-Z0-9]{5,12})\b/);
-    if(m) return m[1];
-    m = fn.match(/(?:COPY[_-]?)?([A-Z]{2,4}\d{6,12})(?:\s*\(|_|\.|$)/);
-    if(m) return m[1];
-    m = fn.match(/\b(\d{8,15})\b/);
-    if(m) return m[1];
+    let m = fn.match(CARRIER_RE);
+    if(m) return m[0].toUpperCase();
+    m = fn.match(/\b([A-Z]{3,6}[A-Z0-9]{6,14})\b/);
+    if(m && !isJunk(m[1])) return m[1];
   }
-  const raw = text || '';
-  // 2) Etiquetas explícitas (CMA CGM y similares)
-  const labeled = [
-    /BILL\s*OF\s*LADING\s*NUMBER\s*[:\-]?\s*([A-Z0-9]{6,16})/i,
-    /B\/?L\s*(?:NO\.?|NUMBER|#)\s*[:\-]?\s*([A-Z0-9]{6,16})/i,
-    /(?:Bill\s*of\s*Lading|Conocimiento\s*(?:de\s*Embarque)?)\s*(?:No\.?|Number|#)?\s*[:\-]?\s*([A-Z0-9]{6,16})/i,
-    /(?:N[°º]?\s*(?:de\s*)?(?:B\/?L|BL|Conocimiento))\s*[:\-]?\s*([A-Z0-9]{6,16})/i
-  ];
-  for(const re of labeled){
-    const m = raw.match(re);
-    if(m) return m[1].trim().toUpperCase();
+
+  const raw = String(text || '');
+  const upper = raw.toUpperCase();
+
+  // 2) Todos los códigos tipo naviera en el documento
+  const all = [];
+  let mm;
+  const reAll = new RegExp(CARRIER_RE.source, 'gi');
+  while((mm = reAll.exec(upper)) !== null){
+    if(!isJunk(mm[1])) all.push({ bl: mm[1].toUpperCase(), idx: mm.index });
   }
-  // 3) Prefijos de naviera
-  const pref = raw.match(/\b((?:MAEU|MSCU|MEDU|HLCU|COSU|ZIMU|CMDU|ONEY|OOLU|EGLV|YMLU|PABV|SUDU|HDMU|GGZ)[A-Z0-9]{5,12})\b/i);
-  if(pref) return pref[1].toUpperCase();
-  // 4) Booking / customer code
-  const book = raw.match(/(?:Customer\s*Code|Booking\s*(?:No\.?|Number)?)\s*[:\-]?\s*([A-Z0-9]{6,15})/i);
-  if(book) return book[1].toUpperCase();
+
+  // 3) Preferir el que esté cerca de "B/L No" / "BILL OF LADING" (hasta 800 chars después)
+  const labelRe = /B\s*\/?\s*L\.?\s*(?:NO\.?|NUMBER|N[°º]|#)?|BILL\s*OF\s*LADING\s*(?:NUMBER|NO\.?)?/gi;
+  let lm;
+  while((lm = labelRe.exec(upper)) !== null){
+    const from = lm.index;
+    const to = from + 800;
+    // a) número justo después de la etiqueta
+    const slice = upper.slice(from, to);
+    const immediate = slice.match(/B\s*\/?\s*L\.?\s*(?:NO\.?|NUMBER|N[°º]|#)?\s*[:\.]?\s*([A-Z]{2,6}[A-Z0-9]{4,14})/i);
+    if(immediate && !isJunk(immediate[1])) return immediate[1].toUpperCase().replace(/[^A-Z0-9]/g,'');
+    // b) cualquier código de naviera en esa ventana
+    const near = all.filter(a => a.idx >= from && a.idx <= to);
+    if(near.length) return near[0].bl;
+  }
+
+  // 4) Primer código de naviera del documento (MEDUADC09707 suele estar al inicio)
+  if(all.length) return all[0].bl;
+
+  // 5) Tras "B/L" capturar token largo aunque no sea prefijo conocido
+  const near2 = upper.match(/B\s*\/?\s*L[\w\s\.°º#:]{0,40}([A-Z]{3,}[A-Z0-9]{5,14})/);
+  if(near2){
+    const bl = near2[1].replace(/[^A-Z0-9]/g,'');
+    if(bl.length >= 8 && !isJunk(bl)) return bl;
+  }
+
+  // 6) Booking / reference
+  const book = upper.match(/(?:CUSTOMER\s*CODE|BOOKING\s*(?:NO\.?|NUMBER)?|REFERENCE\s*NO\.?)\s*[:\-]?\s*([A-Z0-9]{6,18})/);
+  if(book) return book[1];
+
   return '';
 }
 function cvExtractConsignatario(text){
@@ -2765,9 +2839,49 @@ function cvCrossRif(consignatario, rifFromText){
   } catch(e){}
   return { consignatario: consignatarioOut, rif, direccion };
 }
+function cvPickYear(ctx, vin){
+  // 1) Etiquetas explícitas de año
+  const yMan = (ctx||'').match(/(?:YEAR\s*OF\s*(?:MANUFACTURE|MFG|FABRICACI[OÓ]N)|VEHICLE\s*FACTORY\s*DATE|FACTORY\s*DATE)\s*[:\-]?\s*(20[1-3]\d)(?:[\-\/]\d{1,2}[\-\/]\d{1,2})?/i);
+  if(yMan) return { anio: yMan[1], fromVin: false };
+  // 2) Evitar ENGINE/MODEL NO (1046, 2275, etc.)
+  const cleaned = String(ctx||'')
+    .replace(/ENGINE\s*(?:NO\.?)?\s*[:\-]?\s*[A-Z0-9\-]+/gi,' ')
+    .replace(/MODEL\s*(?:NO\.?)?\s*[:\-]?\s*[A-Z0-9\-]+/gi,' ')
+    .replace(/\bHL\d+\b/gi,' ')
+    .replace(/\bGF\d+\b/gi,' ')
+    .replace(/\bTV\d+\b/gi,' ');
+  const yOk = cleaned.match(/\b(20(?:1[5-9]|2[0-9]|3[0-1]))\b/);
+  if(yOk) return { anio: yOk[1], fromVin: false };
+  const fromVin = cvDecodeVinYear(vin);
+  return { anio: fromVin || '', fromVin: !!fromVin };
+}
+
+function cvPickDescripcion(ctx, pos, normalized){
+  // Descripción comercial del vehículo — NO "BRAND NAME" ni códigos MODEL
+  const before = normalized.substring(Math.max(0, pos - 180), pos);
+  const brands = CV_BRANDS.map(b => b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const reDesc = new RegExp(
+    '((?:'+brands+')\\s+[A-Z0-9][A-Za-z0-9\\s\\.\\+\\-]{2,45}?)(?=\\s*(?:VIN|COLOR|YEAR|BRAND|ENGINE|MODEL\\s*NO|$))',
+    'i'
+  );
+  let m = before.match(reDesc);
+  if(m){
+    let d = m[1].trim().replace(/\s{2,}/g,' ')
+      .replace(/\b(BRAND\s*NAME|YEAR\s*OF\s*MANUFACTURE|ENGINE\s*NO|MODEL\s*NO)\b.*$/i,'')
+      .trim();
+    if(d.length >= 5) return d.substring(0,55);
+  }
+  m = before.match(/((?:CHANGAN|TOYOTA|HONDA|NISSAN|HYUNDAI|KIA|FORD|BMW|MAZDA|CHERY|BYD|JAC|MG|GEELY|SUZUKI|MITSUBISHI|VOLKSWAGEN|CHEVROLET)\s+[A-Z0-9][A-Za-z0-9\s\.\+\-]{2,40})/i);
+  if(m) return m[1].trim().replace(/\s{2,}/g,' ').substring(0,55);
+  // Formato "MODEL:CHANGAN CS55PLUS COMPACTSIZE SUV"
+  m = (ctx||'').match(/MODEL\s*[:\-]?\s*((?:CHANGAN|TOYOTA|HONDA|NISSAN|HYUNDAI|KIA|FORD|BMW|MAZDA|CHERY|BYD|JAC|MG|GEELY)[A-Za-z0-9\s\+\-]{2,40})/i);
+  if(m) return m[1].trim().replace(/\s{2,}/g,' ').substring(0,55);
+  const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx||''));
+  return brand || '';
+}
+
 function cvExtractFields(text, filename){
   let consignatario = cvExtractConsignatario(text);
-  // CMA: "FLETMAR FLETES MARITIMOS, S.A." a veces en bloque CONSIGNEE
   if(!consignatario){
     const m = text.match(/CONSIGNEE\s*([\s\S]{5,120}?)(?:NOTIFY|EXPORT|RIF|ADDRESS)/i);
     if(m){
@@ -2777,13 +2891,11 @@ function cvExtractFields(text, filename){
   }
   const bl = cvExtractBL(text, filename);
   let vessel = cvExtractVessel(text);
-  // CMA: VESSEL row "GUANG XING 3"
   if(!vessel){
     const vm = text.match(/VESSEL\s*([A-Z0-9][A-Z0-9\s\-]{2,30}?)(?:\s+NANSHA|\s+PORT|\s+PLACE|\n)/i);
     if(vm) vessel = vm[1].trim().replace(/\s{2,}/g,' ').substring(0,35);
   }
   let fecha = cvExtractFecha(text);
-  // CMA: "12 AUG 2026" / PLACE AND DATE OF ISSUE
   if(!fecha){
     const dm = text.match(/(?:DATE\s*OF\s*ISSUE|PLACE\s*AND\s*DATE\s*OF\s*ISSUE|Shipped\s*on\s*Board)[^\d]{0,40}(\d{1,2}\s*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s*\d{2,4}|\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
     if(dm) fecha = dm[1].trim();
@@ -2794,108 +2906,41 @@ function cvExtractFields(text, filename){
   const rif = cross.rif;
   const direccion = cross.direccion;
 
-  const normalized = text
+  // Texto de TODAS las páginas del PDF
+  const normalized = String(text||'')
     .replace(/CHASSIS\s*NO\.?/gi,'CHASSIS NO')
     .replace(/VIN\s*(?:NO\.?|NUMBER|#)?\s*[:\.]?/gi,'VIN ')
-    .replace(/FRAME\s*NO\.?/gi,'FRAME NO')
-    .replace(/YEAR\s*OF\s*MANUFACTURE/gi,'YEAR OF MANUFACTURE')
-    .replace(/BRAND\s*NAME/gi,'BRAND NAME');
+    .replace(/FRAME\s*NO\.?/gi,'FRAME NO');
 
   const results = [];
   const seen = new Set();
 
-  // Estrategia 0 — formato CMA / estructurado (VIN + YEAR OF MANUFACTURE + BRAND NAME + COLOR)
   const vinHits = [...normalized.matchAll(/(?:VIN|CHASSIS\s*NO|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi)];
   for(const vh of vinHits){
     const vin = cvCleanVin(vh[1]);
     if(!vin || vin.length < 15 || seen.has(vin)) continue;
     seen.add(vin);
     const pos = vh.index || 0;
-    const ctx = normalized.substring(Math.max(0, pos - 220), Math.min(normalized.length, pos + 280));
-    let anio = '', anioFromVin = false;
-    const yMan = ctx.match(/YEAR\s*OF\s*MANUFACTURE\s*[:\-]?\s*(20[12]\d)/i);
-    if(yMan) anio = yMan[1];
-    else {
-      const yAny = ctx.match(/\b(20[12]\d)\b/);
-      if(yAny) anio = yAny[1];
-      else { anio = cvDecodeVinYear(vin); anioFromVin = !!anio; }
-    }
-    // Preferir década actual si VIN da dos opciones
-    if(!yMan && anio){
-      const cy = new Date().getFullYear();
-      const fromVin = cvDecodeVinYear(vin);
-      if(fromVin && Math.abs(Number(fromVin) - cy) <= Math.abs(Number(anio) - cy) + 2) {
-        /* keep explicit year if present */
-      }
-    }
-    let marcaModelo = '';
-    const brandName = ctx.match(/BRAND\s*NAME\s*[:\-]?\s*([A-Z0-9][A-Za-z0-9\s\-]{2,40}?)(?=\s*(?:MODEL|ENGINE|VIN|COLOR|YEAR|$))/i);
-    const modelName = ctx.match(/\bMODEL\s*(?:NO\.?)?\s*[:\-]?\s*([A-Z0-9][A-Za-z0-9\s\-]{1,30}?)(?=\s*(?:ENGINE|VIN|COLOR|YEAR|BRAND|$))/i);
-    if(brandName){
-      marcaModelo = brandName[1].trim();
-      if(modelName && !marcaModelo.toUpperCase().includes(modelName[1].trim().toUpperCase().split(/\s+/)[0])){
-        marcaModelo = (marcaModelo + ' ' + modelName[1].trim()).replace(/\s{2,}/g,' ').substring(0,50);
-      }
-    } else if(modelName){
-      marcaModelo = modelName[1].trim();
-    }
-    if(!marcaModelo){
-      // Línea descriptiva antes del VIN (CHANGAN CS55 PLUS 1.5T / TOYOTA FRONTLANDER 2.0)
-      const before = normalized.substring(Math.max(0, pos - 120), pos);
-      const desc = before.match(/([A-Z][A-Z0-9][A-Za-z0-9\s\.\-]{4,45}?)(?:\s*(?:VIN|COLOR|YEAR|BRAND))/i)
-        || before.match(/(CHANGAN|TOYOTA|HONDA|NISSAN|HYUNDAI|KIA|FORD|BMW|MAZDA|CHERY|BYD|JAC|MG)[A-Za-z0-9\s\.\-]{0,35}/i);
-      if(desc) marcaModelo = desc[1].trim().replace(/\s{2,}/g,' ').substring(0,50);
-    }
-    if(!marcaModelo){
-      const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx));
-      if(brand) marcaModelo = brand;
-    }
-    // Si aún vacío, usar año VIN como apoyo
-    if(!anio){ anio = cvDecodeVinYear(vin); anioFromVin = !!anio; }
+    const ctx = normalized.substring(Math.max(0, pos - 200), Math.min(normalized.length, pos + 320));
+    const y = cvPickYear(ctx, vin);
+    const marcaModelo = cvPickDescripcion(ctx, pos, normalized);
     const color = cvExtractColor(ctx);
-    results.push({ vin, marcaModelo: (marcaModelo||'').substring(0,50), anio, anioFromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
+    results.push({ vin, marcaModelo: (marcaModelo||'').substring(0,55), anio: y.anio, anioFromVin: y.fromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
   }
   if(results.length) return results;
 
-  // Estrategia 1: línea tipo año + marca + chassis
-  const re1 = /(\d{4})\s*(?:YM|YEAR|AÑO)?\s+([A-Za-z][A-Za-z\-]{1,20})\s+([\s\S]{0,80}?)\s*(?:CHASSIS\s*NO|VIN|FRAME\s*NO)\s*[:\.]?\s*([A-HJ-NPR-Z0-9]{15,20})/gi;
-  for(const m of normalized.matchAll(re1)){
-    const vin = cvCleanVin(m[4]);
-    if(!vin || vin.length < 15 || seen.has(vin)) continue;
-    seen.add(vin);
-    let rest = (m[3]||'').trim().replace(/\s+/g,' ');
-    let color = cvExtractColor(rest + ' ' + m[2]);
-    if(color) rest = rest.replace(new RegExp('\\b('+CV_COLORS.join('|')+')\\b','ig'),'').trim();
-    let marcaModelo = [m[2].trim(), rest.substring(0,35)].filter(Boolean).join(' ').trim().substring(0,50);
-    results.push({ vin, marcaModelo, anio: m[1], anioFromVin:false, color, consignatario, rif, direccion, bl, vessel, fecha });
-  }
-  if(results.length) return results;
-
-  // Estrategia 2: VINs sueltos + contexto
-  const vins = [...new Set((normalized.match(/\b([A-HJ-NPR-Z0-9]{15,20})\b/gi)||[]).map(v=>cvCleanVin(v)).filter(v=>v&&v.length>=15))];
+  const vins = [...new Set((normalized.match(/\b([A-HJ-NPR-Z0-9]{17})\b/gi)||[]).map(v=>cvCleanVin(v)).filter(v=>v&&v.length===17))];
   for(const vin of vins){
     if(seen.has(vin)) continue;
     seen.add(vin);
-    const vinYear = cvDecodeVinYear(vin);
     const escVin = vin.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    const ctxM = normalized.match(new RegExp('[\\s\\S]{0,220}'+escVin+'[\\s\\S]{0,220}','i'));
+    const ctxM = normalized.match(new RegExp('[\\s\\S]{0,220}'+escVin+'[\\s\\S]{0,280}','i'));
     const ctx = ctxM ? ctxM[0] : '';
-    let anio = vinYear, anioFromVin = !!vinYear;
-    const yMan = ctx.match(/YEAR\s*OF\s*MANUFACTURE\s*[:\-]?\s*(20[12]\d)/i);
-    if(yMan){ anio = yMan[1]; anioFromVin = false; }
-    else {
-      const yCtx = ctx.match(/\b(20[12]\d)\b/);
-      if(yCtx){ anio = yCtx[1]; anioFromVin = false; }
-    }
-    let marcaModelo = '';
-    const brandName = ctx.match(/BRAND\s*NAME\s*[:\-]?\s*([A-Z0-9][A-Za-z0-9\s\-]{2,40}?)(?=\s*(?:MODEL|ENGINE|VIN|COLOR|YEAR|$))/i);
-    if(brandName) marcaModelo = brandName[1].trim();
-    else {
-      const brand = CV_BRANDS.find(b => new RegExp('\\b'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(ctx));
-      if(brand) marcaModelo = brand;
-    }
+    const pos = ctxM ? (normalized.indexOf(vin)) : 0;
+    const y = cvPickYear(ctx, vin);
+    const marcaModelo = cvPickDescripcion(ctx, pos, normalized);
     const color = cvExtractColor(ctx);
-    results.push({ vin, marcaModelo: marcaModelo.substring(0,50), anio, anioFromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
+    results.push({ vin, marcaModelo: (marcaModelo||'').substring(0,55), anio: y.anio, anioFromVin: y.fromVin, color, consignatario, rif, direccion, bl, vessel, fecha });
   }
   return results;
 }
@@ -2956,6 +3001,7 @@ function cvNewRow(file, fields){
     anio: fields.anio || '',
     anioFromVin: !!fields.anioFromVin,
     color: fields.color || '',
+    comision: fields.comision != null ? Number(fields.comision) : 0,
     bl: fields.bl || '',
     vessel: fields.vessel || '',
     fecha: fields.fecha || '',
@@ -2986,7 +3032,7 @@ async function cvHandleFiles(fileList){
           if(!f.bl && bl) f.bl = bl;
           cvRows.push(cvNewRow(file.name, f));
         });
-        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s)','ok');
+        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s) · B/L '+(bl||(extracted[0]&&extracted[0].bl)||'?'),'ok');
       }
     }catch(err){
       console.error(err);
@@ -3009,50 +3055,66 @@ function cvGetFiltered(){
 }
 
 function cvRenderTable(){
-  const tbody = document.getElementById('cvTbody');
+  const box = document.getElementById('cvTbody');
   const count = document.getElementById('cvCount');
-  if(!tbody) return;
+  if(!box) return;
   cvFilter = (document.getElementById('cvSearch')||{}).value || '';
   const filtered = cvGetFiltered();
   if(count) count.textContent = cvRows.length ? (cvRows.length+' veh.'+(cvFilter?' · '+filtered.length+' filt.':'')) : '';
   if(!filtered.length){
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">'+(cvRows.length?'Sin coincidencias':'Sube un PDF de B/L para comenzar')+'</td></tr>';
+    box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted)">'+(cvRows.length?'Sin coincidencias':'Sube un PDF de B/L para comenzar')+'</div>';
     cvRenderShipments();
     return;
   }
   const groups = {};
   filtered.forEach(r => { const k = r.bl || 'Sin B/L'; (groups[k]=groups[k]||[]).push(r); });
-  let html = '', idx = 0;
+  let html = '';
+  let idx = 0;
   Object.keys(groups).forEach(blKey => {
     const g = groups[blKey];
     const f = g[0];
-    html += '<tr style="background:#1565C0;color:#fff"><td colspan="8" style="padding:10px 12px">'+
-      '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:0.82rem">'+
-      '<span style="font-weight:700">B/L: '+esc(blKey)+'</span>'+
-      '<span>ߚ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="vessel" value="'+esc(f.vessel||'')+'" placeholder="Barco" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;font-size:0.8rem"></span>'+
-      '<span>ߓ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="fecha" value="'+esc(f.fecha||'')+'" placeholder="Fecha" style="width:90px;padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;font-size:0.8rem"></span>'+
+    // 1) Línea B/L arriba (fuera de las columnas)
+    html += '<div style="background:#1565C0;color:#fff;padding:12px 14px;border-bottom:1px solid #0d47a1">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:0.88rem">'+
+      '<span style="font-weight:800;font-size:0.95rem">B/L: '+esc(blKey)+'</span>'+
+      '<span>ߚ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="vessel" value="'+esc(f.vessel||'')+'" placeholder="Barco" style="width:130px;padding:5px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff"></span>'+
+      '<span>ߓ <input data-cv-bl="'+esc(blKey)+'" data-cv-field="fecha" value="'+esc(f.fecha||'')+'" placeholder="Fecha" style="width:100px;padding:5px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff"></span>'+
       (f.eta?'<span>ߏ ETA: '+esc(f.eta)+'</span>':'')+
       (f.status?'<span>ߓ '+esc(f.status)+'</span>':'')+
-      '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#F5C542;color:#1F4E79;border:none;font-size:0.78rem" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
-      '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:4px 10px;font-size:0.78rem" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
-      '</div></td></tr>';
+      '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#F5C542;color:#1F4E79;border:none" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
+      '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#fff;color:#1565C0;border:none" onclick="cvPrintBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">PDF este B/L</button>'+
+      '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:4px 10px" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
+      '</div></div>';
+    // 2) Títulos de columnas (sin comisión)
+    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.88rem;min-width:720px">'+
+      '<thead><tr style="background:#E3F2FD;color:#1565C0">'+
+      '<th style="padding:10px 8px;width:32px;text-align:left">#</th>'+
+      '<th style="padding:10px 8px;text-align:left">Consignatario</th>'+
+      '<th style="padding:10px 8px;width:110px;text-align:left">RIF</th>'+
+      '<th style="padding:10px 8px;text-align:left">Descripción del vehículo</th>'+
+      '<th style="padding:10px 8px;width:56px;text-align:left">Año</th>'+
+      '<th style="padding:10px 8px;width:80px;text-align:left">Color</th>'+
+      '<th style="padding:10px 8px;width:150px;text-align:left">VIN</th>'+
+      '<th style="padding:10px 8px;width:36px"></th>'+
+      '</tr></thead><tbody>';
     g.forEach(r => {
       idx++;
       const vinBad = r.vin && !cvValidateVin(r.vin);
-      html += '<tr style="border-bottom:1px solid #e8eef4">' +
-        '<td style="padding:6px 4px;text-align:center;color:#888">'+idx+'</td>'+
-        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="consignatario" list="rifDatalist" value="'+esc(r.consignatario||'')+'" placeholder="Consignatario" style="width:100%;min-width:110px;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.78rem"></td>'+
-        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="rif" value="'+esc(r.rif||'')+'" placeholder="J-…" style="width:100%;min-width:90px;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.75rem;font-family:monospace"></td>'+
-        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="marcaModelo" value="'+esc(r.marcaModelo)+'" maxlength="50" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.8rem"></td>'+
-        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="vin" value="'+esc(r.vin)+'" maxlength="17" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.72rem;font-family:monospace;text-transform:uppercase">'+(vinBad?' <span style="color:#c62828;font-size:0.65rem">⚠</span>':'')+'</td>'+
-        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="anio" value="'+esc(r.anio)+'" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.8rem;text-align:center"></td>'+
-        '<td style="padding:4px"><input data-cv-id="'+r.id+'" data-cv-field="color" value="'+esc(r.color)+'" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;background:#fff;padding:5px 6px;font-size:0.8rem"></td>'+
-        '<td style="padding:4px;text-align:center"><button type="button" title="Quitar este vehículo" style="background:#ffebee;border:1px solid #ef9a9a;border-radius:6px;color:#c62828;cursor:pointer;font-size:0.95rem;padding:2px 8px" onclick="cvDeleteRow('+r.id+')">×</button></td>'+
+      html += '<tr style="border-bottom:1px solid #e8eef4">'+
+        '<td style="padding:8px;text-align:center;color:#888">'+idx+'</td>'+
+        '<td style="padding:6px"><input data-cv-id="'+r.id+'" data-cv-field="consignatario" list="rifDatalist" value="'+esc(r.consignatario||'')+'" placeholder="Consignee" style="width:100%;min-width:120px;border:1px solid #e0e6ed;border-radius:6px;padding:7px 8px;font-size:0.86rem"></td>'+
+        '<td style="padding:6px"><input data-cv-id="'+r.id+'" data-cv-field="rif" value="'+esc(r.rif||'')+'" placeholder="J-…" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;padding:7px 8px;font-size:0.8rem;font-family:monospace"></td>'+
+        '<td style="padding:6px"><input data-cv-id="'+r.id+'" data-cv-field="marcaModelo" value="'+esc(r.marcaModelo)+'" maxlength="55" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;padding:7px 8px;font-size:0.86rem"></td>'+
+        '<td style="padding:6px"><input data-cv-id="'+r.id+'" data-cv-field="anio" value="'+esc(r.anio)+'" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;padding:7px 8px;text-align:center"></td>'+
+        '<td style="padding:6px"><input data-cv-id="'+r.id+'" data-cv-field="color" value="'+esc(r.color)+'" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;padding:7px 8px"></td>'+
+        '<td style="padding:6px"><input data-cv-id="'+r.id+'" data-cv-field="vin" value="'+esc(r.vin)+'" maxlength="17" style="width:100%;border:1px solid #e0e6ed;border-radius:6px;padding:7px 8px;font-size:0.78rem;font-family:monospace;text-transform:uppercase">'+(vinBad?' <span style="color:#c62828;font-size:0.7rem">⚠</span>':'')+'</td>'+
+        '<td style="padding:6px;text-align:center"><button type="button" title="Quitar" style="background:#ffebee;border:1px solid #ef9a9a;border-radius:6px;color:#c62828;cursor:pointer;padding:4px 10px" onclick="cvDeleteRow('+r.id+')">×</button></td>'+
         '</tr>';
     });
+    html += '</tbody></table></div>';
   });
-  tbody.innerHTML = html;
-  tbody.querySelectorAll('input[data-cv-id]').forEach(inp => {
+  box.innerHTML = html;
+  box.querySelectorAll('input[data-cv-id]').forEach(inp => {
     inp.addEventListener('change', e => {
       const id = Number(e.target.dataset.cvId);
       const field = e.target.dataset.cvField;
@@ -3060,7 +3122,8 @@ function cvRenderTable(){
       if(!row) return;
       let val = e.target.value;
       if(field==='vin') val = val.toUpperCase();
-      if(field==='marcaModelo') val = val.substring(0,50);
+      if(field==='marcaModelo') val = val.substring(0,55);
+      if(field==='comision') val = Number(val)||0;
       row[field] = val;
       if(field==='anio') row.anioFromVin = false;
       if(field==='vin'){
@@ -3069,22 +3132,19 @@ function cvRenderTable(){
       }
       if(field==='consignatario' || field==='rif'){
         const cross = cvCrossRif(field==='consignatario'?val:row.consignatario, field==='rif'?val:row.rif);
-        if(cross.rif) row.rif = cross.rif;
-        if(cross.consignatario && field==='consignatario' && !val) row.consignatario = cross.consignatario;
-        else if(cross.consignatario && field==='rif') row.consignatario = cross.consignatario;
-        if(cross.direccion) row.direccion = cross.direccion;
         if(cross.rif && field==='consignatario') row.rif = cross.rif;
+        if(cross.consignatario && field==='rif') row.consignatario = cross.consignatario;
+        if(cross.direccion) row.direccion = cross.direccion;
       }
       cvSave();
       cvRenderTable();
     });
   });
-  // Solo barco/fecha se propagan a todo el B/L (no consignatario)
-  tbody.querySelectorAll('input[data-cv-bl]').forEach(inp => {
+  box.querySelectorAll('input[data-cv-bl]').forEach(inp => {
     inp.addEventListener('change', e => {
       const bl = e.target.dataset.cvBl;
       const field = e.target.dataset.cvField;
-      let val = e.target.value;
+      const val = e.target.value;
       cvRows.forEach(r => { if(r.bl === bl) r[field] = val; });
       cvSave();
       cvRenderTable();
@@ -3309,6 +3369,7 @@ function cargarHistorialCtrl(id){
   } catch(e){}
   if(typeof initCtrlVeh === 'function') initCtrlVeh();
   else cvRenderTable();
+  if(typeof updateAppFooter === 'function') updateAppFooter('ctrlVeh');
   toast('Cargado: ' + (h.nombre || ('CONTROL-'+(h.bl||''))) + ' — puedes modificar y volver a guardar');
 }
 
@@ -3320,8 +3381,77 @@ function borrarHistorialCtrl(id){
   toast('CONTROL eliminado del historial');
 }
 
-function cvPrintPdf(){
+function cvPrintMenu(){
   if(!cvRows.length){ toast('No hay datos'); return; }
+  const modal = document.getElementById('cvPrintModal');
+  const sel = document.getElementById('cvPrintBl');
+  if(!modal||!sel) return;
+  const bls = [...new Set(cvRows.map(r => r.bl || 'Sin B/L'))];
+  sel.innerHTML = bls.map(b => '<option value="'+esc(b)+'">'+esc(b)+' ('+cvRows.filter(r=> (r.bl||'Sin B/L')===b).length+' veh.)</option>').join('');
+  document.getElementById('cvPrintMode').value = 'bl';
+  cvTogglePrintMode();
+  modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+}
+function cvClosePrintMenu(){
+  const m = document.getElementById('cvPrintModal');
+  if(m){ m.classList.add('hidden'); m.style.display='none'; }
+}
+function cvTogglePrintMode(){
+  const mode = (document.getElementById('cvPrintMode')||{}).value || 'bl';
+  const blBox = document.getElementById('cvPrintBlBox');
+  const infBox = document.getElementById('cvPrintInfBox');
+  if(blBox) blBox.classList.toggle('hidden', mode !== 'bl');
+  if(infBox) infBox.classList.toggle('hidden', mode !== 'informe');
+}
+function cvDoPrint(){
+  const mode = (document.getElementById('cvPrintMode')||{}).value || 'bl';
+  if(mode === 'bl'){
+    const bl = (document.getElementById('cvPrintBl')||{}).value;
+    if(!bl){ toast('Elige un B/L'); return; }
+    cvClosePrintMenu();
+    cvPrintBl(bl);
+  } else {
+    const desde = (document.getElementById('cvInfDesde')||{}).value || '';
+    const hasta = (document.getElementById('cvInfHasta')||{}).value || '';
+    cvClosePrintMenu();
+    cvPrintInforme(desde, hasta);
+  }
+}
+function cvPrintBl(blKey){
+  const rows = cvRows.filter(r => (r.bl || 'Sin B/L') === blKey);
+  if(!rows.length){ toast('Sin vehículos en ese B/L'); return; }
+  cvRenderPdfDoc(rows, {
+    titulo: 'CONTROL DE VEHÍCULOS — B/L ' + blKey,
+    folioBase: 'CONTROL-' + blKey,
+    fileName: 'CONTROL-' + blKey.replace(/[^\w\-]+/g,'_'),
+    conComision: false,
+    unSoloBl: true
+  });
+}
+function cvPrintInforme(desde, hasta){
+  let rows = cvRows.slice();
+  if(desde) rows = rows.filter(r => (r.fechaProceso||r.fecha||'') >= desde);
+  if(hasta) rows = rows.filter(r => (r.fechaProceso||r.fecha||'') <= hasta);
+  if(!rows.length){ toast('No hay vehículos en ese rango'); return; }
+  const label = (desde||'…') + '_a_' + (hasta||'…');
+  const defCom = prompt('Comisión por vehículo para este informe (dejar vacío = usar valor de cada uno, o 0):', '');
+  if(defCom !== null && String(defCom).trim() !== ''){
+    const n = Number(defCom);
+    if(!isNaN(n)) rows.forEach(r => { r.comision = n; });
+  }
+  cvRenderPdfDoc(rows, {
+    titulo: 'INFORME DE CONTROL DE VEHÍCULOS',
+    folioBase: 'INFORME-' + label,
+    fileName: 'INFORME-CONTROL-' + label.replace(/[^\w\-]+/g,'_'),
+    conComision: true,
+    unSoloBl: false
+  });
+}
+/** @deprecated usar cvPrintMenu / cvPrintBl */
+function cvPrintPdf(){ cvPrintMenu(); }
+
+function cvRenderPdfDoc(rows, opts){
   const empKey = (document.getElementById('cvEmpresa')||{}).value || 'vasmar';
   const info = (typeof EMPRESAS !== 'undefined' && EMPRESAS[empKey]) ? EMPRESAS[empKey] : { nombre:'VASMAR Asesores y Logística, C.A.', corto:'VASMAR' };
   const logoSrc = (typeof logos !== 'undefined' && logos[empKey]) ? logos[empKey] : '';
@@ -3329,33 +3459,46 @@ function cvPrintPdf(){
     ? '<img src="'+logoSrc+'" style="max-height:72px;max-width:160px;object-fit:contain">'
     : '<div class="logo-ph">'+(info.corto||'V').charAt(0)+'</div>';
   const today = new Date();
-  const folio = 'VSM-CV-'+today.toISOString().slice(0,10).replace(/-/g,'')+'-'+String(cvRows.length).padStart(3,'0');
+  const folio = (opts.folioBase || 'CONTROL').substring(0,40);
   const groups = {};
-  cvRows.forEach(r => { const k=r.bl||'Sin B/L'; (groups[k]=groups[k]||[]).push(r); });
-  const n = cvRows.length;
+  rows.forEach(r => { const k=r.bl||'Sin B/L'; (groups[k]=groups[k]||[]).push(r); });
+  const n = rows.length;
   let fs = 8.5, pad = '3px 5px';
   if(n>25){ fs=7.5; pad='2px 4px'; }
   if(n>40){ fs=6.5; pad='1.5px 3px'; }
   let filas = '';
   let num = 0;
+  let totalCom = 0;
   Object.keys(groups).forEach(blKey => {
     const g = groups[blKey];
     const f = g[0];
-    filas += '<tr class="bl-row"><td colspan="7">B/L: <strong>'+esc(blKey)+'</strong> · Barco: '+esc(f.vessel||'—')+(f.eta?' · ETA: '+esc(f.eta):'')+(f.status?' · '+esc(f.status):'')+'</td></tr>';
+    const subCom = g.reduce((s,r)=>s+(Number(r.comision)||0),0);
+    totalCom += subCom;
+    filas += '<tr class="bl-row"><td colspan="8">B/L: <strong>'+esc(blKey)+'</strong> · Barco: '+esc(f.vessel||'—')+(f.eta?' · ETA: '+esc(f.eta):'')+(f.status?' · '+esc(f.status):'')+
+      (opts.conComision?' · Comisión grupo: $'+subCom.toFixed(2):'')+'</td></tr>';
     g.forEach(r => {
       num++;
-      filas += '<tr><td class="c">'+num+'</td><td>'+esc((r.marcaModelo||'—').substring(0,36))+'</td><td class="vin">'+esc(r.vin||'—')+'</td>'+
-        '<td class="c">'+esc(r.anio||'—')+'</td><td>'+esc(r.color||'—')+'</td><td>'+esc(r.consignatario||'—')+'</td><td class="vin">'+esc(r.rif||'—')+'</td></tr>';
+      const com = Number(r.comision)||0;
+      filas += '<tr><td class="c">'+num+'</td>'+
+        '<td>'+esc(r.consignatario||'—')+'</td>'+
+        '<td class="vin">'+esc(r.rif||'—')+'</td>'+
+        '<td>'+esc((r.marcaModelo||'—').substring(0,40))+'</td>'+
+        '<td class="c">'+esc(r.anio||'—')+'</td>'+
+        '<td>'+esc(r.color||'—')+'</td>'+
+        '<td class="vin">'+esc(r.vin||'—')+'</td>'+
+        (opts.conComision?'<td class="c">$'+com.toFixed(2)+'</td>':'')+
+        '</tr>';
     });
   });
+  const colCom = opts.conComision ? '<th style="width:70px">Comisión</th>' : '';
   const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Segoe UI,Arial,sans-serif;font-size:'+fs+'pt;color:#1a1a1a;line-height:1.25}'+
     '.hdr{display:flex;align-items:center;gap:12px;border-bottom:2.5px solid #1F4E79;padding-bottom:8px;margin-bottom:8px}'+
     '.hdr img{max-height:72px!important;max-width:160px!important}'+
     '.logo-ph{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#1F4E79,#2E86AB);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20pt;font-weight:900}'+
-    '.hdr h1{font-size:13pt;color:#1F4E79;margin:0 0 1px}.hdr .sub{font-size:8pt;color:#555}'+
+    '.hdr h1{font-size:12pt;color:#1F4E79;margin:0 0 1px}.hdr .sub{font-size:8pt;color:#555}'+
     '.folio{margin-left:auto;border:1.5px solid #1F4E79;border-radius:6px;padding:5px 10px;text-align:center;min-width:100px}'+
-    '.folio .l{font-size:7pt;color:#1F4E79;font-weight:700}.folio .v{font-size:9pt;font-weight:800;color:#1F4E79}.folio .d{font-size:7pt;color:#666}'+
+    '.folio .l{font-size:7pt;color:#1F4E79;font-weight:700}.folio .v{font-size:8.5pt;font-weight:800;color:#1F4E79}.folio .d{font-size:7pt;color:#666}'+
     '.meta{margin-bottom:6px;font-size:8pt;color:#444}table{width:100%;border-collapse:collapse}'+
     'th{background:#1F4E79;color:#fff;padding:'+pad+';text-align:left;font-size:'+(fs-0.5)+'pt}'+
     'td{padding:'+pad+';border-bottom:1px solid #d0d7de}tr:nth-child(even):not(.bl-row) td{background:#f5f8fc}'+
@@ -3363,16 +3506,18 @@ function cvPrintPdf(){
     '.vin{font-family:Consolas,Courier New,monospace;font-size:'+(fs-0.5)+'pt}.c{text-align:center}'+
     '.foot{margin-top:8px;border-top:1px solid #1F4E79;padding-top:5px;font-size:7pt;color:#888;display:flex;justify-content:space-between}'+
     '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Control '+folio+'</title><style>'+css+'</style></head><body>'+
-    '<div class="hdr">'+logoHtml+'<div><h1>CONTROL DE VEHÍCULOS — IMPORTACIÓN</h1><div class="sub">'+esc(info.nombre)+'</div></div>'+
-    '<div class="folio"><div class="l">FOLIO</div><div class="v">'+folio+'</div><div class="d">'+today.toLocaleDateString('es-ES')+'</div></div></div>'+
-    '<div class="meta">Total vehículos: <strong>'+cvRows.length+'</strong> · B/L: <strong>'+Object.keys(groups).length+'</strong></div>'+
-    '<table><thead><tr><th style="width:28px">#</th><th>Marca / Modelo</th><th>VIN</th><th style="width:48px">Año</th><th style="width:70px">Color</th><th>Consignatario</th><th style="width:100px">RIF</th></tr></thead>'+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(opts.fileName||folio)+'</title><style>'+css+'</style></head><body>'+
+    '<div class="hdr">'+logoHtml+'<div><h1>'+esc(opts.titulo||'CONTROL DE VEHÍCULOS')+'</h1><div class="sub">'+esc(info.nombre)+'</div></div>'+
+    '<div class="folio"><div class="l">FOLIO</div><div class="v">'+esc(folio)+'</div><div class="d">'+today.toLocaleDateString('es-ES')+'</div></div></div>'+
+    '<div class="meta">Total vehículos: <strong>'+rows.length+'</strong> · B/L: <strong>'+Object.keys(groups).length+'</strong>'+
+    (opts.conComision?' · Comisión total: <strong>$'+totalCom.toFixed(2)+'</strong>':'')+'</div>'+
+    '<table><thead><tr><th style="width:28px">#</th><th>Consignatario</th><th>RIF</th><th>Descripción del vehículo</th><th style="width:48px">Año</th><th style="width:70px">Color</th><th>VIN</th>'+colCom+'</tr></thead>'+
     '<tbody>'+filas+'</tbody></table>'+
-    '<div class="foot"><span>'+esc(info.nombre)+' · Control de vehículo · Documento interno</span><span>Generado: '+today.toLocaleString('es-ES')+'</span></div>'+
+    '<div class="foot"><span>'+esc(info.nombre)+' · Control de vehículo</span><span>Generado: '+today.toLocaleString('es-ES')+'</span></div>'+
     '<script>window.onload=function(){setTimeout(function(){window.print()},280)}<\/script></body></html>';
+  const fname = (opts.fileName || folio).replace(/[^\w\-\.]+/g,'_');
   if(typeof descargarPdfHtml === 'function'){
-    try { descargarPdfHtml(html, 'Control_'+folio); }
+    try { descargarPdfHtml(html, fname); }
     catch(e){ const w=window.open('','_blank'); w.document.write(html); w.document.close(); }
   } else {
     const w = window.open('','_blank');
