@@ -96,17 +96,59 @@
   header .logo-box .placeholder { font-size: 0.65rem; color: var(--primary); font-weight: 700; text-align: center; line-height: 1.1; }
   header h1 { font-size: 1.1rem; font-weight: 700; }
   header p { font-size: 0.72rem; opacity: 0.9; margin-top: 2px; }
-  nav {
-    display: flex; gap: 4px; padding: 10px 12px; background: white;
-    border-bottom: 1px solid var(--border); overflow-x: auto;
-    position: sticky; top: 72px; z-index: 90;
+  nav.app-nav {
+    display: flex; gap: 4px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255,255,255,0.97);
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 160;
+    box-shadow: 0 -4px 20px rgba(15,40,70,0.10);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
-  nav button {
-    flex: 1; min-width: 70px; padding: 8px 6px; border: none;
-    background: #eef2f6; border-radius: 8px; font-size: 0.78rem;
-    font-weight: 600; color: var(--primary); cursor: pointer; white-space: nowrap;
+  nav.app-nav button {
+    flex: 1; min-width: 64px; padding: 8px 4px; border: none;
+    background: #eef2f6; border-radius: 10px; font-size: 0.72rem;
+    font-weight: 700; color: var(--primary); cursor: pointer; white-space: nowrap;
   }
-  nav button.active { background: var(--primary); color: white; }
+  nav.app-nav button.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(31,78,121,0.35); }
+  body { padding-bottom: 78px; }
+  /* Footer de Nueva queda encima del nav */
+  footer#appFooter { bottom: 58px; }
+  footer#appFooter.footer-hidden { bottom: 0; }
+  .cv-gastos-card {
+    margin-top: 14px; border-radius: 14px; border: 1px solid #d4e4f7;
+    background: linear-gradient(180deg, #f7fbff 0%, #ffffff 40%);
+    overflow: hidden;
+  }
+  .cv-gastos-card .cv-g-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    padding: 12px 14px; background: linear-gradient(135deg, #1F4E79 0%, #2E86AB 100%);
+    color: #fff;
+  }
+  .cv-gastos-card .cv-g-head h3 { font-size: 0.95rem; font-weight: 700; margin: 0; }
+  .cv-gastos-card .cv-g-body { padding: 12px 14px 14px; }
+  .cv-gastos-card .cv-rate-box {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end;
+    padding: 10px; border-radius: 10px; background: #eef5fb; border: 1px solid #c5d8ea;
+    margin-bottom: 10px;
+  }
+  .cv-gastos-card table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .cv-gastos-card th { text-align: left; padding: 8px 6px; color: #1F4E79; border-bottom: 2px solid #c5d8ea; font-size: 0.78rem; }
+  .cv-gastos-card td { padding: 6px; border-bottom: 1px solid #e8eef4; vertical-align: middle; }
+  .cv-gastos-card input { width: 100%; padding: 7px 8px; border: 1px solid #c5d0dc; border-radius: 8px; font-size: 0.85rem; }
+  .cv-gastos-card .totales {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; padding: 10px 12px;
+    border-radius: 10px; background: #1F4E79; color: #fff; font-weight: 700;
+  }
+  .cv-gastos-card .totales span { opacity: 0.85; font-weight: 500; font-size: 0.78rem; display: block; }
+  .hist-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .hist-tabs button {
+    border: 1px solid var(--border); background: #eef2f6; color: var(--primary);
+    border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+  }
+  .hist-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
   .merc-line {
     border: 1px solid var(--border); border-radius: 10px; padding: 10px;
     margin-bottom: 8px; background: #fafbfd;
@@ -334,7 +376,7 @@
   footer#appFooter .btn { margin-top: 0; padding: 10px; font-size: 0.85rem; }
   /* Oculto en RIF, Control, Catálogo, Historial, Config */
   footer#appFooter.footer-hidden { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; padding: 0 !important; border: none !important; }
-  body.footer-off { padding-bottom: 12px !important; }
+  body.footer-off { padding-bottom: 78px !important; }
   #toast {
     position: fixed; bottom: 80px; left: 50%;
     transform: translateX(-50%) translateY(20px);
@@ -346,7 +388,7 @@
   /* Montos de renglones siempre visibles en pantalla; solo se ocultan en PDF si vista cliente = SI */
   .monto-oculto { display: none !important; }
   @media print {
-    nav, footer, header, .no-print, .btn-add, .del, .detalle-ctrl { display: none !important; }
+    nav, nav.app-nav, footer, header, .no-print, .btn-add, .del, .detalle-ctrl { display: none !important; }
     body { background: white !important; padding: 0 !important; }
     .screen { display: none !important; }
     .screen.active { display: block !important; padding: 0 !important; max-width: 100% !important; }
@@ -371,11 +413,11 @@
   </div>
 </header>
 
-<nav>
-  <button class="active" data-screen="nueva">Nueva</button>
+<nav class="app-nav" id="appNav">
+  <button class="active" data-screen="nueva">Vehículos</button>
   <button data-screen="mercancias">Mercancías</button>
   <button data-screen="rifDb">RIF</button>
-  <button data-screen="ctrlVeh">Control veh.</button>
+  <button data-screen="ctrlVeh">Control</button>
   <button data-screen="catalogo">Catálogo</button>
   <button data-screen="historial">Historial</button>
   <button data-screen="config">Config</button>
@@ -550,22 +592,48 @@
         <span class="slider"></span>
       </label>
     </div>
+    <div class="row detalle-ctrl" style="margin-bottom:8px;align-items:flex-end">
+      <div style="flex:2">
+        <label>Usar concepto guardado</label>
+        <select id="selPlantillaOpV" onchange="aplicarConceptoVeh('operacion', this.value); this.value='';">
+          <option value="">— Elegir de la lista —</option>
+        </select>
+      </div>
+      <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-ok" style="width:auto" onclick="guardarListaConceptosVeh('operacion')">Guardar lista actual</button>
+        <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cargarListaConceptosVeh('operacion')">Cargar lista</button>
+      </div>
+    </div>
     <div id="listaOperacion"></div>
-    <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('operacion')">+ Agregar concepto</button>
+    <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('operacion')">+ Concepto nuevo</button>
+    <div class="hint detalle-ctrl" style="margin-top:6px">Los conceptos se recuerdan en este equipo (misma lista de Config / plantillas).</div>
     <div class="subtotal">Total Operación: <span id="totalOp">$0.00</span></div>
   </div>
 
   <div class="card" id="terCard">
     <div class="section-title"><span class="mod-badge ter">6</span> Gastos de Terceros <span class="qty-factor" style="font-weight:600"></span></div>
     <div class="toggle-row detalle-ctrl">
-      <span style="font-size:0.85rem">¿Multiplicar renglones de operación × cantidad?</span>
+      <span style="font-size:0.85rem">¿Multiplicar renglones de terceros × cantidad?</span>
       <label class="switch">
         <input type="checkbox" id="terMultiplica" checked>
         <span class="slider"></span>
       </label>
     </div>
+    <div class="row detalle-ctrl" style="margin-bottom:8px;align-items:flex-end">
+      <div style="flex:2">
+        <label>Usar concepto guardado</label>
+        <select id="selPlantillaTerV" onchange="aplicarConceptoVeh('terceros', this.value); this.value='';">
+          <option value="">— Elegir de la lista —</option>
+        </select>
+      </div>
+      <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-ok" style="width:auto" onclick="guardarListaConceptosVeh('terceros')">Guardar lista actual</button>
+        <button type="button" class="btn btn-sm btn-outline" style="width:auto" onclick="cargarListaConceptosVeh('terceros')">Cargar lista</button>
+      </div>
+    </div>
     <div id="listaTerceros"></div>
-    <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('terceros')">+ Agregar concepto</button>
+    <button class="btn btn-add detalle-ctrl" onclick="agregarLinea('terceros')">+ Concepto nuevo</button>
+    <div class="hint detalle-ctrl" style="margin-top:6px">Misma idea que en Mercancías: guarda una lista y reutilízala.</div>
     <div class="subtotal">Total Terceros: <span id="totalTer">$0.00</span></div>
   </div>
 
@@ -925,6 +993,48 @@
     <div id="cvTableWrap" style="overflow-x:auto;max-height:62vh;border:1px solid var(--border);border-radius:10px;background:#fff">
       <div id="cvTbody" style="padding:20px;color:var(--muted);text-align:center">Sube un PDF de B/L para comenzar</div>
     </div>
+
+    <div class="cv-gastos-card" id="cvGastosCard" style="margin-top:14px">
+      <div class="cv-g-head">
+        <h3>Gastos adicionales · USD / Bs</h3>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;cursor:pointer;user-select:none">
+          <input type="checkbox" id="cvGastosOn" onchange="cvToggleGastos()"> Activar
+        </label>
+      </div>
+      <div class="cv-g-body" id="cvGastosBody" style="display:none">
+        <p style="font-size:0.8rem;color:#5a6a7a;margin-bottom:10px">Solo se muestra si lo activas y agregas conceptos. Puedes consultar la tasa BCV de la fecha elegida.</p>
+        <div class="cv-rate-box">
+          <div style="flex:1;min-width:120px">
+            <label style="font-size:0.75rem;color:#1F4E79;font-weight:600">Fecha tasa</label>
+            <input type="date" id="cvTasaFecha" onchange="cvOnTasaFecha()">
+          </div>
+          <div style="flex:1;min-width:120px">
+            <label style="font-size:0.75rem;color:#1F4E79;font-weight:600">Tasa BCV (Bs / USD)</label>
+            <input type="number" id="cvTasaBcv" step="0.0001" min="0" value="0" oninput="cvRecalcGastos()">
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" style="width:auto;margin:0" onclick="cvFetchBcv()">Consultar BCV</button>
+        </div>
+        <div id="cvTasaMsg" class="hint" style="margin-bottom:8px"></div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Concepto</th>
+                <th style="width:110px">USD</th>
+                <th style="width:130px">Bolívares</th>
+                <th style="width:36px"></th>
+              </tr>
+            </thead>
+            <tbody id="cvGastosTbody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-add" style="margin-top:8px" onclick="cvAddGasto()">+ Agregar concepto</button>
+        <div class="totales">
+          <div><span>Total divisas</span><div id="cvTotUsd">$0.00</div></div>
+          <div><span>Total bolívares</span><div id="cvTotVes">Bs 0,00</div></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -986,8 +1096,15 @@
 
 <div id="historial" class="screen">
   <div class="card">
-    <h2>Historial de relaciones</h2>
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Vehículos, mercancías y <strong>CONTROL</strong> (por B/L). Carga cualquiera para seguir editando o imprimir.</p>
+    <h2>Historial</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Relaciones de gastos, controles por B/L y base RIF. Busca y reabre cuando quieras.</p>
+    <div class="hist-tabs">
+      <button type="button" class="active" data-hist="all" onclick="setHistTab('all')">Todo</button>
+      <button type="button" data-hist="rel" onclick="setHistTab('rel')">Relaciones</button>
+      <button type="button" data-hist="control" onclick="setHistTab('control')">B/L · Control</button>
+      <button type="button" data-hist="rif" onclick="setHistTab('rif')">RIF</button>
+    </div>
+    <input type="search" id="histSearch" placeholder="Buscar por cliente, B/L, RIF, nombre…" oninput="renderHistorial()" style="margin-bottom:10px">
     <div id="listaHistorial"></div>
   </div>
 </div>
@@ -1293,6 +1410,7 @@ function renderLineas(){
   `).join('') || '<div class="empty" style="padding:10px">Sin conceptos.</div>';
   document.getElementById('listaOperacion').innerHTML = mk(lineasOp, 'operacion');
   document.getElementById('listaTerceros').innerHTML = mk(lineasTer, 'terceros');
+  try{ refrescarSelectConceptosVeh(); }catch(e){}
   calcular();
 }
 function esc(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -1315,6 +1433,51 @@ function agregarLinea(tipo){
   else lineasTer.push(nuevo);
   renderLineas();
 }
+
+function refrescarSelectConceptosVeh(){
+  const fill = (selId, plant) => {
+    const sel = document.getElementById(selId);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Elegir de la lista —</option>' +
+      (plant||[]).filter(p => (p.concepto||'').trim()).map((p,i) =>
+        '<option value="'+i+'">'+esc(p.concepto)+' · $'+fmt(p.monto||0)+'</option>'
+      ).join('');
+    sel.value = cur;
+  };
+  fill('selPlantillaOpV', plantillaOp);
+  fill('selPlantillaTerV', plantillaTer);
+}
+function aplicarConceptoVeh(tipo, idx){
+  if(idx==='' || idx==null) return;
+  const plant = tipo==='operacion' ? plantillaOp : plantillaTer;
+  const p = plant[Number(idx)];
+  if(!p) return;
+  const nuevo = {id: lineIdCounter++, concepto: p.concepto||'', monto: Number(p.monto)||0};
+  if(tipo==='operacion') lineasOp.push(nuevo); else lineasTer.push(nuevo);
+  renderLineas();
+  toast('Concepto agregado: '+(p.concepto||''));
+}
+function guardarListaConceptosVeh(tipo){
+  const lineas = tipo==='operacion' ? lineasOp : lineasTer;
+  const plant = lineas.filter(l => (l.concepto||'').trim() || (l.monto||0)>0)
+    .map(l => ({concepto: (l.concepto||'').trim(), monto: Number(l.monto)||0}));
+  if(!plant.length){ toast('No hay conceptos para guardar'); return; }
+  if(tipo==='operacion') plantillaOp = plant; else plantillaTer = plant;
+  save();
+  refrescarSelectConceptosVeh();
+  try{ renderPlantillas(); }catch(e){}
+  toast('Lista de '+(tipo==='operacion'?'operación':'terceros')+' guardada');
+}
+function cargarListaConceptosVeh(tipo){
+  const plant = tipo==='operacion' ? plantillaOp : plantillaTer;
+  if(!plant || !plant.length){ toast('No hay lista guardada'); return; }
+  const mapped = plant.map(p => ({id: lineIdCounter++, concepto: p.concepto||'', monto: Number(p.monto)||0}));
+  if(tipo==='operacion') lineasOp = mapped; else lineasTer = mapped;
+  renderLineas();
+  toast('Lista cargada');
+}
+
 
 function renderPlantillas(){
   document.getElementById('plantillaOp').innerHTML = plantillaOp.map((p,i)=>`
@@ -1342,7 +1505,7 @@ function guardarPlantillas(){
   plantillaTer = plantillaTer.filter(p=>p.concepto.trim()!=='' || p.monto>0);
   save();
   toast('Plantillas guardadas');
-  if(confirm('¿Aplicar a la relación actual?')) cargarLineasDesdePlantilla();
+  if(confirm('¿Aplicar a la relación actual?')) cargarLineasDesdePlantilla(); try{refrescarSelectConceptosVeh();}catch(e){}
 }
 
 function renderCatalogo(){
@@ -1932,20 +2095,62 @@ function guardarEnHistorial(){
   const m = item.presupuesto.match(/P-(\d+)/i);
   if (m) document.getElementById('presupuesto').value = 'P-' + String(parseInt(m[1])+1).padStart(3,'0');
 }
+function setHistTab(tab){
+  window._histTab = tab || 'all';
+  document.querySelectorAll('.hist-tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.hist === window._histTab);
+  });
+  renderHistorial();
+}
+
 function renderHistorial(){
   const cont = document.getElementById('listaHistorial');
   if (!cont) return;
+  const tab = window._histTab || 'all';
+  const q = ((document.getElementById('histSearch')||{}).value || '').toLowerCase().trim();
   let histCtrl = [];
   try { histCtrl = JSON.parse(localStorage.getItem('vasmar_historial_ctrl_v1') || '[]'); if(!Array.isArray(histCtrl)) histCtrl = []; } catch(e){ histCtrl = []; }
+  let rifList = [];
+  try { rifList = JSON.parse(localStorage.getItem('vasmar_rif_db_v1') || '[]'); if(!Array.isArray(rifList)) rifList = []; } catch(e){ rifList = []; }
+
   const veh = (historial||[]).map(h => ({...h, _tipo: 'vehiculo'}));
   const merc = (historialMerc||[]).map(h => ({...h, _tipo: 'mercancia'}));
   const ctrl = histCtrl.map(h => ({...h, _tipo: 'control'}));
-  const all = veh.concat(merc).concat(ctrl).sort((a,b) => (b.id||0) - (a.id||0));
+  const rifs = rifList.map(h => ({...h, _tipo: 'rif', id: h.id}));
+
+  let all = [];
+  if(tab==='all' || tab==='rel') all = all.concat(veh, merc);
+  if(tab==='all' || tab==='control') all = all.concat(ctrl);
+  if(tab==='all' || tab==='rif') all = all.concat(rifs);
+
+  all.sort((a,b) => (b.id||0) - (a.id||0));
+
+  if(q){
+    all = all.filter(h => {
+      const bag = [
+        h._tipo, h.nombre, h.presupuesto, h.cliente, h.modelo, h.codigo,
+        h.bl, (h.bls||[]).join(' '), h.consignatario, h.rif, h.direccion,
+        h.vessel, h.status, h.fecha
+      ].join(' ').toLowerCase();
+      return bag.includes(q);
+    });
+  }
+
   if (!all.length) {
-    cont.innerHTML = '<div class="empty">Aún no hay relaciones guardadas (vehículos, mercancías ni control).</div>';
+    cont.innerHTML = '<div class="empty">No hay registros'+(q?' para esa búsqueda':'')+'.</div>';
     return;
   }
   cont.innerHTML = all.map(h => {
+    if (h._tipo === 'rif') {
+      return `<div class="item-card" style="border-left:4px solid #455A64">
+        <div class="name"><span style="background:#455A64;color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;margin-right:6px">RIF</span>${esc(h.nombre||'—')}</div>
+        <div class="meta"><strong>${esc(h.rif||'—')}</strong>${h.direccion ? ' · '+esc((h.direccion||'').substring(0,80)) : ''}</div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline" onclick="irARifYEditar(${h.id})">Ver / Editar</button>
+          <button class="btn btn-sm btn-outline" onclick="aplicarRifACliente(${h.id})">Usar como cliente</button>
+        </div>
+      </div>`;
+    }
     if (h._tipo === 'control') {
       const nVeh = (h.rows && h.rows.length) || h.count || 0;
       const bls = (h.bls && h.bls.length) ? h.bls.join(', ') : (h.bl || '—');
@@ -1982,6 +2187,20 @@ function renderHistorial(){
       </div>
     </div>`;
   }).join('');
+}
+
+function irARifYEditar(id){
+  try {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    const scr = document.getElementById('rifDb');
+    if(scr) scr.classList.add('active');
+    const btn = document.querySelector('nav button[data-screen="rifDb"]');
+    if(btn) btn.classList.add('active');
+    if(typeof updateAppFooter==='function') updateAppFooter('rifDb');
+    if(typeof initRifModule==='function') initRifModule();
+    if(typeof editarRif==='function') editarRif(id);
+  } catch(e){ console.warn(e); }
 }
 
 function cargarHistorialMerc(id){
@@ -3506,13 +3725,30 @@ function cvRenderPdfDoc(rows, opts){
     '.vin{font-family:Consolas,Courier New,monospace;font-size:'+(fs-0.5)+'pt}.c{text-align:center}'+
     '.foot{margin-top:8px;border-top:1px solid #1F4E79;padding-top:5px;font-size:7pt;color:#888;display:flex;justify-content:space-between}'+
     '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(opts.fileName||folio)+'</title><style>'+css+'</style></head><body>'+
+
+  let gastosHtml = '';
+  if(typeof cvGastosActivos === 'function' && cvGastosActivos()){
+    const tasa = parseFloat((document.getElementById('cvTasaBcv')||{}).value)||0;
+    const fechaT = (document.getElementById('cvTasaFecha')||{}).value || '';
+    let gRows = '', tu=0, tv=0;
+    cvGastos.forEach((g,i) => {
+      const u = Number(g.usd)||0, v = Number(g.ves)||0;
+      tu += u; tv += v;
+      gRows += '<tr><td>'+(i+1)+'</td><td>'+esc(g.concepto||'—')+'</td><td class="c">$'+u.toFixed(2)+'</td><td class="c">Bs '+v.toLocaleString('es-VE',{minimumFractionDigits:2})+'</td></tr>';
+    });
+    gastosHtml = '<div style="margin-top:12px"><div style="font-weight:700;color:#1F4E79;margin-bottom:4px">Gastos adicionales (USD / Bs)'+(fechaT?' · Tasa BCV '+fechaT:'')+(tasa?' · '+tasa.toLocaleString('es-VE',{maximumFractionDigits:4})+' Bs/USD':'')+'</div>'+
+      '<table><thead><tr><th>#</th><th>Concepto</th><th>USD</th><th>Bolívares</th></tr></thead><tbody>'+gRows+
+      '<tr style="font-weight:700"><td colspan="2">TOTAL</td><td class="c">$'+tu.toFixed(2)+'</td><td class="c">Bs '+tv.toLocaleString('es-VE',{minimumFractionDigits:2})+'</td></tr>'+
+      '</tbody></table></div>';
+  }
+
+    const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(opts.fileName||folio)+'</title><style>'+css+'</style></head><body>'+
     '<div class="hdr">'+logoHtml+'<div><h1>'+esc(opts.titulo||'CONTROL DE VEHÍCULOS')+'</h1><div class="sub">'+esc(info.nombre)+'</div></div>'+
     '<div class="folio"><div class="l">FOLIO</div><div class="v">'+esc(folio)+'</div><div class="d">'+today.toLocaleDateString('es-ES')+'</div></div></div>'+
     '<div class="meta">Total vehículos: <strong>'+rows.length+'</strong> · B/L: <strong>'+Object.keys(groups).length+'</strong>'+
     (opts.conComision?' · Comisión total: <strong>$'+totalCom.toFixed(2)+'</strong>':'')+'</div>'+
     '<table><thead><tr><th style="width:28px">#</th><th>Consignatario</th><th>RIF</th><th>Descripción del vehículo</th><th style="width:48px">Año</th><th style="width:70px">Color</th><th>VIN</th>'+colCom+'</tr></thead>'+
-    '<tbody>'+filas+'</tbody></table>'+
+    '<tbody>'+filas+'</tbody></table>'+gastosHtml+
     '<div class="foot"><span>'+esc(info.nombre)+' · Control de vehículo</span><span>Generado: '+today.toLocaleString('es-ES')+'</span></div>'+
     '<script>window.onload=function(){setTimeout(function(){window.print()},280)}<\/script></body></html>';
   const fname = (opts.fileName || folio).replace(/[^\w\-\.]+/g,'_');
@@ -3526,8 +3762,161 @@ function cvRenderPdfDoc(rows, opts){
   }
 }
 
+
+/* ---- Gastos opcionales Control (USD / Bs) ---- */
+let cvGastos = [];
+let cvGastoId = 1;
+const CV_GASTOS_KEY = 'vasmar_ctrl_gastos_v1';
+
+function cvLoadGastosState(){
+  try {
+    const raw = localStorage.getItem(CV_GASTOS_KEY);
+    if(raw){
+      const o = JSON.parse(raw);
+      cvGastos = Array.isArray(o.lines) ? o.lines : [];
+      cvGastoId = cvGastos.reduce((m,x)=>Math.max(m,x.id||0),0)+1;
+      const on = document.getElementById('cvGastosOn');
+      const body = document.getElementById('cvGastosBody');
+      if(on) on.checked = !!o.on && cvGastos.length>0;
+      if(body) body.style.display = (on && on.checked) ? 'block' : 'none';
+      if(document.getElementById('cvTasaFecha') && o.fecha) document.getElementById('cvTasaFecha').value = o.fecha;
+      if(document.getElementById('cvTasaBcv') && o.tasa!=null) document.getElementById('cvTasaBcv').value = o.tasa;
+    }
+  } catch(e){}
+  if(document.getElementById('cvTasaFecha') && !document.getElementById('cvTasaFecha').value){
+    document.getElementById('cvTasaFecha').value = new Date().toISOString().slice(0,10);
+  }
+  cvRenderGastos();
+}
+function cvSaveGastosState(){
+  try {
+    localStorage.setItem(CV_GASTOS_KEY, JSON.stringify({
+      on: !!(document.getElementById('cvGastosOn')||{}).checked,
+      fecha: (document.getElementById('cvTasaFecha')||{}).value || '',
+      tasa: parseFloat((document.getElementById('cvTasaBcv')||{}).value)||0,
+      lines: cvGastos
+    }));
+  } catch(e){}
+}
+function cvToggleGastos(){
+  const on = !!(document.getElementById('cvGastosOn')||{}).checked;
+  const body = document.getElementById('cvGastosBody');
+  if(body) body.style.display = on ? 'block' : 'none';
+  if(on && !cvGastos.length){ /* no auto lines */ }
+  if(!on){ /* keep data but hide */ }
+  cvSaveGastosState();
+  cvRenderGastos();
+}
+function cvAddGasto(){
+  if(!(document.getElementById('cvGastosOn')||{}).checked){
+    const on = document.getElementById('cvGastosOn');
+    if(on){ on.checked = true; cvToggleGastos(); }
+  }
+  cvGastos.push({ id: cvGastoId++, concepto: '', usd: 0, ves: 0 });
+  cvSaveGastosState();
+  cvRenderGastos();
+}
+function cvDelGasto(id){
+  cvGastos = cvGastos.filter(x => x.id !== id);
+  cvSaveGastosState();
+  cvRenderGastos();
+}
+function cvFmtVes(n){
+  return (Number(n)||0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function cvRenderGastos(){
+  const tb = document.getElementById('cvGastosTbody');
+  if(!tb) return;
+  if(!cvGastos.length){
+    tb.innerHTML = '<tr><td colspan="4" style="padding:12px;color:#7a8a9a;text-align:center">Sin conceptos. Pulsa “+ Agregar concepto”.</td></tr>';
+  } else {
+    tb.innerHTML = cvGastos.map(g =>
+      '<tr>'+
+        '<td><input data-cg="'+g.id+'" data-f="concepto" value="'+esc(g.concepto||'')+'" placeholder="Ej. Almacenaje"></td>'+
+        '<td><input data-cg="'+g.id+'" data-f="usd" type="number" step="0.01" min="0" value="'+(g.usd||0)+'"></td>'+
+        '<td><input data-cg="'+g.id+'" data-f="ves" type="number" step="0.01" min="0" value="'+(g.ves||0)+'"></td>'+
+        '<td style="text-align:center"><button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:2px 8px" onclick="cvDelGasto('+g.id+')">×</button></td>'+
+      '</tr>'
+    ).join('');
+    tb.querySelectorAll('input[data-cg]').forEach(inp => {
+      inp.addEventListener('change', e => {
+        const id = Number(e.target.dataset.cg);
+        const f = e.target.dataset.f;
+        const g = cvGastos.find(x => x.id === id);
+        if(!g) return;
+        if(f==='concepto') g.concepto = e.target.value;
+        else if(f==='usd'){
+          g.usd = parseFloat(e.target.value)||0;
+          const tasa = parseFloat((document.getElementById('cvTasaBcv')||{}).value)||0;
+          if(tasa>0) g.ves = Math.round(g.usd * tasa * 100)/100;
+        } else if(f==='ves'){
+          g.ves = parseFloat(e.target.value)||0;
+        }
+        cvSaveGastosState();
+        cvRenderGastos();
+      });
+    });
+  }
+  const totU = cvGastos.reduce((s,g)=>s+(Number(g.usd)||0),0);
+  const totV = cvGastos.reduce((s,g)=>s+(Number(g.ves)||0),0);
+  const elU = document.getElementById('cvTotUsd');
+  const elV = document.getElementById('cvTotVes');
+  if(elU) elU.textContent = '$ ' + fmt(totU);
+  if(elV) elV.textContent = 'Bs ' + cvFmtVes(totV);
+}
+function cvRecalcGastos(){
+  const tasa = parseFloat((document.getElementById('cvTasaBcv')||{}).value)||0;
+  if(tasa>0){
+    cvGastos.forEach(g => { g.ves = Math.round((Number(g.usd)||0) * tasa * 100)/100; });
+  }
+  cvSaveGastosState();
+  cvRenderGastos();
+}
+function cvOnTasaFecha(){ cvSaveGastosState(); }
+async function cvFetchBcv(){
+  const msg = document.getElementById('cvTasaMsg');
+  const fecha = (document.getElementById('cvTasaFecha')||{}).value || new Date().toISOString().slice(0,10);
+  if(msg) msg.textContent = 'Consultando tasa BCV…';
+  try {
+    // Fuentes públicas (oficial / monitoreo). Se prueba en cadena.
+    const urls = [
+      'https://ve.dolarapi.com/v1/dolares/oficial',
+      'https://api.exchangerate.host/latest?base=USD&symbols=VES',
+      'https://open.er-api.com/v6/latest/USD'
+    ];
+    let tasa = null, fuente = '';
+    for(const url of urls){
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if(!res.ok) continue;
+        const data = await res.json();
+        if(data && data.promedio != null){ tasa = Number(data.promedio); fuente = 'dolarapi oficial'; break; }
+        if(data && data.rates && data.rates.VES){ tasa = Number(data.rates.VES); fuente = 'exchangerate'; break; }
+        if(data && data.conversion_rates && data.conversion_rates.VES){ tasa = Number(data.conversion_rates.VES); fuente = 'er-api'; break; }
+        if(data && data.precio != null){ tasa = Number(data.precio); fuente = 'dolarapi'; break; }
+      } catch(err){ continue; }
+    }
+    if(!tasa || !(tasa>0)){
+      if(msg) msg.textContent = 'No se pudo obtener la tasa automáticamente. Introdúcela manualmente (fecha '+fecha+').';
+      toast('Tasa BCV no disponible — escribe el valor');
+      return;
+    }
+    document.getElementById('cvTasaBcv').value = tasa;
+    if(msg) msg.textContent = 'Tasa ' + tasa.toLocaleString('es-VE',{maximumFractionDigits:4}) + ' Bs/USD · '+fuente+' · ref. '+fecha;
+    cvRecalcGastos();
+    toast('Tasa BCV actualizada');
+  } catch(e){
+    if(msg) msg.textContent = 'Error de red. Puedes cargar la tasa a mano.';
+    toast('Error al consultar tasa');
+  }
+}
+function cvGastosActivos(){
+  return !!(document.getElementById('cvGastosOn')||{}).checked && cvGastos.some(g => (g.concepto||'').trim() || g.usd || g.ves);
+}
+
 function initCtrlVeh(){
   cvLoad();
+  cvLoadGastosState();
   cvRenderTable();
   try { if(typeof renderRifDatalist==='function') renderRifDatalist(); } catch(e){}
   const dz = document.getElementById('cvDropzone');
