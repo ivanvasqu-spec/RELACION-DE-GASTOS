@@ -2125,9 +2125,9 @@ async function renderHistorialDocs(){
         '<div class="name"><span style="background:'+color+';color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;margin-right:6px">'+kindLabel+'</span>'+esc(d.name||d.id)+'</div>'+
         '<div class="meta">'+(d.key ? ('Clave: '+esc(d.key)+' · ') : '')+pdfFmtSize(d.size)+' · '+(d.savedAt ? String(d.savedAt).slice(0,19).replace('T',' ') : '')+'</div>'+
         '<div class="item-actions">'+
-          '<button class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\\''+String(d.id).replace(/'/g,"\\\\'")+'\\')">ߓ Ver</button>'+
-          '<button class="btn btn-sm btn-outline" onclick="pdfDescargarDocumento(\\''+String(d.id).replace(/'/g,"\\\\'")+'\\')">⬇ Descargar</button>'+
-          '<button class="btn btn-sm btn-danger" onclick="pdfBorrarDoc(\\''+String(d.id).replace(/'/g,"\\\\'")+'\\')">Borrar archivo</button>'+
+          pdfBtnVer(d.id, 'ߓ Ver')+
+          pdfBtnDl(d.id, '⬇ Descargar')+
+          pdfBtnDel(d.id, 'Borrar archivo')+
         '</div></div>';
     }).join('');
   } catch(e){
@@ -2187,7 +2187,7 @@ function renderHistorial(){
         <div class="meta"><strong>${esc(h.rif||'—')}</strong>${h.direccion ? ' · '+esc((h.direccion||'').substring(0,80)) : ''}</div>
         <div class="item-actions">
           <button class="btn btn-sm btn-outline" onclick="irARifYEditar(${h.id})">Ver / Editar</button>
-          ${h.pdfId ? '<button class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\''+String(h.pdfId).replace(/'/g,"\\'")+'\')">ߓ PDF RIF</button>' : ''}
+          ${h.pdfId ? pdfBtnVer(h.pdfId, 'ߓ PDF RIF') : ''}
           <button class="btn btn-sm btn-outline" onclick="aplicarRifACliente(${h.id})">Usar como cliente</button>
         </div>
       </div>`;
@@ -2201,7 +2201,7 @@ function renderHistorial(){
         <div class="meta" style="margin-top:4px;font-weight:600;color:#1565C0">${esc(h.vessel||'')}${h.eta ? ' · ETA '+esc(h.eta) : ''}${h.status ? ' · '+esc(h.status) : ''}</div>
         <div class="item-actions">
           <button class="btn btn-sm btn-outline" onclick="cargarHistorialCtrl(${h.id})">Cargar / Editar</button>
-          ${(() => { const pid = (h.rows||[]).map(r=>r.pdfId).find(Boolean); return pid ? '<button class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\''+String(pid).replace(/'/g,"\\'")+'\')">ߓ PDF B/L</button>' : ''; })()}
+          ${(() => { const pid = (h.rows||[]).map(r=>r.pdfId).find(Boolean); return pid ? pdfBtnVer(pid, 'ߓ PDF B/L') : ''; })()}
           <button class="btn btn-sm btn-danger" onclick="borrarHistorialCtrl(${h.id})">Borrar</button>
         </div>
       </div>`;
@@ -2585,29 +2585,59 @@ async function pdfStoreAll(kind){
 }
 
 async function pdfStoreSaveFile(file, kind, key){
+  // Copia completa del archivo ANTES de que pdf.js pueda desvincular buffers
   const buf = await file.arrayBuffer();
-  const id = kind + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  return pdfStoreSaveBuffer(buf, {
+    kind,
+    key: String(key || ''),
+    name: file.name || 'documento.pdf',
+    type: file.type || 'application/pdf',
+    size: file.size || buf.byteLength
+  });
+}
+
+async function pdfStoreSaveBuffer(buf, meta){
+  const copy = buf.slice(0); // copia independiente de todas las páginas
+  const id = (meta.kind || 'doc') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const mime = meta.type || 'application/pdf';
+  const blob = new Blob([copy], { type: mime });
   const rec = {
     id,
-    kind, // 'rif' | 'bl'
-    key: String(key || ''),
-    name: file.name || (id + '.pdf'),
-    type: file.type || 'application/pdf',
-    size: file.size || buf.byteLength,
+    kind: meta.kind || 'doc',
+    key: String(meta.key || ''),
+    name: meta.name || (id + '.pdf'),
+    type: mime,
+    size: meta.size || copy.byteLength,
+    pagesHint: meta.pagesHint || 0,
     savedAt: new Date().toISOString(),
-    blob: new Blob([buf], { type: file.type || 'application/pdf' })
+    blob // Blob íntegro multi-página
   };
   await pdfStorePut(rec);
   return rec;
 }
 
+function pdfRecToBlob(rec){
+  if(!rec) return null;
+  if(rec.blob instanceof Blob) return rec.blob;
+  if(rec.data) return new Blob([rec.data], { type: rec.type || 'application/pdf' });
+  return null;
+}
+
 async function pdfVerDocumento(id){
   try {
+    if(!id){ toast('No hay PDF ligado'); return; }
     const rec = await pdfStoreGet(id);
-    if(!rec || !rec.blob){ toast('No hay PDF guardado para este registro'); return; }
-    const url = URL.createObjectURL(rec.blob);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    const blob = pdfRecToBlob(rec);
+    if(!blob){ toast('No hay PDF guardado para este registro'); return; }
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if(!w){
+      // popup bloqueado → forzar descarga
+      const a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
   } catch(e){
     console.error(e);
     toast('No se pudo abrir el PDF');
@@ -2616,15 +2646,20 @@ async function pdfVerDocumento(id){
 
 async function pdfDescargarDocumento(id){
   try {
+    if(!id){ toast('No hay PDF ligado'); return; }
     const rec = await pdfStoreGet(id);
-    if(!rec || !rec.blob){ toast('No hay PDF guardado'); return; }
-    const url = URL.createObjectURL(rec.blob);
+    const blob = pdfRecToBlob(rec);
+    if(!blob){ toast('No hay PDF guardado'); return; }
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = rec.name || 'documento.pdf';
+    a.download = (rec && rec.name) || 'documento.pdf';
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
   } catch(e){
+    console.error(e);
     toast('No se pudo descargar');
   }
 }
@@ -2635,6 +2670,20 @@ function pdfFmtSize(n){
   if(n < 1048576) return (n/1024).toFixed(1) + ' KB';
   return (n/1048576).toFixed(1) + ' MB';
 }
+
+function pdfBtnVer(id, label){
+  if(!id) return '';
+  return '<button type="button" class="btn btn-sm btn-outline" data-pdf-id="'+String(id).replace(/"/g,'&quot;')+'" onclick="pdfVerDocumento(this.dataset.pdfId)">'+(label||'ߓ Ver PDF')+'</button>';
+}
+function pdfBtnDl(id, label){
+  if(!id) return '';
+  return '<button type="button" class="btn btn-sm btn-outline" data-pdf-id="'+String(id).replace(/"/g,'&quot;')+'" onclick="pdfDescargarDocumento(this.dataset.pdfId)">'+(label||'⬇')+'</button>';
+}
+function pdfBtnDel(id, label){
+  if(!id) return '';
+  return '<button type="button" class="btn btn-sm btn-danger" data-pdf-id="'+String(id).replace(/"/g,'&quot;')+'" onclick="pdfBorrarDoc(this.dataset.pdfId)">'+(label||'Borrar archivo')+'</button>';
+}
+
 
 /* ============================================================
    MÓDULO RIF — independiente (no modifica lógica de otros módulos)
@@ -2770,31 +2819,10 @@ function seedRifIfEmpty(){
   });
 }
 
-async function extractRifPdfText(file){
-  // Reutiliza loaders si ya existen en la app (mercancías); si no, los carga
-  const loadPdfJs = () => new Promise((resolve, reject) => {
-    if (window.pdfjsLib) return resolve();
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s.onload = () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      resolve();
-    };
-    s.onerror = () => reject(new Error('PDF.js'));
-    document.head.appendChild(s);
-  });
-  const loadTesseract = () => new Promise((resolve, reject) => {
-    if (window.Tesseract) return resolve();
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Tesseract'));
-    document.head.appendChild(s);
-  });
-
-  await loadPdfJs();
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+async function extractRifPdfTextFromBuffer(buf, prog){
+  await cvLoadPdfJs();
+  const data = buf.slice(0);
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
   let full = '';
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
@@ -2814,14 +2842,12 @@ async function extractRifPdfText(file){
   const letters = (full.match(/[A-Za-zÁÉÍÓÚáéíóúñÑ]{3,}/g) || []).length;
   if (letters >= 20) return full;
 
-  // OCR si poco texto
-  const prog = document.getElementById('rifProgress');
   if (prog) prog.textContent = 'Poco texto — OCR…';
-  await loadTesseract();
+  await cvLoadTesseract();
   let ocrFull = full;
-  const maxPages = Math.min(pdf.numPages, 3);
-  for (let p = 1; p <= maxPages; p++) {
-    if (prog) prog.textContent = 'OCR RIF pág. ' + p + '/' + maxPages + '…';
+  // OCR en TODAS las páginas del RIF (sin límite artificial de 3)
+  for (let p = 1; p <= pdf.numPages; p++) {
+    if (prog) prog.textContent = 'OCR RIF pág. ' + p + '/' + pdf.numPages + '…';
     const page = await pdf.getPage(p);
     const viewport = page.getViewport({ scale: 2.2 });
     const canvas = document.createElement('canvas');
@@ -2831,6 +2857,11 @@ async function extractRifPdfText(file){
     ocrFull += '\n' + ((result && result.data && result.data.text) || '');
   }
   return ocrFull;
+}
+
+async function extractRifPdfText(file){
+  const buf = await file.arrayBuffer();
+  return extractRifPdfTextFromBuffer(buf, document.getElementById('rifProgress'));
 }
 
 async function handleRifFiles(fileList){
@@ -2844,17 +2875,32 @@ async function handleRifFiles(fileList){
     const file = files[i];
     try{
       if(prog) prog.textContent = 'Leyendo ' + (i+1) + '/' + files.length + ': ' + file.name;
-      const text = await extractRifPdfText(file);
+      const buf = await file.arrayBuffer();
+      let pdfId = '';
+      try {
+        const pdfRec = await pdfStoreSaveBuffer(buf.slice(0), {
+          kind: 'rif',
+          key: file.name,
+          name: file.name,
+          type: file.type || 'application/pdf',
+          size: file.size || buf.byteLength
+        });
+        pdfId = pdfRec.id;
+      } catch(errPdf){ console.warn('PDF store rif', errPdf); }
+      const text = await extractRifPdfTextFromBuffer(buf.slice(0), prog);
       const parsed = parseRifText(text);
       if(!parsed || !parsed.rif){
         fail++;
         continue;
       }
       parsed.sourceFile = file.name;
-      try {
-        const pdfRec = await pdfStoreSaveFile(file, 'rif', parsed.rif || file.name);
-        parsed.pdfId = pdfRec.id;
-      } catch(errPdf){ console.warn('PDF store rif', errPdf); }
+      parsed.pdfId = pdfId;
+      if(pdfId){
+        try {
+          const rec = await pdfStoreGet(pdfId);
+          if(rec){ rec.key = parsed.rif; await pdfStorePut(rec); }
+        } catch(e){}
+      }
       const saved = upsertRif(parsed);
       ok++;
       toast((saved.rif) + ' · ' + (saved.nombre||'').substring(0,40));
@@ -2885,8 +2931,8 @@ function renderRifLista(){
         (r.direccion ? ' · ' + esc((r.direccion||'').substring(0,70)) + ((r.direccion||'').length>70?'…':'') : '') +
       '</div>' +
       '<div class="item-actions">' +
-        (r.pdfId ? '<button type="button" class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\''+String(r.pdfId).replace(/'/g,"\\'")+'\')">ߓ Ver PDF</button>' : '') +
-        (r.pdfId ? '<button type="button" class="btn btn-sm btn-outline" onclick="pdfDescargarDocumento(\''+String(r.pdfId).replace(/'/g,"\\'")+'\')">⬇</button>' : '') +
+        pdfBtnVer(r.pdfId, 'ߓ Ver PDF') +
+        pdfBtnDl(r.pdfId, '⬇') +
         '<button type="button" class="btn btn-sm btn-outline" onclick="aplicarRifACliente(' + r.id + ')">Usar como cliente</button>' +
         '<button type="button" class="btn btn-sm btn-outline" onclick="editarRif(' + r.id + ')">Editar</button>' +
         '<button type="button" class="btn btn-sm btn-danger" onclick="borrarRif(' + r.id + ')">×</button>' +
@@ -3338,47 +3384,62 @@ function cvExtractFields(text, filename){
   return results;
 }
 
-async function cvExtractPdfText(file){
-  const loadPdfJs = () => new Promise((resolve, reject) => {
-    if (window.pdfjsLib) return resolve();
+async function cvLoadPdfJs(){
+  if (window.pdfjsLib) return;
+  await new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; resolve(); };
     s.onerror = () => reject(new Error('PDF.js'));
     document.head.appendChild(s);
   });
-  const loadTesseract = () => new Promise((resolve, reject) => {
-    if (window.Tesseract) return resolve();
+}
+async function cvLoadTesseract(){
+  if (window.Tesseract) return;
+  await new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
     s.onload = () => resolve();
     s.onerror = () => reject(new Error('Tesseract'));
     document.head.appendChild(s);
   });
-  await loadPdfJs();
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+}
+
+/** Extrae texto de TODAS las páginas desde un ArrayBuffer (copia propia). */
+async function cvExtractPdfTextFromBuffer(buf, prog){
+  await cvLoadPdfJs();
+  // pdf.js puede transferir/desvincular el buffer: usar siempre una copia
+  const data = buf.slice(0);
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
   let full = '';
-  const prog = document.getElementById('cvProgress');
-  for(let i=1;i<=pdf.numPages;i++){
+  const total = pdf.numPages || 0;
+  for(let i=1; i<=total; i++){
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     let native = (content.items||[]).map(it=>it.str).join(' ');
     native = native.replace(/([A-HJ-NPR-Z0-9]{8,})\s+([A-HJ-NPR-Z0-9]{5,})/g,'$1$2');
     let pageText = native;
     if(native.trim().length < 80){
-      if(prog) prog.textContent = 'OCR pág. '+i+'/'+pdf.numPages+'…';
-      await loadTesseract();
+      if(prog) prog.textContent = 'OCR pág. '+i+'/'+total+'…';
+      await cvLoadTesseract();
       const viewport = page.getViewport({ scale: 2.5 });
       const canvas = document.createElement('canvas');
       canvas.width = viewport.width; canvas.height = viewport.height;
       await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
       const result = await Tesseract.recognize(canvas, 'spa+eng');
       pageText = native + '\n' + ((result&&result.data&&result.data.text)||'');
-    } else if(prog) prog.textContent = 'Pág. '+i+'/'+pdf.numPages+' texto OK';
-    full += pageText + '\n\n';
+    } else if(prog){
+      prog.textContent = 'Pág. '+i+'/'+total+' texto OK';
+    }
+    full += '\n\n----- PAGE '+i+'/'+total+' -----\n' + pageText + '\n';
   }
   return full.replace(/\r\n/g,'\n').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n');
+}
+
+async function cvExtractPdfText(file){
+  const buf = await file.arrayBuffer();
+  const prog = document.getElementById('cvProgress');
+  return cvExtractPdfTextFromBuffer(buf, prog);
 }
 
 function cvNewRow(file, fields){
@@ -3414,16 +3475,35 @@ async function cvHandleFiles(fileList){
     const file = files[i];
     try{
       if(prog) prog.textContent = 'Leyendo '+(i+1)+'/'+files.length+': '+file.name;
-      const text = await cvExtractPdfText(file);
+      // 1) Leer el PDF completo una sola vez (todas las páginas)
+      const buf = await file.arrayBuffer();
+      const bufExtract = buf.slice(0);
+      // 2) Guardar copia íntegra ANTES del parseo (evita buffer detach de pdf.js)
+      let pdfId = '';
+      let pagesHint = 0;
+      try {
+        // páginas: se actualiza tras abrir con pdf.js abajo
+        const pdfRec = await pdfStoreSaveBuffer(buf.slice(0), {
+          kind: 'bl',
+          key: file.name,
+          name: file.name,
+          type: file.type || 'application/pdf',
+          size: file.size || buf.byteLength
+        });
+        pdfId = pdfRec.id;
+      } catch(errPdf){ console.warn('PDF store bl', errPdf); }
+      const text = await cvExtractPdfTextFromBuffer(bufExtract, prog);
       const extracted = cvExtractFields(text, file.name);
       let bl = extracted.length ? extracted[0].bl : '';
       if(!bl) bl = cvExtractBL(text, file.name);
       if(!bl) bl = cvExtractBL('', file.name);
-      let pdfId = '';
-      try {
-        const pdfRec = await pdfStoreSaveFile(file, 'bl', bl || file.name);
-        pdfId = pdfRec.id;
-      } catch(errPdf){ console.warn('PDF store bl', errPdf); }
+      // Actualizar clave del PDF guardado con el B/L real
+      if(pdfId && bl){
+        try {
+          const rec = await pdfStoreGet(pdfId);
+          if(rec){ rec.key = bl; await pdfStorePut(rec); }
+        } catch(e){}
+      }
       if(!extracted.length){
         const row = cvNewRow(file.name, { bl });
         row.pdfId = pdfId;
@@ -3436,7 +3516,7 @@ async function cvHandleFiles(fileList){
           row.pdfId = pdfId;
           cvRows.push(row);
         });
-        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s) · B/L '+(bl||(extracted[0]&&extracted[0].bl)||'?')+(pdfId?' · PDF guardado':''),'ok');
+        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s) · B/L '+(bl||(extracted[0]&&extracted[0].bl)||'?')+(pdfId?' · PDF completo '+pdfFmtSize(file.size||0):''),'ok');
       }
     }catch(err){
       console.error(err);
@@ -3487,8 +3567,8 @@ function cvRenderTable(){
       (f.eta?'<span>ߏ ETA: '+esc(f.eta)+'</span>':'')+
       (f.status?'<span>ߓ '+esc(f.status)+'</span>':'')+
       '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#F5C542;color:#1F4E79;border:none" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
-      (pdfIdGrupo ? '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#E3F2FD;color:#0d47a1;border:none" onclick="pdfVerDocumento(\''+String(pdfIdGrupo).replace(/'/g,"\\'")+'\')">ߓ PDF fuente</button>' : '')+
-      (pdfIdGrupo ? '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#E8F5E9;color:#1b5e20;border:none" onclick="pdfDescargarDocumento(\''+String(pdfIdGrupo).replace(/'/g,"\\'")+'\')">⬇ PDF</button>' : '')+
+      pdfBtnVer(pdfIdGrupo, 'ߓ PDF fuente')+
+      pdfBtnDl(pdfIdGrupo, '⬇ PDF')+
       '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#fff;color:#1565C0;border:none" onclick="cvPrintBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">PDF este B/L</button>'+
       '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:4px 10px" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
       '</div></div>';
