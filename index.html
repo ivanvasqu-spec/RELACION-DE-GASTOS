@@ -913,7 +913,7 @@
     </p>
     <div id="rifDropzone" style="border:2px dashed var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#fafbfd;margin-bottom:12px">
       <div style="font-weight:700;color:var(--primary);margin-bottom:4px">ߓ Toca o suelta PDF de RIF</div>
-      <div style="font-size:0.8rem;color:var(--muted)">Uno o varios · formatos SENIAT actuales</div>
+      <div style="font-size:0.8rem;color:var(--muted)">Uno o varios · se guarda el PDF fuente para verlo después</div>
       <input type="file" id="rifFileInput" accept=".pdf,application/pdf" multiple style="display:none">
     </div>
     <div id="rifProgress" class="hint" style="margin-bottom:8px"></div>
@@ -968,7 +968,7 @@
     </p>
     <div id="cvDropzone" style="border:2px dashed #90CAF9;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#E3F2FD;margin-bottom:10px">
       <div style="font-weight:700;color:#1565C0;margin-bottom:4px">ߓ Toca o suelta PDF de B/L</div>
-      <div style="font-size:0.8rem;color:var(--muted)">Varios a la vez · OCR si es escaneado</div>
+      <div style="font-size:0.8rem;color:var(--muted)">Varios a la vez · se guarda el PDF del B/L · OCR si es escaneado</div>
       <input type="file" id="cvFileInput" accept=".pdf,application/pdf" multiple style="display:none">
     </div>
     <div id="cvLog" style="font-size:0.78rem;color:var(--muted);max-height:90px;overflow-y:auto;margin-bottom:8px;font-family:ui-monospace,monospace"></div>
@@ -1103,8 +1103,9 @@
       <button type="button" data-hist="rel" onclick="setHistTab('rel')">Relaciones</button>
       <button type="button" data-hist="control" onclick="setHistTab('control')">B/L · Control</button>
       <button type="button" data-hist="rif" onclick="setHistTab('rif')">RIF</button>
+      <button type="button" data-hist="docs" onclick="setHistTab('docs')">PDF fuente</button>
     </div>
-    <input type="search" id="histSearch" placeholder="Buscar por cliente, B/L, RIF, nombre…" oninput="renderHistorial()" style="margin-bottom:10px">
+    <input type="search" id="histSearch" placeholder="Buscar por cliente, B/L, RIF, nombre o archivo…" oninput="(window._histTab==='docs'?renderHistorialDocs():renderHistorial())" style="margin-bottom:10px">
     <div id="listaHistorial"></div>
   </div>
 </div>
@@ -2100,8 +2101,47 @@ function setHistTab(tab){
   document.querySelectorAll('.hist-tabs button').forEach(b => {
     b.classList.toggle('active', b.dataset.hist === window._histTab);
   });
-  renderHistorial();
+  if(window._histTab === 'docs') renderHistorialDocs();
+  else renderHistorial();
 }
+
+async function renderHistorialDocs(){
+  const cont = document.getElementById('listaHistorial');
+  if(!cont) return;
+  const q = ((document.getElementById('histSearch')||{}).value || '').toLowerCase().trim();
+  cont.innerHTML = '<div class="empty">Cargando documentos…</div>';
+  try {
+    const all = await pdfStoreAll();
+    let list = all.slice().sort((a,b) => String(b.savedAt||'').localeCompare(String(a.savedAt||'')));
+    if(q) list = list.filter(d => (d.name||'').toLowerCase().includes(q) || (d.key||'').toLowerCase().includes(q) || (d.kind||'').includes(q));
+    if(!list.length){
+      cont.innerHTML = '<div class="empty">No hay PDF fuente guardados'+(q?' para esa búsqueda':'')+'. Se guardan al cargar un RIF o un B/L.</div>';
+      return;
+    }
+    cont.innerHTML = list.map(d => {
+      const kindLabel = d.kind === 'rif' ? 'RIF' : (d.kind === 'bl' ? 'B/L' : (d.kind||'PDF'));
+      const color = d.kind === 'rif' ? '#455A64' : '#1565C0';
+      return '<div class="item-card" style="border-left:4px solid '+color+'">'+
+        '<div class="name"><span style="background:'+color+';color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;margin-right:6px">'+kindLabel+'</span>'+esc(d.name||d.id)+'</div>'+
+        '<div class="meta">'+(d.key ? ('Clave: '+esc(d.key)+' · ') : '')+pdfFmtSize(d.size)+' · '+(d.savedAt ? String(d.savedAt).slice(0,19).replace('T',' ') : '')+'</div>'+
+        '<div class="item-actions">'+
+          '<button class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\\''+String(d.id).replace(/'/g,"\\\\'")+'\\')">ߓ Ver</button>'+
+          '<button class="btn btn-sm btn-outline" onclick="pdfDescargarDocumento(\\''+String(d.id).replace(/'/g,"\\\\'")+'\\')">⬇ Descargar</button>'+
+          '<button class="btn btn-sm btn-danger" onclick="pdfBorrarDoc(\\''+String(d.id).replace(/'/g,"\\\\'")+'\\')">Borrar archivo</button>'+
+        '</div></div>';
+    }).join('');
+  } catch(e){
+    console.error(e);
+    cont.innerHTML = '<div class="empty">No se pudo leer el almacén de PDF.</div>';
+  }
+}
+async function pdfBorrarDoc(id){
+  if(!confirm('¿Borrar este PDF fuente del almacén? (no borra los datos extraídos)')) return;
+  await pdfStoreDelete(id);
+  toast('PDF eliminado del almacén');
+  renderHistorialDocs();
+}
+
 
 function renderHistorial(){
   const cont = document.getElementById('listaHistorial');
@@ -2147,6 +2187,7 @@ function renderHistorial(){
         <div class="meta"><strong>${esc(h.rif||'—')}</strong>${h.direccion ? ' · '+esc((h.direccion||'').substring(0,80)) : ''}</div>
         <div class="item-actions">
           <button class="btn btn-sm btn-outline" onclick="irARifYEditar(${h.id})">Ver / Editar</button>
+          ${h.pdfId ? '<button class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\''+String(h.pdfId).replace(/'/g,"\\'")+'\')">ߓ PDF RIF</button>' : ''}
           <button class="btn btn-sm btn-outline" onclick="aplicarRifACliente(${h.id})">Usar como cliente</button>
         </div>
       </div>`;
@@ -2160,6 +2201,7 @@ function renderHistorial(){
         <div class="meta" style="margin-top:4px;font-weight:600;color:#1565C0">${esc(h.vessel||'')}${h.eta ? ' · ETA '+esc(h.eta) : ''}${h.status ? ' · '+esc(h.status) : ''}</div>
         <div class="item-actions">
           <button class="btn btn-sm btn-outline" onclick="cargarHistorialCtrl(${h.id})">Cargar / Editar</button>
+          ${(() => { const pid = (h.rows||[]).map(r=>r.pdfId).find(Boolean); return pid ? '<button class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\''+String(pid).replace(/'/g,"\\'")+'\')">ߓ PDF B/L</button>' : ''; })()}
           <button class="btn btn-sm btn-danger" onclick="borrarHistorialCtrl(${h.id})">Borrar</button>
         </div>
       </div>`;
@@ -2471,6 +2513,129 @@ function importarDatos(e){
 }
 
 
+
+/* ============================================================
+   ALMACÉN DE PDF FUENTE (RIF y B/L) — IndexedDB
+   Guarda el documento original para verlo / reutilizarlo
+   ============================================================ */
+const PDF_DB_NAME = 'vasmar_pdf_store_v1';
+const PDF_STORE = 'docs';
+let _pdfDbPromise = null;
+
+function openPdfDb(){
+  if(_pdfDbPromise) return _pdfDbPromise;
+  _pdfDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(PDF_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains(PDF_STORE)){
+        const st = db.createObjectStore(PDF_STORE, { keyPath: 'id' });
+        st.createIndex('by_kind', 'kind', { unique: false });
+        st.createIndex('by_key', 'key', { unique: false });
+        st.createIndex('by_name', 'name', { unique: false });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return _pdfDbPromise;
+}
+
+async function pdfStorePut(rec){
+  const db = await openPdfDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PDF_STORE, 'readwrite');
+    tx.objectStore(PDF_STORE).put(rec);
+    tx.oncomplete = () => resolve(rec.id);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function pdfStoreGet(id){
+  if(!id) return null;
+  const db = await openPdfDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PDF_STORE, 'readonly');
+    const req = tx.objectStore(PDF_STORE).get(id);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function pdfStoreDelete(id){
+  if(!id) return;
+  const db = await openPdfDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PDF_STORE, 'readwrite');
+    tx.objectStore(PDF_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function pdfStoreAll(kind){
+  const db = await openPdfDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PDF_STORE, 'readonly');
+    const st = tx.objectStore(PDF_STORE);
+    const req = kind ? st.index('by_kind').getAll(kind) : st.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function pdfStoreSaveFile(file, kind, key){
+  const buf = await file.arrayBuffer();
+  const id = kind + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const rec = {
+    id,
+    kind, // 'rif' | 'bl'
+    key: String(key || ''),
+    name: file.name || (id + '.pdf'),
+    type: file.type || 'application/pdf',
+    size: file.size || buf.byteLength,
+    savedAt: new Date().toISOString(),
+    blob: new Blob([buf], { type: file.type || 'application/pdf' })
+  };
+  await pdfStorePut(rec);
+  return rec;
+}
+
+async function pdfVerDocumento(id){
+  try {
+    const rec = await pdfStoreGet(id);
+    if(!rec || !rec.blob){ toast('No hay PDF guardado para este registro'); return; }
+    const url = URL.createObjectURL(rec.blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch(e){
+    console.error(e);
+    toast('No se pudo abrir el PDF');
+  }
+}
+
+async function pdfDescargarDocumento(id){
+  try {
+    const rec = await pdfStoreGet(id);
+    if(!rec || !rec.blob){ toast('No hay PDF guardado'); return; }
+    const url = URL.createObjectURL(rec.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = rec.name || 'documento.pdf';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch(e){
+    toast('No se pudo descargar');
+  }
+}
+
+function pdfFmtSize(n){
+  n = Number(n)||0;
+  if(n < 1024) return n + ' B';
+  if(n < 1048576) return (n/1024).toFixed(1) + ' KB';
+  return (n/1048576).toFixed(1) + ' MB';
+}
+
 /* ============================================================
    MÓDULO RIF — independiente (no modifica lógica de otros módulos)
    Storage: vasmar_rif_db_v1
@@ -2532,6 +2697,7 @@ function upsertRif(data){
     fechaActualizacion: data.fechaActualizacion || (existing && existing.fechaActualizacion) || '',
     fechaVencimiento: data.fechaVencimiento || (existing && existing.fechaVencimiento) || '',
     sourceFile: data.sourceFile || (existing && existing.sourceFile) || '',
+    pdfId: data.pdfId || (existing && existing.pdfId) || '',
     updatedAt: new Date().toISOString().slice(0,10),
     createdAt: existing ? existing.createdAt : new Date().toISOString().slice(0,10)
   };
@@ -2685,6 +2851,10 @@ async function handleRifFiles(fileList){
         continue;
       }
       parsed.sourceFile = file.name;
+      try {
+        const pdfRec = await pdfStoreSaveFile(file, 'rif', parsed.rif || file.name);
+        parsed.pdfId = pdfRec.id;
+      } catch(errPdf){ console.warn('PDF store rif', errPdf); }
       const saved = upsertRif(parsed);
       ok++;
       toast((saved.rif) + ' · ' + (saved.nombre||'').substring(0,40));
@@ -2715,6 +2885,8 @@ function renderRifLista(){
         (r.direccion ? ' · ' + esc((r.direccion||'').substring(0,70)) + ((r.direccion||'').length>70?'…':'') : '') +
       '</div>' +
       '<div class="item-actions">' +
+        (r.pdfId ? '<button type="button" class="btn btn-sm btn-outline" onclick="pdfVerDocumento(\''+String(r.pdfId).replace(/'/g,"\\'")+'\')">ߓ Ver PDF</button>' : '') +
+        (r.pdfId ? '<button type="button" class="btn btn-sm btn-outline" onclick="pdfDescargarDocumento(\''+String(r.pdfId).replace(/'/g,"\\'")+'\')">⬇</button>' : '') +
         '<button type="button" class="btn btn-sm btn-outline" onclick="aplicarRifACliente(' + r.id + ')">Usar como cliente</button>' +
         '<button type="button" class="btn btn-sm btn-outline" onclick="editarRif(' + r.id + ')">Editar</button>' +
         '<button type="button" class="btn btn-sm btn-danger" onclick="borrarRif(' + r.id + ')">×</button>' +
@@ -2802,6 +2974,8 @@ function guardarRifForm(){
 
 function borrarRif(id){
   if(!confirm('¿Eliminar este consignatario de la base?')) return;
+  const doomed = rifDb.find(x => x.id === id);
+  if(doomed && doomed.pdfId) try{ pdfStoreDelete(doomed.pdfId); }catch(e){}
   rifDb = rifDb.filter(x => x.id !== id);
   saveRifDb();
   renderRifLista();
@@ -3226,7 +3400,8 @@ function cvNewRow(file, fields){
     fecha: fields.fecha || '',
     eta: fields.eta || '',
     status: fields.status || '',
-    fechaProceso: new Date().toISOString().slice(0,10)
+    fechaProceso: new Date().toISOString().slice(0,10),
+    pdfId: fields.pdfId || ''
   };
 }
 
@@ -3242,16 +3417,26 @@ async function cvHandleFiles(fileList){
       const text = await cvExtractPdfText(file);
       const extracted = cvExtractFields(text, file.name);
       let bl = extracted.length ? extracted[0].bl : '';
+      if(!bl) bl = cvExtractBL(text, file.name);
       if(!bl) bl = cvExtractBL('', file.name);
+      let pdfId = '';
+      try {
+        const pdfRec = await pdfStoreSaveFile(file, 'bl', bl || file.name);
+        pdfId = pdfRec.id;
+      } catch(errPdf){ console.warn('PDF store bl', errPdf); }
       if(!extracted.length){
-        cvRows.push(cvNewRow(file.name, { bl }));
+        const row = cvNewRow(file.name, { bl });
+        row.pdfId = pdfId;
+        cvRows.push(row);
         cvLog('⚠ '+file.name+': sin VIN, fila vacía','warn');
       } else {
         extracted.forEach(f => {
           if(!f.bl && bl) f.bl = bl;
-          cvRows.push(cvNewRow(file.name, f));
+          const row = cvNewRow(file.name, f);
+          row.pdfId = pdfId;
+          cvRows.push(row);
         });
-        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s) · B/L '+(bl||(extracted[0]&&extracted[0].bl)||'?'),'ok');
+        cvLog('✅ '+file.name+': '+extracted.length+' vehículo(s) · B/L '+(bl||(extracted[0]&&extracted[0].bl)||'?')+(pdfId?' · PDF guardado':''),'ok');
       }
     }catch(err){
       console.error(err);
@@ -3292,6 +3477,7 @@ function cvRenderTable(){
   Object.keys(groups).forEach(blKey => {
     const g = groups[blKey];
     const f = g[0];
+    const pdfIdGrupo = (g.find(x => x.pdfId)||{}).pdfId || '';
     // 1) Línea B/L arriba (fuera de las columnas)
     html += '<div style="background:#1565C0;color:#fff;padding:12px 14px;border-bottom:1px solid #0d47a1">'+
       '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:0.88rem">'+
@@ -3301,6 +3487,8 @@ function cvRenderTable(){
       (f.eta?'<span>ߏ ETA: '+esc(f.eta)+'</span>':'')+
       (f.status?'<span>ߓ '+esc(f.status)+'</span>':'')+
       '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#F5C542;color:#1F4E79;border:none" onclick="cvOpenTrack(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Rastrear</button>'+
+      (pdfIdGrupo ? '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#E3F2FD;color:#0d47a1;border:none" onclick="pdfVerDocumento(\''+String(pdfIdGrupo).replace(/'/g,"\\'")+'\')">ߓ PDF fuente</button>' : '')+
+      (pdfIdGrupo ? '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#E8F5E9;color:#1b5e20;border:none" onclick="pdfDescargarDocumento(\''+String(pdfIdGrupo).replace(/'/g,"\\'")+'\')">⬇ PDF</button>' : '')+
       '<button type="button" class="btn btn-sm" style="width:auto;padding:4px 10px;background:#fff;color:#1565C0;border:none" onclick="cvPrintBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">PDF este B/L</button>'+
       '<button type="button" class="btn btn-sm btn-danger" style="width:auto;padding:4px 10px" onclick="cvDeleteBl(\''+esc(blKey).replace(/'/g,"\\'")+'\')">Eliminar BL</button>'+
       '</div></div>';
